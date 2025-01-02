@@ -879,13 +879,18 @@ class SettingsOptionsPane : OptionsPane() {
                 .add("${I18n.getString("termora.settings.about.author")}:").xy(1, rows)
                 .add(createHyperlink("https://github.com/hstyi")).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.settings.about.source")}:").xy(1, rows)
-                .add(createHyperlink("https://github.com/TermoraDev/termora")).xy(3, rows).apply { rows += step }
+                .add(
+                    createHyperlink(
+                        "https://github.com/TermoraDev/termora/tree/${Application.getVersion()}",
+                        "https://github.com/TermoraDev/termora",
+                    )
+                ).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.settings.about.issue")}:").xy(1, rows)
                 .add(createHyperlink("https://github.com/TermoraDev/termora/issues")).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.settings.about.third-party")}:").xy(1, rows)
                 .add(
                     createHyperlink(
-                        "https://github.com/TermoraDev/termora/blob/master/THIRDPARTY",
+                        "https://github.com/TermoraDev/termora/blob/${Application.getVersion()}/THIRDPARTY",
                         "Open-source software"
                     )
                 ).xy(3, rows).apply { rows += step }
