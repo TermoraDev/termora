@@ -831,9 +831,7 @@ class ControlSequenceIntroducerProcessor(terminal: Terminal, reader: TerminalRea
                 37 -> foreground = mode - 30 + 1
 
                 //  xterm-256 foreground color
-                38
-
-                    -> {
+                38 -> {
                     if (iterator.hasNext()) {
                         when (val code = iterator.next()) {
                             // rgb
@@ -841,7 +839,7 @@ class ControlSequenceIntroducerProcessor(terminal: Terminal, reader: TerminalRea
                                 val r = iterator.next()
                                 val g = iterator.next()
                                 val b = iterator.next()
-                                background = 65536 * r + 256 * g + b
+                                foreground = 65536 * r + 256 * g + b
                             }
 
                             // index color
