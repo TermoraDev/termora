@@ -67,7 +67,8 @@ open class HostOptionsPane : OptionsPane() {
         val options = Options.Default.copy(
             encoding = terminalOption.charsetComboBox.selectedItem as String,
             env = terminalOption.environmentTextArea.text,
-            startupCommand = terminalOption.startupCommandTextField.text
+            startupCommand = terminalOption.startupCommandTextField.text,
+            heartbeatInterval = (terminalOption.heartbeatIntervalTextField.value ?: 30) as Int,
         )
 
         return Host(
@@ -508,6 +509,7 @@ open class HostOptionsPane : OptionsPane() {
     protected inner class TerminalOption : JPanel(BorderLayout()), Option {
         val charsetComboBox = JComboBox<String>()
         val startupCommandTextField = OutlineTextField()
+        val heartbeatIntervalTextField = IntSpinner(30, minimum = 3, maximum = Int.MAX_VALUE)
         val environmentTextArea = FixedLengthTextArea(2048)
 
 
@@ -563,7 +565,7 @@ open class HostOptionsPane : OptionsPane() {
         private fun getCenterComponent(): JComponent {
             val layout = FormLayout(
                 "left:pref, $formMargin, default:grow, $formMargin, default:grow",
-                "pref, $formMargin, pref, $formMargin, pref, $formMargin"
+                "pref, $formMargin, pref, $formMargin, pref, $formMargin, pref"
             )
 
             var rows = 1
@@ -571,6 +573,8 @@ open class HostOptionsPane : OptionsPane() {
             val panel = FormBuilder.create().layout(layout)
                 .add("${I18n.getString("termora.new-host.terminal.encoding")}:").xy(1, rows)
                 .add(charsetComboBox).xy(3, rows).apply { rows += step }
+                .add("${I18n.getString("termora.new-host.terminal.heartbeat-interval")}:").xy(1, rows)
+                .add(heartbeatIntervalTextField).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.new-host.terminal.startup-commands")}:").xy(1, rows)
                 .add(startupCommandTextField).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.new-host.terminal.env")}:").xy(1, rows)

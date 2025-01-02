@@ -58,6 +58,10 @@ data class Options(
      * 连接成功后立即发送命令
      */
     val startupCommand: String = StringUtils.EMPTY,
+    /**
+     * SSH 心跳间隔
+     */
+    val heartbeatInterval: Int = 30
 ) {
     companion object {
         val Default = Options()

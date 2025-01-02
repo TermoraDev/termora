@@ -19,6 +19,7 @@ import org.eclipse.jgit.transport.sshd.ProxyData
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.time.Duration
+import kotlin.math.max
 
 object SshClients {
     private val timeout = Duration.ofSeconds(30)
@@ -83,7 +84,8 @@ object SshClients {
         }
 
         val sshClient = builder.build() as JGitSshClient
-        CoreModuleProperties.HEARTBEAT_INTERVAL.set(sshClient, timeout)
+        val heartbeatInterval = max(host.options.heartbeatInterval, 3)
+        CoreModuleProperties.HEARTBEAT_INTERVAL.set(sshClient, Duration.ofSeconds(heartbeatInterval.toLong()))
         sshClient.setKeyPasswordProviderFactory { IdentityPasswordProvider(CredentialsProvider.getDefault()) }
 
         if (host.proxy.type != ProxyType.No) {

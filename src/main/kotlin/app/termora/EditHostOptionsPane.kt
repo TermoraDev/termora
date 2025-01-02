@@ -31,6 +31,7 @@ class EditHostOptionsPane(private val host: Host) : HostOptionsPane() {
         terminalOption.charsetComboBox.selectedItem = host.options.encoding
         terminalOption.environmentTextArea.text = host.options.env
         terminalOption.startupCommandTextField.text = host.options.startupCommand
+        terminalOption.heartbeatIntervalTextField.value = host.options.heartbeatInterval
 
         tunnelingOption.tunnelings.addAll(host.tunnelings)
     }
