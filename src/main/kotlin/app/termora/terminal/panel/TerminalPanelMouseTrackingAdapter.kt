@@ -2,6 +2,7 @@ package app.termora.terminal.panel
 
 import app.termora.terminal.*
 import org.slf4j.LoggerFactory
+import java.awt.event.KeyEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.event.MouseWheelEvent
@@ -66,12 +67,11 @@ class TerminalPanelMouseTrackingAdapter(
     override fun mouseWheelMoved(e: MouseWheelEvent) {
         if (shouldSendMouseData) {
             val unitsToScroll = e.unitsToScroll
+            val encode = terminal.getKeyEncoder()
+                .encode(TerminalKeyEvent(if (e.wheelRotation < 0) KeyEvent.VK_UP else KeyEvent.VK_DOWN))
+
             for (i in 0 until abs(unitsToScroll)) {
-                val sb = StringBuilder()
-                sb.append(ControlCharacters.ESC)
-                sb.append('O')
-                sb.append(if (e.wheelRotation < 0) 'A' else 'B')
-                ptyConnector.write(sb.toString())
+                ptyConnector.write(encode)
             }
         }
     }
@@ -119,9 +119,6 @@ class TerminalPanelMouseTrackingAdapter(
             sb.append(ControlCharacters.ESC).append("[M")
                 .append((32 + cb).toChar()).append((32 + x).toChar())
                 .append((32 + y).toChar())
-        } else if (isUrxvtMouseMode) {
-            sb.append(ControlCharacters.ESC).append("[")
-                .append(32 + cb).append(x).append(y).append('M')
         } else if (isSGRMouseMode) {
             // for SGR 1006 style, internal use only
             //  128 - mouse button is released
@@ -136,6 +133,9 @@ class TerminalPanelMouseTrackingAdapter(
                     .append(cb).append(';').append(x).append(';')
                     .append(y).append('M')
             }
+        } else if (isUrxvtMouseMode) {
+            sb.append(ControlCharacters.ESC).append("[")
+                .append(32 + cb).append(x).append(y).append('M')
         } else {
             charset = Charsets.ISO_8859_1
             sb.append(ControlCharacters.ESC).append("[M")
