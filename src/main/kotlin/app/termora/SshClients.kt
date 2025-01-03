@@ -92,14 +92,14 @@ object SshClients {
             sshClient.setProxyDatabase {
                 if (host.proxy.authenticationType == AuthenticationType.No) ProxyData(
                     Proxy(
-                        Proxy.Type.SOCKS,
+                        if (host.proxy.type == ProxyType.SOCKS5) Proxy.Type.SOCKS else Proxy.Type.HTTP,
                         InetSocketAddress(host.proxy.host, host.proxy.port)
                     )
                 )
                 else
                     ProxyData(
                         Proxy(
-                            Proxy.Type.SOCKS,
+                            if (host.proxy.type == ProxyType.SOCKS5) Proxy.Type.SOCKS else Proxy.Type.HTTP,
                             InetSocketAddress(host.proxy.host, host.proxy.port)
                         ),
                         host.proxy.username,
