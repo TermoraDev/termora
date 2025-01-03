@@ -1,5 +1,7 @@
 package app.termora.terminal
 
+import java.awt.event.KeyEvent
+
 @Suppress("MemberVisibilityCanBePrivate")
 open class KeyEncoderImpl(private val terminal: Terminal) : KeyEncoder, DataListener {
 
@@ -43,6 +45,20 @@ open class KeyEncoderImpl(private val terminal: Terminal) : KeyEncoder, DataList
         putCode(TerminalKeyEvent(keyCode = 0x9B), encode = "${ControlCharacters.ESC}[2~")
         // Delete
         putCode(TerminalKeyEvent(keyCode = 0x7F), encode = "${ControlCharacters.ESC}[3~")
+
+        // Function Keys
+        putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_F1), encode = "${ControlCharacters.ESC}OP")
+        putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_F2), encode = "${ControlCharacters.ESC}OQ")
+        putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_F3), encode = "${ControlCharacters.ESC}OR")
+        putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_F4), encode = "${ControlCharacters.ESC}OS")
+        putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_F5), encode = "${ControlCharacters.ESC}[15~");
+        putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_F6), encode = "${ControlCharacters.ESC}[17~");
+        putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_F7), encode = "${ControlCharacters.ESC}[18~");
+        putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_F8), encode = "${ControlCharacters.ESC}[19~");
+        putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_F9), encode = "${ControlCharacters.ESC}[20~");
+        putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_F10), encode = "${ControlCharacters.ESC}[21~");
+        putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_F11), encode = "${ControlCharacters.ESC}[23~");
+        putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_F12), encode = "${ControlCharacters.ESC}[24~");
 
         terminal.getTerminalModel().addDataListener(object : DataListener {
             override fun onChanged(key: DataKey<*>, data: Any) {
