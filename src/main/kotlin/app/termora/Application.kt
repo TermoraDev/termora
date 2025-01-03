@@ -69,7 +69,7 @@ object Application {
         var baseDataDir = System.getProperty("${getName()}.base-data-dir".lowercase())
         // 取不到从环境取
         if (StringUtils.isBlank(baseDataDir)) {
-            baseDataDir = System.getenv("${getName()}-BASE-DATA-DIR".uppercase())
+            baseDataDir = System.getenv("${getName()}_BASE_DATA_DIR".uppercase())
         }
 
         var dir = File(SystemUtils.getUserHome(), ".${getName()}".lowercase())
