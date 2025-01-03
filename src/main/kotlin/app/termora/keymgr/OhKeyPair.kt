@@ -9,7 +9,7 @@ data class OhKeyPair(
     val publicKey: String,
     // base64
     val privateKey: String,
-    // RSA
+    // RSA、ED25519
     val type: String,
     val name: String,
     val remark: String,

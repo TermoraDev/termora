@@ -11,6 +11,7 @@ import com.formdev.flatlaf.ui.FlatTextBorder
 import com.formdev.flatlaf.util.SystemInfo
 import com.jgoodies.forms.builder.FormBuilder
 import com.jgoodies.forms.layout.FormLayout
+import net.i2p.crypto.eddsa.EdDSAPublicKey
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.io.IOUtils
 import org.apache.commons.io.file.PathUtils
@@ -30,6 +31,7 @@ import java.io.File
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.security.KeyPair
+import java.security.spec.X509EncodedKeySpec
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -187,8 +189,9 @@ class KeyManagerPanel : JPanel(BorderLayout()) {
                 for (keyPair in keyPairs) {
                     val pubNameCount = names.getOrPut(keyPair.name + ".pub") { 0 }
                     val priNameCount = names.getOrPut(keyPair.name) { 0 }
-                    val publicKey = RSA.generatePublic(Base64.decodeBase64(keyPair.publicKey))
-                    val privateKey = RSA.generatePrivate(Base64.decodeBase64(keyPair.privateKey))
+                    val kp = OhKeyPairKeyPairProvider.generateKeyPair(keyPair)
+                    val publicKey = kp.public
+                    val privateKey = kp.private
 
                     zos.putNextEntry(ZipEntry("${keyPair.name}${if (pubNameCount > 0) ".${pubNameCount}" else String()}.pub"))
                     OpenSSHKeyPairResourceWriter.INSTANCE.writePublicKey(publicKey, null, zos)
@@ -236,6 +239,9 @@ class KeyManagerPanel : JPanel(BorderLayout()) {
             title = I18n.getString("termora.keymgr.title")
 
             typeComboBox.addItem("RSA")
+            typeComboBox.addItem("ED25519")
+
+            // 默认 RSA
             lengthComboBox.addItem(1024)
             lengthComboBox.addItem(1024 * 2)
             lengthComboBox.addItem(1024 * 3)
@@ -254,16 +260,7 @@ class KeyManagerPanel : JPanel(BorderLayout()) {
             savePublicKeyBtn.isEnabled = false
 
 
-            savePublicKeyBtn.addActionListener {
-                val fileChooser = FileChooser()
-                fileChooser.fileSelectionMode = JFileChooser.FILES_ONLY
-                fileChooser.win32Filters.add(Pair("All Files", listOf("*")))
-                fileChooser.showSaveDialog(this, nameTextField.text).thenAccept { file ->
-                    file?.outputStream()?.use {
-                        IOUtils.write(publicKeyTextArea.text, it, StandardCharsets.UTF_8)
-                    }
-                }
-            }
+            initEvents()
 
             if (editable) {
                 typeComboBox.isEnabled = false
@@ -273,8 +270,15 @@ class KeyManagerPanel : JPanel(BorderLayout()) {
                 nameTextField.text = ohKeyPair.name
                 remarkTextField.text = ohKeyPair.remark
                 val baos = ByteArrayOutputStream()
-                OpenSSHKeyPairResourceWriter.INSTANCE
-                    .writePublicKey(RSA.generatePublic(ohKeyPair.publicKey.decodeBase64()), null, baos)
+                if (ohKeyPair.type == "RSA") {
+                    OpenSSHKeyPairResourceWriter.INSTANCE
+                        .writePublicKey(RSA.generatePublic(ohKeyPair.publicKey.decodeBase64()), null, baos)
+                } else if (ohKeyPair.type == "ED25519") {
+                    OpenSSHKeyPairResourceWriter.INSTANCE.writePublicKey(
+                        EdDSAPublicKey(X509EncodedKeySpec(ohKeyPair.publicKey.decodeBase64())),
+                        null, baos
+                    )
+                }
                 publicKeyTextArea.text = baos.toString()
                 savePublicKeyBtn.isEnabled = true
             } else {
@@ -327,6 +331,35 @@ class KeyManagerPanel : JPanel(BorderLayout()) {
                 .build()
         }
 
+        private fun initEvents() {
+
+            savePublicKeyBtn.addActionListener {
+                val fileChooser = FileChooser()
+                fileChooser.fileSelectionMode = JFileChooser.FILES_ONLY
+                fileChooser.win32Filters.add(Pair("All Files", listOf("*")))
+                fileChooser.showSaveDialog(this, "${nameTextField.text}.pub").thenAccept { file ->
+                    file?.outputStream()?.use {
+                        IOUtils.write(publicKeyTextArea.text, it, StandardCharsets.UTF_8)
+                    }
+                }
+            }
+
+            typeComboBox.addItemListener {
+                if (it.stateChange == ItemEvent.SELECTED) {
+                    lengthComboBox.removeAllItems()
+                    if (typeComboBox.selectedItem == "ED25519") {
+                        lengthComboBox.addItem(256)
+                    } else if (typeComboBox.selectedItem == "RSA") {
+                        lengthComboBox.addItem(1024)
+                        lengthComboBox.addItem(1024 * 2)
+                        lengthComboBox.addItem(1024 * 3)
+                        lengthComboBox.addItem(1024 * 4)
+                        lengthComboBox.addItem(1024 * 8)
+                        lengthComboBox.selectedItem = 1024 * 2
+                    }
+                }
+            }
+        }
 
         override fun createOkAction(): AbstractAction {
             if (!editable) {
@@ -349,7 +382,9 @@ class KeyManagerPanel : JPanel(BorderLayout()) {
                     return
                 }
 
-                val keyPair = RSA.generateKeyPair(lengthComboBox.selectedItem as Int)
+                val keyType = if (typeComboBox.selectedItem == "RSA")
+                    KeyPairProvider.SSH_RSA else KeyPairProvider.SSH_ED25519
+                val keyPair = KeyUtils.generateKeyPair(keyType, lengthComboBox.selectedItem as Int)
                 ohKeyPair = OhKeyPair(
                     id = UUID.randomUUID().toSimpleString(),
                     name = nameTextField.text,
@@ -516,16 +551,20 @@ class KeyManagerPanel : JPanel(BorderLayout()) {
                     val dialog = InputDialog(owner = this@ImportKeyDialog, title = "Password")
                     dialog.getText() ?: String()
                 }
-                val keyPair =
-                    provider.loadKeys(null).firstOrNull() ?: throw IllegalStateException("Failed to load the key file")
+                val keyPair = provider.loadKeys(null).firstOrNull()
+                    ?: throw IllegalStateException("Failed to load the key file")
                 val keyType = KeyUtils.getKeyType(keyPair)
-                if (keyType != KeyPairProvider.SSH_RSA) {
-                    throw UnsupportedOperationException("Key type:${keyType}. Only RSA keys are supported.")
+                if (keyType != KeyPairProvider.SSH_RSA && keyType != KeyPairProvider.SSH_ED25519) {
+                    throw UnsupportedOperationException("Key type:${keyType}. Only RSA/ED25519 keys are supported.")
                 }
 
                 nameTextField.text = StringUtils.defaultIfBlank(nameTextField.text, file.name)
                 fileTextField.text = file.absolutePath
-                typeComboBox.addItem("RSA")
+                if (keyType == KeyPairProvider.SSH_RSA) {
+                    typeComboBox.addItem("RSA")
+                } else {
+                    typeComboBox.addItem("ED25519")
+                }
                 lengthComboBox.addItem(KeyUtils.getKeySize(keyPair.private))
 
                 ohKeyPair = OhKeyPair(
@@ -573,6 +612,7 @@ class KeyManagerPanel : JPanel(BorderLayout()) {
 
             if (ohKeyPair.remark.isEmpty()) {
                 ohKeyPair = ohKeyPair.copy(
+                    name = nameTextField.text,
                     remark = "Import on " + DateFormatUtils.format(Date(), I18n.getString("termora.date-format"))
                 )
             }
