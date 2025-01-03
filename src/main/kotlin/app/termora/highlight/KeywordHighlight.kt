@@ -20,7 +20,7 @@ data class KeywordHighlight(
     val description: String = StringUtils.EMPTY,
 
     /**
-     * [keyword] 是否忽略大小写
+     * [keyword] 是否大小写匹配，如果为 true 表示不忽略大小写，也就是：'A != a'；如果为 false 那么 'A == a'
      */
     val matchCase: Boolean = false,
 
@@ -57,7 +57,7 @@ data class KeywordHighlight(
     /**
      * 是否启用
      */
-    val enabled:Boolean = true,
+    val enabled: Boolean = true,
 
     /**
      * 排序

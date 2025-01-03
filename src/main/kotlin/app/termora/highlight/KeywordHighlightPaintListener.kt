@@ -42,7 +42,7 @@ class KeywordHighlightPaintListener private constructor() : TerminalPaintListene
                     return document.getLine(index++)
                 }
 
-            }, CharArraySubstr(highlight.keyword.toCharArray())).find(highlight.matchCase)
+            }, CharArraySubstr(highlight.keyword.toCharArray())).find(!highlight.matchCase)
 
             for (kind in kinds) {
                 terminal.getMarkupModel().addHighlighter(
