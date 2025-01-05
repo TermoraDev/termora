@@ -37,5 +37,10 @@ interface TerminalTab : Disposable {
     fun onLostFocus() {}
     fun onGrabFocus() {}
 
+    /**
+     * @return 返回 false 则不可关闭
+     */
+    fun canClose(): Boolean = true
+
 
 }

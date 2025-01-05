@@ -35,6 +35,8 @@ dependencies {
     testImplementation(libs.jsch)
     testImplementation(libs.rhino)
     testImplementation(libs.delight.rhino.sandbox)
+    testImplementation(platform(libs.testcontainers.bom))
+    testImplementation(libs.testcontainers)
 
     implementation(libs.slf4j.api)
     implementation(libs.pty4j)
@@ -137,6 +139,7 @@ tasks.register<Exec>("jpackage") {
     val buildDir = layout.buildDirectory.get()
     val options = mutableListOf(
         "--add-exports java.base/sun.nio.ch=ALL-UNNAMED",
+        "-XX:+UseZGC", "-XX:+ZGenerational", "-XX:ZUncommit", "-XX:ZUncommitDelay=60",
         "-Xmx2g",
         "-XX:+HeapDumpOnOutOfMemoryError",
         "-Dlogger.console.level=off",

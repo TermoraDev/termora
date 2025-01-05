@@ -17,7 +17,10 @@ import java.io.File
 import java.net.URI
 import java.time.Duration
 import java.util.*
+import kotlin.math.ln
+import kotlin.math.pow
 import kotlin.reflect.KClass
+
 
 object Application {
     private val services = Collections.synchronizedMap(mutableMapOf<KClass<*>, Any>())
@@ -99,6 +102,10 @@ object Application {
         return version
     }
 
+    fun isUnknownVersion(): Boolean {
+        return getVersion().contains("unknown")
+    }
+
     fun getAppPath(): String {
         return StringUtils.defaultString(System.getProperty("jpackage.app-path"))
     }
@@ -144,3 +151,28 @@ object Application {
         }
     }
 }
+
+fun formatBytes(bytes: Long): String {
+    if (bytes < 1024) return "$bytes B"
+
+    val units = arrayOf("B", "KB", "MB", "GB", "TB", "PB", "EB")
+    val exp = (ln(bytes.toDouble()) / ln(1024.0)).toInt()
+    val value = bytes / 1024.0.pow(exp.toDouble())
+
+    return String.format("%.2f %s", value, units[exp])
+}
+
+fun formatSeconds(seconds: Long): String {
+    val days = seconds / 86400
+    val hours = (seconds % 86400) / 3600
+    val minutes = (seconds % 3600) / 60
+    val remainingSeconds = seconds % 60
+
+    return when {
+        days > 0 -> "${days}天${hours}小时${minutes}分${remainingSeconds}秒"
+        hours > 0 -> "${hours}小时${minutes}分${remainingSeconds}秒"
+        minutes > 0 -> "${minutes}分${remainingSeconds}秒"
+        else -> "${remainingSeconds}秒"
+    }
+}
+

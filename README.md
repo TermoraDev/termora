@@ -11,6 +11,7 @@
 ## 功能特性
 
 - 支持 SSH 和本地终端
+- 支持 [SFTP](./docs/sftp-zh_CN.png) 文件传输
 - 支持 Windows、macOS、Linux 平台
 - 支持 Zmodem 协议
 - 支持 SSH 端口转发
@@ -33,7 +34,7 @@
 
 ## 开发
 
-建议使用 [JetBrainsRuntime](https://github.com/JetBrains/JetBrainsRuntime) 的 JDK 版本，通过 `./gradlew :run`即可运行程序。
+建议使用 [JetBrainsRuntime](https://github.com/JetBrains/JetBrainsRuntime) 的 JDK 版本，通过 `./gradlew :run` 即可运行程序。
 
 通过 `./gradlew dist` 可以自动构建适用于本机的版本。在 macOS 上是：`dmg`，在 Windows 上是：`zip`，在 Linux 上是：`tar.gz`。
 

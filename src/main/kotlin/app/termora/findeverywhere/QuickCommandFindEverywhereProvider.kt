@@ -1,10 +1,9 @@
 package app.termora.findeverywhere
 
-import app.termora.Actions
-import app.termora.I18n
-import app.termora.Icons
+import app.termora.*
 import com.formdev.flatlaf.FlatLaf
 import org.jdesktop.swingx.action.ActionManager
+import java.awt.event.ActionEvent
 import javax.swing.Icon
 
 class QuickCommandFindEverywhereProvider : FindEverywhereProvider {
@@ -15,6 +14,24 @@ class QuickCommandFindEverywhereProvider : FindEverywhereProvider {
         ActionManager.getInstance().getAction(Actions.ADD_HOST)?.let {
             list.add(CreateHostFindEverywhereResult())
         }
+
+        // SFTP
+        list.add(ActionFindEverywhereResult(object : AnAction("SFTP", Icons.fileTransfer) {
+            override fun actionPerformed(evt: ActionEvent) {
+                val terminalTabbedManager = Application.getService(TerminalTabbedManager::class)
+                val tabs = terminalTabbedManager.getTerminalTabs()
+                for (i in tabs.indices) {
+                    val tab = tabs[i]
+                    if (tab is SFTPTerminalTab) {
+                        terminalTabbedManager.setSelectedTerminalTab(tab)
+                        return
+                    }
+                }
+                // 创建一个新的
+                terminalTabbedManager.addTerminalTab(SFTPTerminalTab())
+            }
+        }))
+
         return list
     }
 

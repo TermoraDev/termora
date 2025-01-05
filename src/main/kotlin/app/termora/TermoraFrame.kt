@@ -392,9 +392,6 @@ class TermoraFrame : JFrame() {
                 if (e.source == tabbedPane) {
                     val index = tabbedPane.indexAtLocation(e.x, e.y)
                     if (index >= 0) {
-                        if (e.id == MouseEvent.MOUSE_CLICKED) {
-                            tabbedPane.getComponentAt(index)?.requestFocusInWindow()
-                        }
                         return
                     }
                 }

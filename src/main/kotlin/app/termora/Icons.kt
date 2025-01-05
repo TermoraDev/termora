@@ -1,6 +1,7 @@
 package app.termora
 
 object Icons {
+    val bulletList by lazy { DynamicIcon("icons/bulletList.svg", "icons/bulletList_dark.svg") }
     val up by lazy { DynamicIcon("icons/up.svg", "icons/up_dark.svg") }
     val down by lazy { DynamicIcon("icons/down.svg", "icons/down_dark.svg") }
     val close by lazy { DynamicIcon("icons/close.svg", "icons/close_dark.svg") }
@@ -14,6 +15,7 @@ object Icons {
     val pin by lazy { DynamicIcon("icons/pin.svg", "icons/pin_dark.svg") }
     val empty by lazy { DynamicIcon("icons/empty.svg") }
     val add by lazy { DynamicIcon("icons/add.svg", "icons/add_dark.svg") }
+    val errorIntroduction by lazy { DynamicIcon("icons/errorIntroduction.svg", "icons/errorIntroduction_dark.svg") }
     val networkPolicy by lazy { DynamicIcon("icons/networkPolicy.svg", "icons/networkPolicy_dark.svg") }
     val clusterRole by lazy { DynamicIcon("icons/clusterRole.svg", "icons/clusterRole_dark.svg") }
     val daemonSets by lazy { DynamicIcon("icons/daemonSets.svg", "icons/daemonSets_dark.svg") }
@@ -26,6 +28,8 @@ object Icons {
     val rec by lazy { DynamicIcon("icons/rec.svg", "icons/rec_dark.svg") }
     val stop by lazy { DynamicIcon("icons/stop.svg", "icons/stop_dark.svg") }
     val find by lazy { DynamicIcon("icons/find.svg", "icons/find_dark.svg") }
+    val bookmarks by lazy { DynamicIcon("icons/bookmarks.svg", "icons/bookmarks_dark.svg") }
+    val bookmarksOff by lazy { DynamicIcon("icons/bookmarksOff.svg", "icons/bookmarksOff_dark.svg") }
     val keyboard by lazy { DynamicIcon("icons/keyboard.svg", "icons/keyboard_dark.svg") }
     val moreVertical by lazy { DynamicIcon("icons/moreVertical.svg", "icons/moreVertical_dark.svg") }
     val colors by lazy { DynamicIcon("icons/colors.svg", "icons/colors_dark.svg") }
@@ -64,9 +68,12 @@ object Icons {
     val split by lazy { DynamicIcon("icons/split.svg", "icons/split_dark.svg") }
     val setKey by lazy { DynamicIcon("icons/setKey.svg", "icons/setKey_dark.svg") }
     val greyKey by lazy { DynamicIcon("icons/greyKey.svg", "icons/greyKey_dark.svg") }
+    val refresh by lazy { DynamicIcon("icons/refresh.svg", "icons/refresh_dark.svg") }
     val sortedSet by lazy { DynamicIcon("icons/sortedSet.svg", "icons/sortedSet_dark.svg") }
     val colorPicker by lazy { DynamicIcon("icons/colorPicker.svg", "icons/colorPicker_dark.svg") }
     val folder by lazy { DynamicIcon("icons/folder.svg", "icons/folder_dark.svg") }
+    val listFiles by lazy { DynamicIcon("icons/listFiles.svg", "icons/listFiles_dark.svg") }
+    val fileTransfer by lazy { DynamicIcon("icons/fileTransfer.svg", "icons/fileTransfer_dark.svg") }
     val help by lazy { DynamicIcon("icons/help.svg", "icons/help_dark.svg") }
     val expand by lazy { DynamicIcon("icons/expand.svg", "icons/expand_dark.svg") }
     val collapse by lazy { DynamicIcon("icons/collapse.svg", "icons/collapse_dark.svg") }

@@ -5,7 +5,10 @@ import javax.swing.event.TreeModelListener
 import javax.swing.tree.TreeModel
 import javax.swing.tree.TreePath
 
-class SearchableHostTreeModel(private val model: HostTreeModel) : TreeModel {
+class SearchableHostTreeModel(
+    private val model: HostTreeModel,
+    private val filter: (host: Host) -> Boolean = { true }
+) : TreeModel {
     private var text = String()
 
     override fun getRoot(): Any {
@@ -45,7 +48,8 @@ class SearchableHostTreeModel(private val model: HostTreeModel) : TreeModel {
         val children = model.getChildren(parent)
         if (children.isEmpty()) return emptyList()
         return children.filter { e ->
-            e.name.contains(text, true) || TreeUtils.children(model, e, true).filterIsInstance<Host>().any {
+            filter.invoke(e) && e.name.contains(text, true) || TreeUtils.children(model, e, true)
+                .filterIsInstance<Host>().any {
                 it.name.contains(text, true)
             }
         }

@@ -27,6 +27,13 @@ class HostTree : JTree(), Disposable {
     private val hostManager get() = HostManager.instance
     private val editor = OutlineTextField(64)
 
+    var contextmenu = true
+
+    /**
+     * 双击是否打开连接
+     */
+    var doubleClickConnection = true
+
     val model = HostTreeModel()
     val searchableModel = SearchableHostTreeModel(model)
 
@@ -122,7 +129,7 @@ class HostTree : JTree(), Disposable {
             }
 
             override fun mouseClicked(e: MouseEvent) {
-                if (SwingUtilities.isLeftMouseButton(e) && e.clickCount % 2 == 0) {
+                if (doubleClickConnection && SwingUtilities.isLeftMouseButton(e) && e.clickCount % 2 == 0) {
                     val host = lastSelectedPathComponent
                     if (host is Host && host.protocol != Protocol.Folder) {
                         ActionManager.getInstance().getAction(Actions.OPEN_HOST)
@@ -296,6 +303,8 @@ class HostTree : JTree(), Disposable {
     }
 
     private fun showContextMenu(event: MouseEvent) {
+        if (!contextmenu) return
+
         val lastHost = lastSelectedPathComponent
         if (lastHost !is Host) {
             return
@@ -356,7 +365,7 @@ class HostTree : JTree(), Disposable {
         remove.addActionListener {
             if (OptionPane.showConfirmDialog(
                     SwingUtilities.getWindowAncestor(this),
-                    "删除后无法恢复，你确定要删除吗？",
+                    I18n.getString("termora.keymgr.delete-warning"),
                     I18n.getString("termora.remove"),
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.QUESTION_MESSAGE
@@ -512,7 +521,7 @@ class HostTree : JTree(), Disposable {
         collapsePath(TreePath(model.getPathToRoot(node)))
     }
 
-    private fun getSelectionNodes(): List<Host> {
+    fun getSelectionNodes(): List<Host> {
         val selectionNodes = selectionModel.selectionPaths.map { it.lastPathComponent }
             .filterIsInstance<Host>()
 

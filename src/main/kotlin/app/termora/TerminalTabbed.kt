@@ -162,7 +162,7 @@ class TerminalTabbed(
             override fun mouseClicked(e: MouseEvent) {
                 if (SwingUtilities.isLeftMouseButton(e)) {
                     val index = tabbedPane.indexAtLocation(e.x, e.y)
-                    if (index >= 0) {
+                    if (index > 0) {
                         tabbedPane.getComponentAt(index).requestFocusInWindow()
                     }
                 }
@@ -213,6 +213,13 @@ class TerminalTabbed(
     private fun removeTabAt(index: Int, disposable: Boolean = true) {
         if (tabbedPane.isTabClosable(index)) {
             val tab = tabs[index]
+
+            if (disposable) {
+                if (!tab.canClose()) {
+                    return
+                }
+            }
+
             tab.onLostFocus()
             tab.removePropertyChangeListener(iconListener)
 
@@ -244,6 +251,7 @@ class TerminalTabbed(
 
         val popupMenu = FlatPopupMenu()
 
+        // 修改名称
         val rename = popupMenu.add(I18n.getString("termora.tabbed.contextmenu.rename"))
         rename.addActionListener {
             val index = tabbedPane.selectedIndex
@@ -261,6 +269,7 @@ class TerminalTabbed(
 
         }
 
+        // 克隆
         val clone = popupMenu.add(I18n.getString("termora.tabbed.contextmenu.clone"))
         clone.addActionListener {
             val index = tabbedPane.selectedIndex
@@ -272,9 +281,9 @@ class TerminalTabbed(
                         .actionPerformed(OpenHostActionEvent(this, tab.host))
                 }
             }
-
         }
 
+        // 在新窗口中打开
         val openInNewWindow = popupMenu.add(I18n.getString("termora.tabbed.contextmenu.open-in-new-window"))
         openInNewWindow.addActionListener {
             val index = tabbedPane.selectedIndex
@@ -294,11 +303,13 @@ class TerminalTabbed(
 
         popupMenu.addSeparator()
 
+        // 关闭
         val close = popupMenu.add(I18n.getString("termora.tabbed.contextmenu.close"))
         close.addActionListener {
             tabbedPane.tabCloseCallback?.accept(tabbedPane, tabIndex)
         }
 
+        // 关闭其他标签页
         popupMenu.add(I18n.getString("termora.tabbed.contextmenu.close-other-tabs")).addActionListener {
             for (i in tabbedPane.tabCount - 1 downTo tabIndex + 1) {
                 tabbedPane.tabCloseCallback?.accept(tabbedPane, i)
@@ -308,6 +319,7 @@ class TerminalTabbed(
             }
         }
 
+        // 关闭所有标签页
         popupMenu.add(I18n.getString("termora.tabbed.contextmenu.close-all-tabs")).addActionListener {
             for (i in 0 until tabbedPane.tabCount) {
                 tabbedPane.tabCloseCallback?.accept(tabbedPane, tabbedPane.tabCount - 1)
@@ -319,6 +331,11 @@ class TerminalTabbed(
         rename.isEnabled = close.isEnabled
         clone.isEnabled = close.isEnabled
         openInNewWindow.isEnabled = close.isEnabled
+
+        // SFTP不允许克隆
+        if (clone.isEnabled && getSelectedTerminalTab() is SFTPTerminalTab) {
+            clone.isEnabled = false
+        }
 
 
         if (close.isEnabled) {
@@ -398,6 +415,15 @@ class TerminalTabbed(
 
     override fun getTerminalTabs(): List<TerminalTab> {
         return tabs
+    }
+
+    override fun setSelectedTerminalTab(tab: TerminalTab) {
+        for (index in tabs.indices) {
+            if (tabs[index] == tab) {
+                tabbedPane.selectedIndex = index
+                break
+            }
+        }
     }
 
 

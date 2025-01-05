@@ -3,9 +3,9 @@ package app.termora
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.Window
-import javax.swing.BorderFactory
-import javax.swing.JComponent
-import javax.swing.JPanel
+import java.awt.event.WindowAdapter
+import java.awt.event.WindowEvent
+import javax.swing.*
 
 class TerminalTabDialog(
     owner: Window,
@@ -19,10 +19,20 @@ class TerminalTabDialog(
         isAlwaysOnTop = false
         iconImages = owner.iconImages
         escapeDispose = false
-        
+
         super.setSize(size)
 
         init()
+
+        defaultCloseOperation = WindowConstants.DO_NOTHING_ON_CLOSE
+        addWindowListener(object : WindowAdapter() {
+            override fun windowClosing(e: WindowEvent) {
+                if (terminalTab.canClose()) {
+                    SwingUtilities.invokeLater { doCancelAction() }
+                }
+            }
+        })
+
         setLocationRelativeTo(null)
     }
 

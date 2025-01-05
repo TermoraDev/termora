@@ -39,6 +39,7 @@ bip39 = "1.0.8"
 colorpicker = "2.0.1"
 rhino = "1.7.15"
 delight-rhino-sandbox = "0.0.17"
+testcontainers = "1.20.4"
 
 [libraries]
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
@@ -57,6 +58,8 @@ flatlaf = { group = "com.formdev", name = "flatlaf", version.ref = "flatlaf" }
 flatlaf-extras = { group = "com.formdev", name = "flatlaf-extras", version.ref = "flatlaf" }
 trove4j = { group = "org.jetbrains.intellij.deps", name = "trove4j", version.ref = "trove4j" }
 koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-bom" }
+testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
+testcontainers = { module = "org.testcontainers:testcontainers" }
 koin-core = { module = "io.insert-koin:koin-core" }
 swingx = { module = "org.swinglabs.swingx:swingx-all", version.ref = "swingx" }
 jgoodies-forms = { module = "com.jgoodies:jgoodies-forms", version.ref = "jgoodies-forms" }
