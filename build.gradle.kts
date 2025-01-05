@@ -136,6 +136,8 @@ tasks.register<Exec>("jlink") {
 }
 
 tasks.register<Exec>("jpackage") {
+    dependsOn("jlink", "jar", "copy-dependencies")
+
     val buildDir = layout.buildDirectory.get()
     val options = mutableListOf(
         "--add-exports java.base/sun.nio.ch=ALL-UNNAMED",
@@ -195,66 +197,54 @@ tasks.register<Exec>("jpackage") {
     }
 
     commandLine(arguments)
-
 }
 
-tasks.register("dist") {
-    doLast {
-        val vendor = Jvm.current().vendor ?: StringUtils.EMPTY
-        @Suppress("UnstableApiUsage")
-        if (!JvmVendorSpec.JETBRAINS.matches(vendor)) {
-            throw GradleException("JVM: $vendor is not supported")
-        }
-
-        val distributionDir = layout.buildDirectory.dir("distributions").get()
-        val gradlew = File(projectDir, if (os.isWindows) "gradlew.bat" else "gradlew").absolutePath
-
+tasks.register<Exec>("dist") {
+    dependsOn(
         // 清空目录
-        exec { commandLine(gradlew, "clean") }
-
-        // 打包并复制依赖
-        exec { commandLine(gradlew, "jar", "copy-dependencies") }
-
+        "clean",
         // 检查依赖的开源协议
-        exec { commandLine(gradlew, "check-license") }
-
-        // jlink
-        exec { commandLine(gradlew, "jlink") }
-
+        "check-license",
         // 打包
-        exec { commandLine(gradlew, "jpackage") }
+        "jpackage"
+    )
 
-        // pack
-        exec {
-            if (os.isWindows) { // zip
-                commandLine(
-                    "tar", "-vacf",
-                    distributionDir.file("${project.name}-${project.version}-windows-${arch.name}.zip").asFile.absolutePath,
-                    project.name.uppercaseFirstChar()
-                )
-                workingDir = layout.buildDirectory.dir("jpackage/images/win-msi.image/").get().asFile
-            } else if (os.isLinux) { // tar.gz
-                commandLine(
-                    "tar", "-czvf",
-                    distributionDir.file("${project.name}-${project.version}-linux-${arch.name}.tar.gz").asFile.absolutePath,
-                    project.name.uppercaseFirstChar()
-                )
-                workingDir = distributionDir.asFile
-            } else if (os.isMacOsX) { // rename
-                commandLine(
-                    "mv",
-                    distributionDir.file("${project.name.uppercaseFirstChar()}-${project.version}.dmg").asFile.absolutePath,
-                    distributionDir.file("${project.name}-${project.version}-osx-${arch.name}.dmg").asFile.absolutePath,
-                )
-            } else {
-                throw GradleException("${os.name} is not supported")
-            }
-        }
+    val vendor = Jvm.current().vendor ?: StringUtils.EMPTY
+    @Suppress("UnstableApiUsage")
+    if (!JvmVendorSpec.JETBRAINS.matches(vendor)) {
+        logger.warn("JVM: $vendor is not supported, suggest using JetBrains Runtime")
+    }
+
+    val distributionDir = layout.buildDirectory.dir("distributions").get()
+
+    // pack
+    if (os.isWindows) { // zip
+        commandLine(
+            "tar", "-vacf",
+            distributionDir.file("${project.name}-${project.version}-windows-${arch.name}.zip").asFile.absolutePath,
+            project.name.uppercaseFirstChar()
+        )
+        workingDir = layout.buildDirectory.dir("jpackage/images/win-msi.image/").get().asFile
+    } else if (os.isLinux) { // tar.gz
+        commandLine(
+            "tar", "-czvf",
+            distributionDir.file("${project.name}-${project.version}-linux-${arch.name}.tar.gz").asFile.absolutePath,
+            project.name.uppercaseFirstChar()
+        )
+        workingDir = distributionDir.asFile
+    } else if (os.isMacOsX) { // rename
+        commandLine(
+            "mv",
+            distributionDir.file("${project.name.uppercaseFirstChar()}-${project.version}.dmg").asFile.absolutePath,
+            distributionDir.file("${project.name}-${project.version}-osx-${arch.name}.dmg").asFile.absolutePath,
+        )
+    } else {
+        throw GradleException("${os.name} is not supported")
     }
 }
 
 tasks.register("check-license") {
-    doLast {
+    actions.add {
         val thirdParty = mutableMapOf<String, String>()
         val iterator = File(projectDir, "THIRDPARTY").readLines().iterator()
         val thirdPartyNames = mutableSetOf<String>()
