@@ -2,6 +2,8 @@ package app.termora
 
 import app.termora.keymgr.KeyManagerDialog
 import app.termora.keymgr.OhKeyPair
+import app.termora.localshell.LocalShellDetect
+import app.termora.localshell.LocalShellProvider
 import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.extras.components.FlatComboBox
 import com.formdev.flatlaf.ui.FlatTextBorder
@@ -17,9 +19,9 @@ import javax.swing.table.DefaultTableModel
 
 open class HostOptionsPane : OptionsPane() {
     protected val tunnelingOption = TunnelingOption()
+    protected val terminalOption = TerminalOption()
     protected val generalOption = GeneralOption()
     protected val proxyOption = ProxyOption()
-    protected val terminalOption = TerminalOption()
     protected val owner: Window? get() = SwingUtilities.getWindowAncestor(this)
 
     init {
@@ -64,9 +66,29 @@ open class HostOptionsPane : OptionsPane() {
             )
         }
 
+        val localShell = when (val v = terminalOption.localShellProviderComboBox.selectedItem) {
+            LocalShellProvider.FollowGlobal -> null
+            is LocalShellProvider.CustomCommandLineArgs -> {
+                v.localShell.id.asIdentificationString()
+            }
+
+            is LocalShellProvider.Specify -> {
+                v.localShell.id.asIdentificationString()
+            }
+
+            is String -> {
+                LocalShellProvider.CustomCommandLineArgs(CommandLineArgs.of(v)).localShell.id.asIdentificationString()
+            }
+
+            else -> {
+                null
+            }
+        }
+
         val options = Options.Default.copy(
             encoding = terminalOption.charsetComboBox.selectedItem as String,
             env = terminalOption.environmentTextArea.text,
+            localShell = localShell,
             startupCommand = terminalOption.startupCommandTextField.text,
             heartbeatInterval = (terminalOption.heartbeatIntervalTextField.value ?: 30) as Int,
         )
@@ -98,6 +120,10 @@ open class HostOptionsPane : OptionsPane() {
 
         if (host.protocol == Protocol.SSH) {
             if (validateField(generalOption.usernameTextField)) {
+                return false
+            }
+        } else if (host.protocol == Protocol.Local) {
+            if (validateField(terminalOption.localShellProviderComboBox)) {
                 return false
             }
         }
@@ -140,6 +166,19 @@ open class HostOptionsPane : OptionsPane() {
             selectOptionJComponent(textField)
             textField.putClientProperty(FlatClientProperties.OUTLINE, FlatClientProperties.OUTLINE_ERROR)
             textField.requestFocusInWindow()
+            return true
+        }
+        return false
+    }
+
+    /**
+     * 返回 true 表示有错误
+     */
+    private fun validateField(comboBox: FlatComboBox<*>): Boolean {
+        if (comboBox.isEnabled && comboBox.selectedItem == null || comboBox.selectedItem == "") {
+            selectOptionJComponent(comboBox)
+            comboBox.putClientProperty(FlatClientProperties.OUTLINE, FlatClientProperties.OUTLINE_ERROR)
+            comboBox.requestFocusInWindow()
             return true
         }
         return false
@@ -282,6 +321,7 @@ open class HostOptionsPane : OptionsPane() {
             authenticationTypeComboBox.isEnabled = true
             passwordTextField.isEnabled = true
             chooseKeyBtn.isEnabled = true
+            terminalOption.localShellProviderComboBox.isEnabled = false
 
             if (protocolTypeComboBox.selectedItem == Protocol.Local) {
                 hostTextField.isEnabled = false
@@ -290,6 +330,7 @@ open class HostOptionsPane : OptionsPane() {
                 authenticationTypeComboBox.isEnabled = false
                 passwordTextField.isEnabled = false
                 chooseKeyBtn.isEnabled = false
+                terminalOption.localShellProviderComboBox.isEnabled = true
             }
 
         }
@@ -511,6 +552,7 @@ open class HostOptionsPane : OptionsPane() {
         val startupCommandTextField = OutlineTextField()
         val heartbeatIntervalTextField = IntSpinner(30, minimum = 3, maximum = Int.MAX_VALUE)
         val environmentTextArea = FixedLengthTextArea(2048)
+        val localShellProviderComboBox = FlatComboBox<LocalShellProvider>()
 
 
         init {
@@ -543,10 +585,52 @@ open class HostOptionsPane : OptionsPane() {
 
             charsetComboBox.selectedItem = "UTF-8"
 
+            localShellProviderComboBox.renderer = object : DefaultListCellRenderer() {
+                override fun getListCellRendererComponent(list: JList<*>?, value: Any?, index: Int, isSelected: Boolean, cellHasFocus: Boolean): Component? {
+                    val text = when (value) {
+                        LocalShellProvider.FollowGlobal -> {
+                            I18n.getString("termora.new-host.terminal.local-shell-provider-follow-global")
+                        }
+
+                        LocalShellProvider.EmptyCustomCommandLineArgs -> {
+                            I18n.getString("termora.new-host.terminal.local-shell-provider-custom-command-line")
+                        }
+
+                        is LocalShellProvider.Specify -> {
+                            value.localShell.toString()
+                        }
+
+                        else -> value.toString()
+                    }
+                    return super.getListCellRendererComponent(list, text, index, isSelected, cellHasFocus)
+                }
+            }
+
+            localShellProviderComboBox.addItem(LocalShellProvider.FollowGlobal)
+            LocalShellDetect.getSupportAllLocalShell().forEach { localShellProviderComboBox.addItem(it.provider) }
+            localShellProviderComboBox.addItem(LocalShellProvider.EmptyCustomCommandLineArgs)
         }
 
         private fun initEvents() {
+            localShellProviderComboBox.addItemListener {
+                if (it.stateChange == ItemEvent.SELECTED) {
+                    when (localShellProviderComboBox.selectedItem) {
+                        LocalShellProvider.EmptyCustomCommandLineArgs -> {
+                            // 选择了自定义命令行
+                            localShellProviderComboBox.isEditable = true
+                            localShellProviderComboBox.selectedItem = ""
+                        }
 
+                        is String -> {
+                        }
+
+                        LocalShellProvider.FollowGlobal,
+                        is LocalShellProvider.Specify -> {
+                            localShellProviderComboBox.isEditable = false
+                        }
+                    }
+                }
+            }
         }
 
 
@@ -565,7 +649,7 @@ open class HostOptionsPane : OptionsPane() {
         private fun getCenterComponent(): JComponent {
             val layout = FormLayout(
                 "left:pref, $formMargin, default:grow, $formMargin, default:grow",
-                "pref, $formMargin, pref, $formMargin, pref, $formMargin, pref"
+                "pref, $formMargin, pref, $formMargin, pref, $formMargin, pref, $formMargin, pref"
             )
 
             var rows = 1
@@ -575,6 +659,8 @@ open class HostOptionsPane : OptionsPane() {
                 .add(charsetComboBox).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.new-host.terminal.heartbeat-interval")}:").xy(1, rows)
                 .add(heartbeatIntervalTextField).xy(3, rows).apply { rows += step }
+                .add("${I18n.getString("termora.new-host.terminal.local-shell-provider")}:").xy(1, rows)
+                .add(localShellProviderComboBox).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.new-host.terminal.startup-commands")}:").xy(1, rows)
                 .add(startupCommandTextField).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.new-host.terminal.env")}:").xy(1, rows)

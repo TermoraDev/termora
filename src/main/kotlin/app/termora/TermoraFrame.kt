@@ -3,6 +3,7 @@ package app.termora
 import app.termora.findeverywhere.FindEverywhere
 import app.termora.highlight.KeywordHighlightDialog
 import app.termora.keymgr.KeyManagerDialog
+import app.termora.localshell.LocalShellDetect
 import app.termora.macro.MacroAction
 import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.FlatLaf
@@ -163,6 +164,15 @@ class TermoraFrame : JFrame() {
 
         // dispose
         addWindowListener(object : WindowAdapter() {
+            override fun windowOpened(e: WindowEvent?) {
+                removeWindowListener(this)
+                @OptIn(DelicateCoroutinesApi::class)
+                GlobalScope.launch {
+                    // 这里调用一次, 触发初始化
+                    LocalShellDetect.getSupportAllLocalShell()
+                }
+            }
+
             override fun windowClosed(e: WindowEvent) {
 
                 Disposer.dispose(disposable)
