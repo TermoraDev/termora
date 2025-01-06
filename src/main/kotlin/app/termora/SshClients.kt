@@ -20,6 +20,7 @@ import java.net.InetSocketAddress
 import java.net.Proxy
 import java.time.Duration
 import kotlin.math.max
+import org.apache.sshd.client.config.hosts.HostConfigEntryResolver
 
 object SshClients {
     private val timeout = Duration.ofSeconds(30)
@@ -82,6 +83,8 @@ object SshClients {
         } else {
             builder.forwardingFilter(AcceptAllForwardingFilter.INSTANCE)
         }
+
+        builder.hostConfigEntryResolver(HostConfigEntryResolver.EMPTY)
 
         val sshClient = builder.build() as JGitSshClient
         val heartbeatInterval = max(host.options.heartbeatInterval, 3)
