@@ -143,6 +143,8 @@ class TermoraFrame : JFrame() {
                             .actionPerformed(ActionEvent(rootPane, ActionEvent.ACTION_PERFORMED, StringUtils.EMPTY))
                     }
                     lastTime = now
+                } else if (e.keyCode != KeyEvent.VK_SHIFT) { // 如果不是 Shift 键，那么就阻断了连续性，重置时间
+                    lastTime = -1
                 }
                 return false
             }

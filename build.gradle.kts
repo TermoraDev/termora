@@ -139,7 +139,6 @@ tasks.register<Exec>("jpackage") {
     val buildDir = layout.buildDirectory.get()
     val options = mutableListOf(
         "--add-exports java.base/sun.nio.ch=ALL-UNNAMED",
-        "-XX:+UseZGC", "-XX:+ZGenerational", "-XX:ZUncommit", "-XX:ZUncommitDelay=60",
         "-Xmx2g",
         "-XX:+HeapDumpOnOutOfMemoryError",
         "-Dlogger.console.level=off",
