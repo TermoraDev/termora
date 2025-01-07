@@ -1,9 +1,6 @@
 package app.termora
 
-import app.termora.terminal.ControlCharacters
-import app.termora.terminal.PtyConnector
-import app.termora.terminal.PtyConnectorDelegate
-import app.termora.terminal.TerminalKeyEvent
+import app.termora.terminal.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.swing.Swing
 import org.apache.commons.lang3.exception.ExceptionUtils
@@ -12,7 +9,11 @@ import java.awt.event.KeyEvent
 import javax.swing.JComponent
 import kotlin.time.Duration.Companion.milliseconds
 
-abstract class PtyHostTerminalTab(host: Host) : HostTerminalTab(host) {
+abstract class PtyHostTerminalTab(
+    host: Host,
+    terminal: Terminal = TerminalFactory.instance.createTerminal()
+) : HostTerminalTab(host, terminal) {
+
     companion object {
         private val log = LoggerFactory.getLogger(PtyHostTerminalTab::class.java)
     }

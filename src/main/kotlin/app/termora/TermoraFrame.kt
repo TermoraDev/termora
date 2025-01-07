@@ -4,6 +4,7 @@ import app.termora.findeverywhere.FindEverywhere
 import app.termora.highlight.KeywordHighlightDialog
 import app.termora.keymgr.KeyManagerDialog
 import app.termora.macro.MacroAction
+import app.termora.tlog.TerminalLoggerAction
 import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.FlatLaf
 import com.formdev.flatlaf.extras.FlatDesktop
@@ -232,6 +233,9 @@ class TermoraFrame : JFrame() {
                 showUpdateDialog()
             }
         })
+
+        // 终端日志记录
+        ActionManager.getInstance().addAction(Actions.TERMINAL_LOGGER, TerminalLoggerAction())
 
         // macro
         ActionManager.getInstance().addAction(Actions.MACRO, MacroAction())

@@ -8,9 +8,15 @@ import kotlinx.coroutines.swing.Swing
 import java.beans.PropertyChangeEvent
 import javax.swing.Icon
 
-abstract class HostTerminalTab(val host: Host) : PropertyTerminalTab() {
+abstract class HostTerminalTab(
+    val host: Host,
+    protected val terminal: Terminal = TerminalFactory.instance.createTerminal()
+) : PropertyTerminalTab() {
+    companion object {
+        val Host = DataKey(app.termora.Host::class)
+    }
+
     protected val coroutineScope by lazy { CoroutineScope(Dispatchers.Swing) }
-    protected val terminal = TerminalFactory.instance.createTerminal()
     protected val terminalModel get() = terminal.getTerminalModel()
     protected var unread = false
         set(value) {
@@ -25,6 +31,7 @@ abstract class HostTerminalTab(val host: Host) : PropertyTerminalTab() {
     }
 
     init {
+        terminal.getTerminalModel().setData(Host, host)
         terminal.getTerminalModel().addDataListener(object : DataListener {
             override fun onChanged(key: DataKey<*>, data: Any) {
                 if (key == VisualTerminal.Written) {
@@ -51,6 +58,7 @@ abstract class HostTerminalTab(val host: Host) : PropertyTerminalTab() {
     }
 
     override fun dispose() {
+        terminal.close()
         coroutineScope.cancel()
     }
 

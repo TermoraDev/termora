@@ -3,6 +3,7 @@ package app.termora
 import app.termora.db.Database
 import app.termora.terminal.*
 import app.termora.terminal.panel.TerminalPanel
+import app.termora.tlog.TerminalLoggerDataListener
 import java.awt.Color
 import javax.swing.UIManager
 
@@ -15,6 +16,10 @@ class TerminalFactory {
 
     fun createTerminal(): Terminal {
         val terminal = MyVisualTerminal()
+
+        // terminal logger listener
+        terminal.getTerminalModel().addDataListener(TerminalLoggerDataListener(terminal))
+
         terminals.add(terminal)
         return terminal
     }
@@ -23,7 +28,7 @@ class TerminalFactory {
         return terminals
     }
 
-    private inner class MyVisualTerminal : VisualTerminal() {
+    open class MyVisualTerminal : VisualTerminal() {
         private val terminalModel by lazy { MyTerminalModel(this) }
 
         override fun getTerminalModel(): TerminalModel {
@@ -31,13 +36,13 @@ class TerminalFactory {
         }
     }
 
-    private inner class MyTerminalModel(terminal: Terminal) : TerminalModelImpl(terminal) {
+    open class MyTerminalModel(terminal: Terminal) : TerminalModelImpl(terminal) {
         private val colorPalette by lazy { MyColorPalette(terminal) }
         private val config get() = Database.instance.terminal
 
         init {
-            setData(DataKey.CursorStyle, config.cursor)
-            setData(TerminalPanel.Debug, config.debug)
+            this.setData(DataKey.CursorStyle, config.cursor)
+            this.setData(TerminalPanel.Debug, config.debug)
         }
 
         override fun getColorPalette(): ColorPalette {
@@ -97,7 +102,7 @@ class TerminalFactory {
 
     }
 
-    private inner class MyColorPalette(terminal: Terminal) : ColorPaletteImpl(terminal) {
+    class MyColorPalette(terminal: Terminal) : ColorPaletteImpl(terminal) {
         private val colorTheme by lazy { FlatLafColorTheme() }
         override fun getTheme(): ColorTheme {
             return colorTheme

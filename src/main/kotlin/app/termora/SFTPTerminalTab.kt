@@ -34,6 +34,9 @@ class SFTPTerminalTab : Disposable, TerminalTab {
         return transportPanel
     }
 
+    override fun canClone(): Boolean {
+        return false
+    }
 
     override fun canClose(): Boolean {
         assertEventDispatchThread()

@@ -14,6 +14,7 @@ object Icons {
     val settings by lazy { DynamicIcon("icons/settings.svg", "icons/settings_dark.svg") }
     val pin by lazy { DynamicIcon("icons/pin.svg", "icons/pin_dark.svg") }
     val empty by lazy { DynamicIcon("icons/empty.svg") }
+    val changelog by lazy { DynamicIcon("icons/changelog.svg", "icons/changelog_dark.svg") }
     val add by lazy { DynamicIcon("icons/add.svg", "icons/add_dark.svg") }
     val errorIntroduction by lazy { DynamicIcon("icons/errorIntroduction.svg", "icons/errorIntroduction_dark.svg") }
     val networkPolicy by lazy { DynamicIcon("icons/networkPolicy.svg", "icons/networkPolicy_dark.svg") }
@@ -47,11 +48,11 @@ object Icons {
     val google by lazy { DynamicIcon("icons/google-small.svg") }
     val aliyun by lazy { DynamicIcon("icons/aliyun.svg") }
     val yandexCloud by lazy { DynamicIcon("icons/yandexCloud.svg") }
-    val aws by lazy { DynamicIcon("icons/aws.svg","icons/aws_dark.svg") }
+    val aws by lazy { DynamicIcon("icons/aws.svg", "icons/aws_dark.svg") }
     val huawei by lazy { DynamicIcon("icons/huawei.svg") }
     val baidu by lazy { DynamicIcon("icons/baiduyun.svg") }
     val tianyi by lazy { DynamicIcon("icons/tianyiyun.svg") }
-    val digitalocean by lazy { DynamicIcon("icons/digitalocean.svg","icons/digitalocean_dark.svg") }
+    val digitalocean by lazy { DynamicIcon("icons/digitalocean.svg", "icons/digitalocean_dark.svg") }
     val terminalUnread by lazy { DynamicIcon("icons/terminalUnread.svg", "icons/terminalUnread_dark.svg") }
     val dbPrimitive by lazy { DynamicIcon("icons/dbPrimitive.svg", "icons/dbPrimitive_dark.svg") }
     val linux by lazy { DynamicIcon("icons/linux.svg", "icons/linux_dark.svg") }
@@ -73,6 +74,7 @@ object Icons {
     val colorPicker by lazy { DynamicIcon("icons/colorPicker.svg", "icons/colorPicker_dark.svg") }
     val folder by lazy { DynamicIcon("icons/folder.svg", "icons/folder_dark.svg") }
     val listFiles by lazy { DynamicIcon("icons/listFiles.svg", "icons/listFiles_dark.svg") }
+    val dotListFiles by lazy { DynamicIcon("icons/dotListFiles.svg", "icons/dotListFiles_dark.svg") }
     val fileTransfer by lazy { DynamicIcon("icons/fileTransfer.svg", "icons/fileTransfer_dark.svg") }
     val help by lazy { DynamicIcon("icons/help.svg", "icons/help_dark.svg") }
     val expand by lazy { DynamicIcon("icons/expand.svg", "icons/expand_dark.svg") }
