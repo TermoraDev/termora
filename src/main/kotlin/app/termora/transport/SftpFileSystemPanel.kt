@@ -1,6 +1,7 @@
 package app.termora.transport
 
 import app.termora.*
+import app.termora.keyboardinteractive.TerminalUserInteraction
 import com.formdev.flatlaf.icons.FlatOptionPaneErrorIcon
 import com.formdev.flatlaf.icons.FlatOptionPaneInformationIcon
 import com.jgoodies.forms.builder.FormBuilder
@@ -113,6 +114,10 @@ class SftpFileSystemPanel(
 
         try {
             val client = SshClients.openClient(host).apply { client = this }
+            withContext(Dispatchers.Swing) {
+                client.userInteraction =
+                    TerminalUserInteraction(SwingUtilities.getWindowAncestor(this@SftpFileSystemPanel))
+            }
             val session = SshClients.openSession(host, client).apply { session = this }
             fileSystem = SftpClientFactory.instance().createSftpFileSystem(session)
             session.addCloseFutureListener { onClose() }

@@ -61,6 +61,10 @@ abstract class PtyHostTerminalTab(
                 if (log.isErrorEnabled) {
                     log.error(e.message, e)
                 }
+
+                // 失败关闭
+                stop()
+
                 withContext(Dispatchers.Swing) {
                     terminal.write("\r\n${ControlCharacters.ESC}[31m")
                     terminal.write(ExceptionUtils.getRootCauseMessage(e))

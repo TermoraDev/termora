@@ -1,6 +1,7 @@
 package app.termora
 
 import app.termora.addons.zmodem.ZModemPtyConnectorAdaptor
+import app.termora.keyboardinteractive.TerminalUserInteraction
 import app.termora.terminal.ControlCharacters
 import app.termora.terminal.DataKey
 import app.termora.terminal.PtyConnector
@@ -24,6 +25,7 @@ import org.apache.sshd.common.util.net.SshdSocketAddress
 import org.slf4j.LoggerFactory
 import java.nio.charset.StandardCharsets
 import javax.swing.JComponent
+import javax.swing.SwingUtilities
 
 
 class SSHTerminalTab(host: Host) : PtyHostTerminalTab(host) {
@@ -76,6 +78,9 @@ class SSHTerminalTab(host: Host) : PtyHostTerminalTab(host) {
         }
 
         val client = SshClients.openClient(host).also { sshClient = it }
+        // keyboard interactive
+        client.userInteraction = TerminalUserInteraction(SwingUtilities.getWindowAncestor(terminalPanel))
+
         val sessionListener = MySessionListener()
         val channelListener = MyChannelListener()
 

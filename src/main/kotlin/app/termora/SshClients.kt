@@ -64,9 +64,12 @@ object SshClients {
         } else if (host.authentication.type == AuthenticationType.PublicKey) {
             session.keyIdentityProvider = OhKeyPairKeyPairProvider(host.authentication.password)
         }
-        if (!session.auth().verify(timeout).await(timeout)) {
+
+        val verifyTimeout = Duration.ofSeconds(timeout.seconds * 5)
+        if (!session.auth().verify(verifyTimeout).await(verifyTimeout)) {
             throw SshException("Authentication failed")
         }
+
         return session
     }
 
