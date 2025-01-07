@@ -1,6 +1,9 @@
 package app.termora.terminal
 
+import org.apache.commons.codec.binary.Base64
 import org.slf4j.LoggerFactory
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
 
 class OperatingSystemCommandProcessor(terminal: Terminal, reader: TerminalReader) :
     AbstractProcessor(terminal, reader) {
@@ -93,6 +96,25 @@ class OperatingSystemCommandProcessor(terminal: Terminal, reader: TerminalReader
             11, 10 -> {
                 val terminalColor = if (mode == 10) TerminalColor.Normal.WHITE else TerminalColor.Normal.BLACK
                 replyColor(mode, terminalColor)
+            }
+
+            // Ps = 5 2  ⇒  Manipulate Selection Data.  These controls may be disabled using the allowWindowOps resource.  The parameter Pt is parsed as
+            52 -> {
+                val pair = suffix.split(";", limit = 2).let {
+                    Pair(it.first(), it.last())
+                }
+
+                // base64
+                if (pair.first == "c") {
+                    val text = String(Base64.decodeBase64(pair.second))
+                    Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(text), null)
+                    if (log.isDebugEnabled) {
+                        log.debug("Copy {} to clipboard", text)
+                    }
+                } else if (log.isWarnEnabled) {
+                    log.warn("Manipulate Selection Data. Unknown: {}", pair)
+                }
+
             }
 
             else -> {
