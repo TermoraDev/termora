@@ -15,6 +15,24 @@ class QuickCommandFindEverywhereProvider : FindEverywhereProvider {
             list.add(CreateHostFindEverywhereResult())
         }
 
+        // Local terminal
+        list.add(ActionFindEverywhereResult(object : AnAction(
+            I18n.getString("termora.find-everywhere.quick-command.local-terminal"),
+            Icons.terminal
+        ) {
+            override fun actionPerformed(evt: ActionEvent) {
+                ActionManager.getInstance().getAction(Actions.OPEN_HOST)
+                    ?.actionPerformed(
+                        OpenHostActionEvent(
+                            this, Host(
+                                name = name,
+                                protocol = Protocol.Local
+                            )
+                        )
+                    )
+            }
+        }))
+
         // SFTP
         list.add(ActionFindEverywhereResult(object : AnAction("SFTP", Icons.fileTransfer) {
             override fun actionPerformed(evt: ActionEvent) {
