@@ -42,5 +42,10 @@ interface TerminalTab : Disposable {
      */
     fun canClose(): Boolean = true
 
+    /**
+     * 是否可以克隆
+     */
+    fun canClone(): Boolean = true
+
 
 }

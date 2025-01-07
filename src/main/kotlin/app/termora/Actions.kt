@@ -47,4 +47,9 @@ object Actions {
      * 打开一个主机
      */
     const val OPEN_HOST = "OpenHostAction"
+
+    /**
+     * 终端日志记录
+     */
+    const val TERMINAL_LOGGER = "TerminalLogAction"
 }

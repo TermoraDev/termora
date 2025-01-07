@@ -71,6 +71,7 @@ class TerminalTabbed(
         }))
         toolbar.add(Box.createHorizontalStrut(UIManager.getInt("TabbedPane.tabHeight")))
         toolbar.add(Box.createHorizontalGlue())
+        toolbar.add(actionContainerFactory.createButton(actionManager.getAction(Actions.TERMINAL_LOGGER)))
         toolbar.add(actionContainerFactory.createButton(actionManager.getAction(Actions.MACRO)))
         toolbar.add(actionContainerFactory.createButton(actionManager.getAction(Actions.KEYWORD_HIGHLIGHT_EVERYWHERE)))
         toolbar.add(actionContainerFactory.createButton(actionManager.getAction(Actions.KEY_MANAGER)))
@@ -248,6 +249,7 @@ class TerminalTabbed(
 
     private fun showContextMenu(tabIndex: Int, e: MouseEvent) {
         val c = tabbedPane.getComponentAt(tabIndex) as JComponent
+        val tab = tabs[tabIndex]
 
         val popupMenu = FlatPopupMenu()
 
@@ -288,7 +290,6 @@ class TerminalTabbed(
         openInNewWindow.addActionListener {
             val index = tabbedPane.selectedIndex
             if (index > 0) {
-                val tab = tabs[index]
                 removeTabAt(index, false)
                 val dialog = TerminalTabDialog(
                     owner = SwingUtilities.getWindowAncestor(this),
@@ -332,11 +333,10 @@ class TerminalTabbed(
         clone.isEnabled = close.isEnabled
         openInNewWindow.isEnabled = close.isEnabled
 
-        // SFTP不允许克隆
-        if (clone.isEnabled && getSelectedTerminalTab() is SFTPTerminalTab) {
+        // 如果不允许克隆
+        if (clone.isEnabled && !tab.canClone()) {
             clone.isEnabled = false
         }
-
 
         if (close.isEnabled) {
             popupMenu.addSeparator()

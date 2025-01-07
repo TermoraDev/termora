@@ -3,8 +3,8 @@ package app.termora.native
 import app.termora.native.osx.DispatchNative
 import com.formdev.flatlaf.util.SystemInfo
 import de.jangassen.jfa.foundation.Foundation
-import de.jangassen.jfa.foundation.Foundation.NSArray
 import jnafilechooser.api.JnaFileChooser
+import org.apache.commons.lang3.StringUtils
 import java.awt.Window
 import java.io.File
 import java.util.concurrent.CompletableFuture
@@ -17,6 +17,12 @@ class FileChooser {
     var allowsOtherFileTypes = true
     var canCreateDirectories = true
     var win32Filters = mutableListOf<Pair<String, List<String>>>()
+    var osxAllowedFileTypes = emptyList<String>()
+
+    /**
+     * 默认的打开目录
+     */
+    var defaultDirectory = StringUtils.EMPTY
 
     fun showOpenDialog(owner: Window? = null): CompletableFuture<List<File>> {
         val future = CompletableFuture<List<File>>()
@@ -26,6 +32,17 @@ class FileChooser {
             val fileChooser = JnaFileChooser()
             fileChooser.isMultiSelectionEnabled = allowsMultiSelection
             fileChooser.setTitle(title)
+
+            if (defaultDirectory.isNotBlank()) {
+                fileChooser.setCurrentDirectory(defaultDirectory)
+            }
+
+            if (win32Filters.isNotEmpty()) {
+                for ((name, filters) in win32Filters) {
+                    fileChooser.addFilter(name, *filters.toTypedArray())
+                }
+            }
+
             if (fileChooser.showOpenDialog(owner)) {
                 future.complete(fileChooser.selectedFiles.toList())
             } else {
@@ -91,6 +108,27 @@ class FileChooser {
                     // 是否允许多选
                     Foundation.invoke(openPanelInstance, "setAllowsMultipleSelection:", allowsMultiSelection)
 
+                    // 限制文件类型
+                    if (osxAllowedFileTypes.isNotEmpty()) {
+                        Foundation.invoke(
+                            openPanelInstance,
+                            "setAllowedFileTypes:",
+                            Foundation.fillArray(osxAllowedFileTypes.toTypedArray())
+                        )
+                    }
+
+                    if (defaultDirectory.isNotBlank()) {
+                        Foundation.invoke(
+                            openPanelInstance,
+                            "setDirectoryURL:",
+                            Foundation.invoke(
+                                "NSURL",
+                                "fileURLWithPath:",
+                                Foundation.nsString(defaultDirectory)
+                            )
+                        )
+                    }
+
                     // 标题
                     if (title.isNotBlank()) {
                         Foundation.invoke(openPanelInstance, "setTitle:", Foundation.nsString(title))
@@ -103,7 +141,7 @@ class FileChooser {
                     }
 
                     val files = mutableListOf<File>()
-                    val urls = NSArray(Foundation.invoke(openPanelInstance, "URLs"))
+                    val urls = Foundation.NSArray(Foundation.invoke(openPanelInstance, "URLs"))
                     for (i in 0 until urls.count()) {
                         val url = Foundation.invoke(urls.at(i), "path")
                         if (url != null) {

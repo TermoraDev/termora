@@ -6,6 +6,7 @@ import com.formdev.flatlaf.util.SystemInfo
 import com.jetbrains.JBR
 import kotlinx.coroutines.*
 import kotlinx.coroutines.swing.Swing
+import org.apache.commons.lang3.StringUtils
 import org.jdesktop.swingx.JXLabel
 import java.awt.BorderLayout
 import java.awt.Component
@@ -122,7 +123,7 @@ object OptionPane {
         if (Desktop.isDesktopSupported() && Desktop.getDesktop()
                 .isSupported(Desktop.Action.BROWSE_FILE_DIR)
         ) {
-            if (JOptionPane.YES_OPTION == showConfirmDialog(
+            if (yMessage.isEmpty() || JOptionPane.YES_OPTION == showConfirmDialog(
                     parentComponent,
                     yMessage,
                     optionType = JOptionPane.YES_NO_OPTION
