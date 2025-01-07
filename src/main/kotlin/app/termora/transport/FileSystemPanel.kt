@@ -613,7 +613,7 @@ class FileSystemPanel(
 
     private fun deleteRecursively(path: Path, rm: Boolean) {
         if (path.fileSystem == FileSystems.getDefault()) {
-            FileUtils.deleteDirectory(path.toFile())
+            FileUtils.deleteQuietly(path.toFile())
         } else if (path.fileSystem is SftpFileSystem) {
             val fs = path.fileSystem as SftpFileSystem
             if (rm) {
