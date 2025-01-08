@@ -872,6 +872,8 @@ class SettingsOptionsPane : OptionsPane() {
             var rows = 1
             val step = 2
 
+            val branch = if (Application.isUnknownVersion()) "main" else Application.getVersion()
+
             return FormBuilder.create().padding("$formMargin, $formMargin, $formMargin, $formMargin")
                 .layout(layout).debug(true)
                 .add(I18n.getString("termora.settings.about.termora", Application.getVersion()))
@@ -881,7 +883,7 @@ class SettingsOptionsPane : OptionsPane() {
                 .add("${I18n.getString("termora.settings.about.source")}:").xy(1, rows)
                 .add(
                     createHyperlink(
-                        "https://github.com/TermoraDev/termora/tree/${Application.getVersion()}",
+                        "https://github.com/TermoraDev/termora/tree/${branch}",
                         "https://github.com/TermoraDev/termora",
                     )
                 ).xy(3, rows).apply { rows += step }
@@ -890,7 +892,7 @@ class SettingsOptionsPane : OptionsPane() {
                 .add("${I18n.getString("termora.settings.about.third-party")}:").xy(1, rows)
                 .add(
                     createHyperlink(
-                        "https://github.com/TermoraDev/termora/blob/${Application.getVersion()}/THIRDPARTY",
+                        "https://github.com/TermoraDev/termora/blob/${branch}/THIRDPARTY",
                         "Open-source software"
                     )
                 ).xy(3, rows).apply { rows += step }
