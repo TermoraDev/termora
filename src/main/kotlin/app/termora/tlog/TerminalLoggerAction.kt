@@ -23,6 +23,8 @@ class TerminalLoggerAction : AnAction(I18n.getString("termora.terminal-logger"),
     var isRecording = properties.getString("terminal.logger.isRecording")?.toBoolean() ?: false
         private set(value) {
             field = value
+            // firePropertyChange
+            putValue("Recording", value)
             properties.putString("terminal.logger.isRecording", value.toString())
         }
 

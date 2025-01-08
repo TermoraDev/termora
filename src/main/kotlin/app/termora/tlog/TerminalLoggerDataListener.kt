@@ -10,11 +10,13 @@ import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.jdesktop.swingx.action.ActionManager
 import org.slf4j.LoggerFactory
+import java.beans.PropertyChangeListener
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
 import java.nio.file.Paths
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 
 class TerminalLoggerDataListener(private val terminal: Terminal) : DataListener {
     companion object {
@@ -26,11 +28,21 @@ class TerminalLoggerDataListener(private val terminal: Terminal) : DataListener 
         private val log = LoggerFactory.getLogger(TerminalLoggerDataListener::class.java)
     }
 
-    private val coroutineScope by lazy { CoroutineScope(Dispatchers.IO) }
-    private val channel by lazy { Channel<String>(Channel.UNLIMITED) }
+    private var coroutineScope: CoroutineScope? = null
+    private var channel: Channel<String>? = null
+    private var file: File? = null
+    private var writer: BufferedWriter? = null
 
-    private lateinit var file: File
-    private lateinit var writer: BufferedWriter
+    private val isRecording = AtomicBoolean(false)
+
+    // 监听 Recording 变化，如果已经停止录制，那么立即关闭文件
+    private val terminalLoggerActionPropertyChangeListener = PropertyChangeListener { evt ->
+        if (evt.propertyName == "Recording") {
+            if (evt.newValue == false) {
+                close()
+            }
+        }
+    }
 
     private val host: Host?
         get() {
@@ -65,20 +77,30 @@ class TerminalLoggerDataListener(private val terminal: Terminal) : DataListener 
             return
         }
 
-        // 尝试记录
-        tryRecord(data as String, host, action)
+        try {// 尝试记录
+            tryRecord(data as String, host, action)
+        } catch (e: Exception) {
+            if (log.isErrorEnabled) {
+                log.error(e.message, e)
+            }
+        }
     }
 
     private fun tryRecord(text: String, host: Host, action: TerminalLoggerAction) {
-        if (!::writer.isInitialized) {
+        if (isRecording.compareAndSet(false, true)) {
 
-            file = createFile(host, action.getLogDir())
-
-            writer = BufferedWriter(FileWriter(file, false))
+            val file = createFile(host, action.getLogDir()).apply { file = this }
+            val writer = BufferedWriter(FileWriter(file, false)).apply { writer = this }
 
             if (log.isInfoEnabled) {
                 log.info("Terminal logger file: ${file.absolutePath}")
             }
+
+            action.removePropertyChangeListener(terminalLoggerActionPropertyChangeListener)
+            action.addPropertyChangeListener(terminalLoggerActionPropertyChangeListener)
+
+            val coroutineScope = this.coroutineScope ?: CoroutineScope(Dispatchers.IO).apply { coroutineScope = this }
+            val channel = this.channel ?: Channel<String>(Channel.UNLIMITED).apply { channel = this }
 
             coroutineScope.launch {
                 while (coroutineScope.isActive) {
@@ -97,7 +119,9 @@ class TerminalLoggerDataListener(private val terminal: Terminal) : DataListener 
             channel.trySend("${ControlCharacters.LF}${ControlCharacters.CR}").isSuccess
         }
 
-        channel.trySend(text).isSuccess
+        if (isRecording.get()) {
+            channel?.trySend(text)?.isSuccess
+        }
     }
 
     private fun createFile(host: Host, dir: File): File {
@@ -119,29 +143,41 @@ class TerminalLoggerDataListener(private val terminal: Terminal) : DataListener 
     }
 
     private fun close() {
-        if (!::writer.isInitialized) {
+        if (!isRecording.compareAndSet(true, false)) {
             return
         }
 
-        channel.close()
-        coroutineScope.cancel()
+        // 移除监听
+        ActionManager.getInstance().getAction(Actions.TERMINAL_LOGGER)
+            ?.removePropertyChangeListener(terminalLoggerActionPropertyChangeListener)
+
+        this.channel?.close()
+        this.coroutineScope?.cancel()
+
+        this.channel = null
+        this.coroutineScope = null
 
         // write end
         runCatching {
             val date = DateFormatUtils.format(Date(), I18n.getString("termora.date-format"))
-            writer.write("${ControlCharacters.LF}${ControlCharacters.CR}")
-            writer.write("[END] ---- $date ----")
+            this.writer?.write("${ControlCharacters.LF}${ControlCharacters.CR}")
+            this.writer?.write("[END] ---- $date ----")
         }.onFailure {
             if (log.isErrorEnabled) {
-                log.info(it.message, it)
+                log.error(it.message, it)
             }
         }
 
+        IOUtils.closeQuietly(this.writer)
 
-        IOUtils.closeQuietly(writer)
-
-        if (log.isInfoEnabled) {
+        val file = this.file
+        if (log.isInfoEnabled && file != null) {
             log.info("Terminal logger file: {} saved", file.absolutePath)
         }
+
+        this.writer = null
+        this.file = null
+
+
     }
 }
