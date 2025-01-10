@@ -61,7 +61,11 @@ data class Options(
     /**
      * SSH 心跳间隔
      */
-    val heartbeatInterval: Int = 30
+    val heartbeatInterval: Int = 30,
+    /**
+     * 如果为null使用全局,否则使用指定的本地 Shell Id
+     */
+    val localShell: String? = null,
 ) {
     companion object {
         val Default = Options()

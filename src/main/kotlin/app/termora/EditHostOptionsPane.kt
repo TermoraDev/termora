@@ -2,6 +2,8 @@ package app.termora
 
 import app.termora.keymgr.KeyManager
 import app.termora.keymgr.OhKeyPair
+import app.termora.localshell.LocalShellId
+import app.termora.localshell.LocalShellProvider
 
 class EditHostOptionsPane(private val host: Host) : HostOptionsPane() {
     init {
@@ -32,6 +34,15 @@ class EditHostOptionsPane(private val host: Host) : HostOptionsPane() {
         terminalOption.environmentTextArea.text = host.options.env
         terminalOption.startupCommandTextField.text = host.options.startupCommand
         terminalOption.heartbeatIntervalTextField.value = host.options.heartbeatInterval
+
+        val provider = LocalShellProvider.makeProviderByIdentificationString(host.options.localShell) ?: LocalShellProvider.FollowGlobal
+
+        if (provider is LocalShellProvider.CustomCommandLineArgs) {
+            terminalOption.localShellProviderComboBox.isEditable = true
+            terminalOption.localShellProviderComboBox.selectedItem = provider.commandLine.commandLineString
+        } else {
+            terminalOption.localShellProviderComboBox.selectedItem = provider
+        }
 
         tunnelingOption.tunnelings.addAll(host.tunnelings)
     }

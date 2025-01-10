@@ -1,5 +1,7 @@
 package app.termora
 
+import app.termora.localshell.LocalShell
+import app.termora.localshell.LocalShellDetect
 import com.formdev.flatlaf.util.SystemInfo
 import com.jthemedetecor.util.OsInfo
 import kotlinx.coroutines.Dispatchers
@@ -51,16 +53,8 @@ object Application {
             .build()
     }
 
-    fun getDefaultShell(): String {
-        if (SystemInfo.isWindows) {
-            return "cmd.exe"
-        } else {
-            val shell = System.getenv("SHELL")
-            if (shell != null && shell.isNotBlank()) {
-                return shell
-            }
-        }
-        return "/bin/bash"
+    fun getDefaultShell(): LocalShell? {
+        return LocalShellDetect.getSupportAllLocalShell().firstOrNull()
     }
 
     fun getBaseDataDir(): File {

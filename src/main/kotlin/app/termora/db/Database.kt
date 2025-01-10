@@ -408,7 +408,7 @@ class Database private constructor(private val env: Environment) : Disposable {
         /**
          * 默认终端
          */
-        var localShell by StringPropertyLazyDelegate { Application.getDefaultShell() }
+        var localShell by StringPropertyLazyDelegate { Application.getDefaultShell()?.id?.asIdentificationString() ?: "" }
 
         /**
          * 字体大小
