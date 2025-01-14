@@ -35,6 +35,7 @@ class TerminalPanel(val terminal: Terminal, private val ptyConnector: PtyConnect
         val SelectCopy = DataKey(Boolean::class)
     }
 
+    private val floatingToolBar = TerminalFloatingToolBar(terminal)
     private val terminalFindPanel = TerminalFindPanel(this, terminal)
     private val terminalDisplay = TerminalDisplay(this, terminal)
     val scrollBar = TerminalScrollBar(this@TerminalPanel, terminalFindPanel, terminal)
@@ -126,6 +127,7 @@ class TerminalPanel(val terminal: Terminal, private val ptyConnector: PtyConnect
         val layeredPane = TerminalLayeredPane()
         layeredPane.add(terminalDisplay, JLayeredPane.DEFAULT_LAYER as Any)
         layeredPane.add(terminalFindPanel, JLayeredPane.POPUP_LAYER as Any)
+        layeredPane.add(floatingToolBar.getJComponent(), JLayeredPane.POPUP_LAYER as Any)
         add(layeredPane, BorderLayout.CENTER)
         add(scrollBar, BorderLayout.EAST)
 
@@ -152,6 +154,11 @@ class TerminalPanel(val terminal: Terminal, private val ptyConnector: PtyConnect
         this.addMouseListener(mouseAdapter)
         this.addMouseMotionListener(mouseAdapter)
 
+        // 悬浮工具栏
+        val floatingToolBarAdapter = TerminalPanelMouseFloatingToolBarAdapter(floatingToolBar, this, terminalDisplay)
+        this.addMouseMotionListener(floatingToolBarAdapter)
+        this.addMouseListener(floatingToolBarAdapter)
+
         // 超链接
         val hyperlinkAdapter = TerminalPanelMouseHyperlinkAdapter(this, terminal)
         this.addMouseListener(hyperlinkAdapter)
@@ -160,6 +167,14 @@ class TerminalPanel(val terminal: Terminal, private val ptyConnector: PtyConnect
         val trackingAdapter = TerminalPanelMouseTrackingAdapter(this, terminal, ptyConnector)
         this.addMouseListener(trackingAdapter)
         this.addMouseWheelListener(trackingAdapter)
+
+        // 悬浮窗隐藏/关闭时，重新渲染一次
+        floatingToolBar.addPropertyChangeListener { evt ->
+            if (evt.propertyName == "State") {
+                repaintImmediate()
+                println("ASD")
+            }
+        }
 
         // 滚动相关
         this.addMouseWheelListener(object : MouseWheelListener {
@@ -449,6 +464,9 @@ class TerminalPanel(val terminal: Terminal, private val ptyConnector: PtyConnect
             synchronized(treeLock) {
                 val w = width
                 val h = height
+                val findPanelHeight = max(terminalFindPanel.preferredSize.height, terminalFindPanel.height)
+                val floatingComponent = floatingToolBar.getJComponent()
+
                 for (c in components) {
                     when (c) {
                         terminalDisplay -> {
@@ -466,7 +484,18 @@ class TerminalPanel(val terminal: Terminal, private val ptyConnector: PtyConnect
                                 w - width,
                                 0,
                                 width,
-                                max(terminalFindPanel.preferredSize.height, terminalFindPanel.height)
+                                findPanelHeight
+                            )
+                        }
+
+                        floatingComponent -> {
+                            val width = floatingComponent.preferredSize.width
+                            val y = 4
+                            c.setBounds(
+                                w - width,
+                                if (terminalFindPanel.isVisible) findPanelHeight + y else y,
+                                width,
+                                max(floatingComponent.preferredSize.height, floatingComponent.height)
                             )
                         }
                     }

@@ -41,6 +41,7 @@ class SSHTerminalTab(host: Host) : PtyHostTerminalTab(host) {
 
     init {
         terminalPanel.dropFiles = false
+        terminal.getTerminalModel().setData(TerminalTab, this)
     }
 
     override fun getJComponent(): JComponent {

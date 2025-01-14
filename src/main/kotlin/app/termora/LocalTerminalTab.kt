@@ -5,6 +5,9 @@ import org.apache.commons.io.Charsets
 import java.nio.charset.StandardCharsets
 
 class LocalTerminalTab(host: Host) : PtyHostTerminalTab(host) {
+    init {
+        terminal.getTerminalModel().setData(TerminalTab, this)
+    }
 
     override suspend fun openPtyConnector(): PtyConnector {
         val winSize = terminalPanel.winSize()

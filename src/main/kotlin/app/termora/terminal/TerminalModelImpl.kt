@@ -1,5 +1,6 @@
 package app.termora.terminal
 
+import org.apache.commons.lang3.ArrayUtils
 import org.slf4j.LoggerFactory
 import java.awt.Toolkit
 import kotlin.reflect.cast
@@ -8,7 +9,7 @@ open class TerminalModelImpl(private val terminal: Terminal) : TerminalModel {
     private var rows: Int = 27
     private var cols: Int = 80
     private val data = mutableMapOf<DataKey<*>, Any>()
-    private val listeners = mutableListOf<DataListener>()
+    private var listeners = emptyArray<DataListener>()
     private val colorPalette = ColorPaletteImpl(terminal)
 
     companion object {
@@ -92,11 +93,11 @@ open class TerminalModelImpl(private val terminal: Terminal) : TerminalModel {
     }
 
     override fun addDataListener(listener: DataListener) {
-        listeners.add(listener)
+        listeners = ArrayUtils.add(listeners, listener)
     }
 
     override fun removeDataListener(listener: DataListener) {
-        listeners.remove(listener)
+        listeners = ArrayUtils.removeElement(listeners, listener)
     }
 
     override fun bell() {
@@ -129,9 +130,8 @@ open class TerminalModelImpl(private val terminal: Terminal) : TerminalModel {
 
     @Suppress("MemberVisibilityCanBePrivate")
     protected fun <T : Any> fireDataChanged(key: DataKey<T>, data: T) {
-        val size = listeners.size
-        for (i in 0 until size) {
-            listeners.getOrNull(i)?.onChanged(key, data)
+        for (listener in listeners) {
+            listener.onChanged(key, data)
         }
     }
 

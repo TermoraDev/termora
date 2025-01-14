@@ -14,6 +14,7 @@ abstract class HostTerminalTab(
 ) : PropertyTerminalTab() {
     companion object {
         val Host = DataKey(app.termora.Host::class)
+        val TerminalTab = DataKey(app.termora.TerminalTab::class)
     }
 
     protected val coroutineScope by lazy { CoroutineScope(Dispatchers.Swing) }
