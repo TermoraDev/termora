@@ -5,7 +5,8 @@ import org.apache.commons.io.Charsets
 import java.nio.charset.StandardCharsets
 import javax.swing.Icon
 
-class SerialTerminalTab(windowScope: WindowScope, host: Host) : PtyHostTerminalTab(windowScope, host) {
+class SerialTerminalTab(windowScope: WindowScope, host: Host, terminalTabbedManager: TerminalTabbedManager) :
+    PtyHostTerminalTab(windowScope, host, terminalTabbedManager) {
     override suspend fun openPtyConnector(): PtyConnector {
         val serialPort = Serials.openPort(host)
         return SerialPortPtyConnector(

@@ -468,6 +468,11 @@ class Database private constructor(private val env: Environment) : Disposable {
          * 光标样式
          */
         var cursor by CursorStylePropertyDelegate(CursorStyle.Block)
+
+        /**
+         * 终端断开连接时自动关闭Tab
+         */
+        var autoCloseTabWhenDisconnected by BooleanPropertyDelegate(false)
     }
 
     /**

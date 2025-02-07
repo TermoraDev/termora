@@ -93,7 +93,7 @@ class TerminalLoggerAction : AnAction(I18n.getString("termora.terminal-logger"),
                 SwingUtilities.invokeLater {
                     val manager = ApplicationScope.forWindowScope(owner).get(TerminalTabbedManager::class)
                     for (file in files) {
-                        val tab = LogViewerTerminalTab(ApplicationScope.forWindowScope(owner), file)
+                        val tab = LogViewerTerminalTab(ApplicationScope.forWindowScope(owner), file, manager)
                         tab.start()
                         manager.addTerminalTab(tab)
                     }

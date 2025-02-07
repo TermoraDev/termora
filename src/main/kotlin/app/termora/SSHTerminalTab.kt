@@ -31,7 +31,8 @@ import javax.swing.JComponent
 import javax.swing.SwingUtilities
 
 
-class SSHTerminalTab(windowScope: WindowScope, host: Host) : PtyHostTerminalTab(windowScope, host) {
+class SSHTerminalTab(windowScope: WindowScope, host: Host, terminalTabbedManager: TerminalTabbedManager) :
+    PtyHostTerminalTab(windowScope, host, terminalTabbedManager) {
     companion object {
         private val log = LoggerFactory.getLogger(PtyHostTerminalTab::class.java)
     }
@@ -126,6 +127,9 @@ class SSHTerminalTab(windowScope: WindowScope, host: Host) : PtyHostTerminalTab(
                     terminal.write("\r\n")
                     terminal.write("${ControlCharacters.ESC}[0m")
                     terminalModel.setData(DataKey.ShowCursor, false)
+                    if (Database.getDatabase().terminal.autoCloseTabWhenDisconnected) {
+                        closeSelfTab()
+                    }
                 }
             }
         })

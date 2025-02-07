@@ -12,6 +12,7 @@ import kotlin.time.Duration.Companion.milliseconds
 abstract class PtyHostTerminalTab(
     windowScope: WindowScope,
     host: Host,
+    val terminalTabbedManager: TerminalTabbedManager,
     terminal: Terminal = TerminalFactory.getInstance(windowScope).createTerminal()
 ) : HostTerminalTab(windowScope, host, terminal) {
 
@@ -133,4 +134,8 @@ abstract class PtyHostTerminalTab(
     }
 
     abstract suspend fun openPtyConnector(): PtyConnector
+
+    open fun closeSelfTab() {
+        terminalTabbedManager.closeTerminalTab(this, true)
+    }
 }

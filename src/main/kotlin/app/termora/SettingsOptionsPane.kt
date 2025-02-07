@@ -46,6 +46,7 @@ import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Toolkit
 import java.awt.datatransfer.StringSelection
+import java.awt.event.ActionEvent
 import java.awt.event.ItemEvent
 import java.io.File
 import java.net.URI
@@ -307,6 +308,7 @@ class SettingsOptionsPane : OptionsPane() {
         private val fontSizeTextField = IntSpinner(0, 9, 99)
         private val terminalSetting get() = Database.getDatabase().terminal
         private val selectCopyComboBox = YesOrNoComboBox()
+        private val autoCloseTabComboBox = YesOrNoComboBox()
 
         init {
             initView()
@@ -321,6 +323,13 @@ class SettingsOptionsPane : OptionsPane() {
                     fireFontChanged()
                 }
             }
+
+            autoCloseTabComboBox.addItemListener { e ->
+                if (e.stateChange == ItemEvent.SELECTED) {
+                    terminalSetting.autoCloseTabWhenDisconnected = autoCloseTabComboBox.selectedItem as Boolean
+                }
+            }
+            autoCloseTabComboBox.toolTipText = I18n.getString("termora.settings.terminal.auto-close-tab-description")
 
             selectCopyComboBox.addItemListener { e ->
                 if (e.stateChange == ItemEvent.SELECTED) {
@@ -466,6 +475,7 @@ class SettingsOptionsPane : OptionsPane() {
             beepComboBox.selectedItem = terminalSetting.beep
             cursorStyleComboBox.selectedItem = terminalSetting.cursor
             selectCopyComboBox.selectedItem = terminalSetting.selectCopy
+            autoCloseTabComboBox.selectedItem = terminalSetting.autoCloseTabWhenDisconnected
         }
 
         override fun getIcon(isSelected: Boolean): Icon {
@@ -483,7 +493,7 @@ class SettingsOptionsPane : OptionsPane() {
         private fun getCenterComponent(): JComponent {
             val layout = FormLayout(
                 "left:pref, $formMargin, default:grow, $formMargin, left:pref, $formMargin, pref, default:grow",
-                "pref, $formMargin, pref, $formMargin, pref, $formMargin, pref, $formMargin, pref, $formMargin, pref, $formMargin, pref"
+                "pref, $formMargin, pref, $formMargin, pref, $formMargin, pref, $formMargin, pref, $formMargin, pref, $formMargin, pref, $formMargin, pref"
             )
 
             val beepBtn = JButton(Icons.run)
@@ -511,7 +521,9 @@ class SettingsOptionsPane : OptionsPane() {
                 .add("${I18n.getString("termora.settings.terminal.cursor-style")}:").xy(1, rows)
                 .add(cursorStyleComboBox).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.settings.terminal.local-shell")}:").xy(1, rows)
-                .add(shellComboBox).xyw(3, rows, 5)
+                .add(shellComboBox).xyw(3, rows, 5).apply { rows += step }
+                .add("${I18n.getString("termora.settings.terminal.auto-close-tab")}:").xy(1, rows)
+                .add(autoCloseTabComboBox).xy(3, rows)
                 .build()
 
 

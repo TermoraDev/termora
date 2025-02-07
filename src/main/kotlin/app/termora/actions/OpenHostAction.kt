@@ -16,9 +16,9 @@ class OpenHostAction : AnAction() {
         val windowScope = evt.getData(DataProviders.WindowScope) ?: return
 
         val tab = when (evt.host.protocol) {
-            Protocol.SSH -> SSHTerminalTab(windowScope, evt.host)
-            Protocol.Serial -> SerialTerminalTab(windowScope, evt.host)
-            else -> LocalTerminalTab(windowScope, evt.host)
+            Protocol.SSH -> SSHTerminalTab(windowScope, evt.host, terminalTabbedManager)
+            Protocol.Serial -> SerialTerminalTab(windowScope, evt.host, terminalTabbedManager)
+            else -> LocalTerminalTab(windowScope, evt.host, terminalTabbedManager)
         }
 
         terminalTabbedManager.addTerminalTab(tab)
