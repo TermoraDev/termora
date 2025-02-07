@@ -119,9 +119,14 @@ class SSHTerminalTab(windowScope: WindowScope, host: Host) : PtyHostTerminalTab(
             override fun channelClosed(channel: Channel, reason: Throwable?) {
                 coroutineScope.launch(Dispatchers.Swing) {
                     terminal.write("\r\n\r\n${ControlCharacters.ESC}[31m")
-                    terminal.write("Channel has been disconnected.")
+                    terminal.write(I18n.getString("termora.terminal.channel-disconnected"))
                     if (reconnectShortcut is KeyShortcut) {
-                        terminal.write(" Type $reconnectShortcut to reconnect.")
+                        terminal.write(
+                            I18n.getString(
+                                "termora.terminal.channel-reconnect",
+                                reconnectShortcut.toString()
+                            )
+                        )
                     }
                     terminal.write("\r\n")
                     terminal.write("${ControlCharacters.ESC}[0m")
