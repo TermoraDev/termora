@@ -4,8 +4,8 @@ import app.termora.terminal.PtyConnector
 import org.apache.commons.io.Charsets
 import java.nio.charset.StandardCharsets
 
-class LocalTerminalTab(windowScope: WindowScope, host: Host, terminalTabbedManager: TerminalTabbedManager) :
-    PtyHostTerminalTab(windowScope, host, terminalTabbedManager) {
+class LocalTerminalTab(windowScope: WindowScope, host: Host) :
+    PtyHostTerminalTab(windowScope, host) {
 
     override suspend fun openPtyConnector(): PtyConnector {
         val winSize = terminalPanel.winSize()

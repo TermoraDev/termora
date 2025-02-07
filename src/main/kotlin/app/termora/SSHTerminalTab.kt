@@ -1,5 +1,7 @@
 package app.termora
 
+import app.termora.actions.AnActionEvent
+import app.termora.actions.DataProviders
 import app.termora.actions.TabReconnectAction
 import app.termora.addons.zmodem.ZModemPtyConnectorAdaptor
 import app.termora.keyboardinteractive.TerminalUserInteraction
@@ -27,12 +29,13 @@ import org.apache.sshd.common.session.SessionListener.Event
 import org.apache.sshd.common.util.net.SshdSocketAddress
 import org.slf4j.LoggerFactory
 import java.nio.charset.StandardCharsets
+import java.util.EventObject
 import javax.swing.JComponent
 import javax.swing.SwingUtilities
 
 
-class SSHTerminalTab(windowScope: WindowScope, host: Host, terminalTabbedManager: TerminalTabbedManager) :
-    PtyHostTerminalTab(windowScope, host, terminalTabbedManager) {
+class SSHTerminalTab(windowScope: WindowScope, host: Host) :
+    PtyHostTerminalTab(windowScope, host) {
     companion object {
         private val log = LoggerFactory.getLogger(PtyHostTerminalTab::class.java)
     }
@@ -42,6 +45,9 @@ class SSHTerminalTab(windowScope: WindowScope, host: Host, terminalTabbedManager
     private var sshClient: SshClient? = null
     private var sshSession: ClientSession? = null
     private var sshChannelShell: ChannelShell? = null
+    private val terminalTabbedManager
+        get() = AnActionEvent(getJComponent(), StringUtils.EMPTY, EventObject(getJComponent()))
+            .getData(DataProviders.TerminalTabbedManager)
 
     init {
         terminalPanel.dropFiles = false
@@ -128,7 +134,11 @@ class SSHTerminalTab(windowScope: WindowScope, host: Host, terminalTabbedManager
                     terminal.write("${ControlCharacters.ESC}[0m")
                     terminalModel.setData(DataKey.ShowCursor, false)
                     if (Database.getDatabase().terminal.autoCloseTabWhenDisconnected) {
-                        closeSelfTab()
+                        terminalTabbedManager?.let { manager ->
+                            SwingUtilities.invokeLater {
+                                manager.closeTerminalTab(this@SSHTerminalTab, true)
+                            }
+                        }
                     }
                 }
             }

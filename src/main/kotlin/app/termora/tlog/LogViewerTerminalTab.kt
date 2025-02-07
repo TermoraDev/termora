@@ -12,14 +12,12 @@ import javax.swing.Icon
 class LogViewerTerminalTab(
     windowScope: WindowScope,
     private val file: File,
-    terminalTabbedManager: TerminalTabbedManager
 ) : PtyHostTerminalTab(
     windowScope,
     Host(
         name = file.name,
         protocol = Protocol.Local
     ),
-    terminalTabbedManager,
     LogViewerTerminal()
 ) {
 
