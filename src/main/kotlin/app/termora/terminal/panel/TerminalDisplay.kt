@@ -132,10 +132,8 @@ class TerminalDisplay(
         g.fillRect(0, 0, width, height)
     }
 
-    private fun drawCursor(g: Graphics, xOffset: Int, width: Int) {
+    private fun drawCursor(g: Graphics, y: Int, xOffset: Int, width: Int) {
         val lineHeight = getLineHeight()
-        val position = terminal.getCursorModel().getPosition()
-        val row = position.y
         val style = if (inputMethodData.isNoTyping)
             terminal.getTerminalModel().getData(DataKey.CursorStyle) else CursorStyle.Bar
 
@@ -144,19 +142,19 @@ class TerminalDisplay(
 
         if (style == CursorStyle.Block) {
             if (terminalPanel.hasFocus()) {
-                g.fillRect(xOffset, (row - 1) * lineHeight, width, lineHeight)
+                g.fillRect(xOffset, (y - 1) * lineHeight, width, lineHeight)
             } else {
-                g.drawRect(xOffset, (row - 1) * lineHeight, width, lineHeight)
+                g.drawRect(xOffset, (y - 1) * lineHeight, width, lineHeight)
             }
         } else if (style == CursorStyle.Underline) {
             val h = ceil(lineHeight / 10.0).toInt()
-            g.fillRect(xOffset, row * lineHeight - h / 2, width, h)
+            g.fillRect(xOffset, y * lineHeight - h / 2, width, h)
         } else if (style == CursorStyle.Bar) {
             if (inputMethodData.isTyping) {
                 val w = ceil(width / 3.5).toInt()
-                g.fillRect(xOffset, (row - 1) * lineHeight, w, lineHeight)
+                g.fillRect(xOffset, (y - 1) * lineHeight, w, lineHeight)
             } else {
-                g.drawLine(xOffset, row * lineHeight - lineHeight, xOffset, row * lineHeight)
+                g.drawLine(xOffset, y * lineHeight - lineHeight, xOffset, y * lineHeight)
             }
         }
     }
@@ -222,10 +220,10 @@ class TerminalDisplay(
         val reverseVideo = terminal.getTerminalModel().getData(DataKey.ReverseVideo, false)
         val rows = terminal.getTerminalModel().getRows()
         val cols = terminal.getTerminalModel().getCols()
-        val buffer = terminal.getDocument().getCurrentTerminalLineBuffer()
         val triple = Triple(Char.Space.toString(), TextStyle.Default, 1)
         val cursorPosition = terminal.getCursorModel().getPosition()
         val averageCharWidth = getAverageCharWidth()
+        val maxVerticalScrollOffset = terminal.getScrollingModel().getMaxVerticalScrollOffset()
         val verticalScrollOffset = terminal.getScrollingModel().getVerticalScrollOffset()
         val selectionModel = terminal.getSelectionModel()
         val cursorStyle = terminal.getTerminalModel().getData(DataKey.CursorStyle)
@@ -242,7 +240,7 @@ class TerminalDisplay(
             while (j <= cols) {
                 val position = Position(row + 1, j)
                 val caret = showCursor && j == cursorPosition.x + inputMethodData.offset
-                        && row + 1 == cursorPosition.y + buffer.getBufferCount()
+                        && i == cursorPosition.y + (maxVerticalScrollOffset - verticalScrollOffset)
 
                 val (text, style, length) = if (characters.hasNext()) characters.next() else triple
                 var textStyle = style
@@ -312,7 +310,7 @@ class TerminalDisplay(
 
                 // 渲染光标
                 if (caret) {
-                    drawCursor(g, xOffset, charWidth)
+                    drawCursor(g, i, xOffset, charWidth)
                     // 如果是获取焦点状态，那么颜色互换
                     if (terminalPanel.hasFocus() && cursorStyle == CursorStyle.Block && inputMethodData.isNoTyping) {
                         g.color = Color(colorPalette.getColor(TerminalColor.Basic.BACKGROUND))
