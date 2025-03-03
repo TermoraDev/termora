@@ -254,13 +254,6 @@ tasks.register<Copy>("copy-dependencies") {
                     exec { commandLine("zip", "-d", file.absolutePath, "resources/*freebsd*") }
                     if (os.isWindows) {
                         exec { commandLine("zip", "-d", file.absolutePath, "resources/*linux*") }
-                        if (arch.isArm) {
-                            exec { commandLine("zip", "-d", file.absolutePath, "resources/*win/x86/*") }
-                            exec { commandLine("zip", "-d", file.absolutePath, "resources/*win/x86-64*") }
-                        } else {
-                            exec { commandLine("zip", "-d", file.absolutePath, "resources/*win/x86/*") }
-                            exec { commandLine("zip", "-d", file.absolutePath, "resources/*win/aarch64/*") }
-                        }
                     } else if (os.isLinux) {
                         exec { commandLine("zip", "-d", file.absolutePath, "resources/*win*") }
                     }
