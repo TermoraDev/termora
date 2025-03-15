@@ -18,7 +18,7 @@ open class VisualWindowPanel(protected val id: String, protected val visualWindo
     private val titleLabel = JLabel()
     private val toolbar = FlatToolBar()
     private val visualWindow get() = this
-    private val resizer = VisualWindowResizer(this) { !isWindow }
+    private val resizer = VisualWindowResizer(visualWindow) { !isWindow && !isStick }
     private var isWindow = false
         set(value) {
             val oldValue = field
@@ -39,11 +39,23 @@ open class VisualWindowPanel(protected val id: String, protected val visualWindo
         }
     }
 
-
-    var title: String
-        set(value) {
-            titleLabel.text = value
+    protected var isStickHover = false
+        private set(value) {
+            if (value == field) return
+            field = value
+            reassemble()
         }
+    protected var isStick: Boolean = false
+        private set(value) {
+            if (field == value) return
+            if (!value) isStickHover = false
+            field = value
+            reassemble()
+        }
+    protected val expand get() = isWindow || isStickHover || !isStick
+
+    protected var title: String
+        set(value) = titleLabel.setText(value)
         get() = titleLabel.text
 
 
@@ -69,6 +81,7 @@ open class VisualWindowPanel(protected val id: String, protected val visualWindo
 
         if (w > 0 && h > 0) setSize(w, h) else setSize(400, 200)
 
+        oldBounds = bounds
         alwaysTopBtn.isSelected = isAlwaysTop
         alwaysTopBtn.isVisible = false
     }
@@ -90,14 +103,18 @@ open class VisualWindowPanel(protected val id: String, protected val visualWindo
                         if (SwingUtilities.isDescendingFrom(c, visualWindow)) {
                             visualWindowManager.moveToFront(visualWindow)
                         }
+                    } else if (event.id == MouseEvent.MOUSE_MOVED) {
+                        if (isStick && !isWindow) {
+                            val c = event.component ?: return
+                            isStickHover = SwingUtilities.isDescendingFrom(c, visualWindow)
+                        }
                     }
                 }
             }
-
         }
 
         // 监听全局事件
-        toolkit.addAWTEventListener(awtEventListener, MouseEvent.MOUSE_EVENT_MASK)
+        toolkit.addAWTEventListener(awtEventListener, MouseEvent.MOUSE_EVENT_MASK or MouseEvent.MOUSE_MOTION_EVENT_MASK)
 
         Disposer.register(this, object : Disposable {
             override fun dispose() {
@@ -110,15 +127,22 @@ open class VisualWindowPanel(protected val id: String, protected val visualWindo
 
         toggleWindowBtn.addActionListener { toggleWindow() }
 
-        addPropertyChangeListener("isWindow", object : PropertyChangeListener {
+        addPropertyChangeListener("isWindow") {
+            if (isWindow) {
+                border = BorderFactory.createMatteBorder(1, 0, 0, 0, DynamicColor.BorderColor)
+                toggleWindowBtn.icon = Icons.openInToolWindow
+            } else {
+                border = BorderFactory.createMatteBorder(1, 1, 1, 1, DynamicColor.BorderColor)
+                toggleWindowBtn.icon = Icons.openInNewWindow
+            }
+        }
+
+        // 被添加到组件后
+        addPropertyChangeListener("ancestor", object : PropertyChangeListener {
             override fun propertyChange(evt: PropertyChangeEvent) {
-                if (isWindow) {
-                    border = BorderFactory.createMatteBorder(1, 0, 0, 0, DynamicColor.BorderColor)
-                    toggleWindowBtn.icon = Icons.openInToolWindow
-                } else {
-                    border = BorderFactory.createMatteBorder(1, 1, 1, 1, DynamicColor.BorderColor)
-                    toggleWindowBtn.icon = Icons.openInNewWindow
-                }
+                removePropertyChangeListener("ancestor", this)
+                // 是否吸附
+                isStick = properties.getString("VisualWindow.${id}.stick", "false").toBoolean()
             }
         })
 
@@ -152,11 +176,12 @@ open class VisualWindowPanel(protected val id: String, protected val visualWindo
 
     override fun dispose() {
 
-        val bounds = if (isWindow) oldBounds else bounds
+        val bounds = if (isWindow || isStick) oldBounds else bounds
         properties.putString("VisualWindow.${id}.location.x", bounds.x.toString())
         properties.putString("VisualWindow.${id}.location.y", bounds.y.toString())
         properties.putString("VisualWindow.${id}.location.width", bounds.width.toString())
         properties.putString("VisualWindow.${id}.location.height", bounds.height.toString())
+        properties.putString("VisualWindow.${id}.stick", isStick.toString())
 
         resizer.uninstall()
 
@@ -198,6 +223,13 @@ open class VisualWindowPanel(protected val id: String, protected val visualWindo
             // 变基
             visualWindowManager.rebaseVisualWindow(this)
 
+            // 如果在预览状态，那么设置成 false
+            if (isStickHover) {
+                isStickHover = false
+            } else {
+                reassemble()
+            }
+
             val dialog = VisualWindowDialog().apply { dialog = this }
             dialog.addWindowListener(closeWindowListener)
             dialog.isVisible = true
@@ -206,44 +238,78 @@ open class VisualWindowPanel(protected val id: String, protected val visualWindo
             bounds = oldBounds
             visualWindowManager.removeVisualWindow(visualWindow)
             visualWindowManager.addVisualWindow(visualWindow)
+            // 重组
+            reassemble()
         }
     }
 
-    private inner class DragListener() : MouseAdapter() {
+    private inner class DragListener : MouseAdapter() {
         private var startPoint: Point? = null
+        private val stickPx = 2
 
         override fun mousePressed(e: MouseEvent) {
             if (isWindow) {
                 startPoint = null
                 return
             }
-            startPoint = SwingUtilities.convertPoint(visualWindow, e.getPoint(), visualWindow.getParent())
+            startPoint = SwingUtilities.convertPoint(visualWindow, e.getPoint(), visualWindow.parent)
         }
 
         override fun mouseDragged(e: MouseEvent) {
             val startPoint = this.startPoint ?: return
-            val newPoint = SwingUtilities.convertPoint(visualWindow, e.getPoint(), visualWindow.getParent())
+            val newPoint = SwingUtilities.convertPoint(visualWindow, e.getPoint(), visualWindow.parent)
             val dimension = visualWindowManager.getDimension()
 
             val x = min(
-                visualWindow.getX() + (newPoint.x - startPoint.x),
+                visualWindow.x + (newPoint.x - startPoint.x),
                 dimension.width - visualWindow.width
             )
 
             val y = min(
-                visualWindow.getY() + (newPoint.y - startPoint.y),
+                visualWindow.y + (newPoint.y - startPoint.y),
                 dimension.height - visualWindow.height
             )
 
-            visualWindow.setBounds(max(x, 0), max(y, 0), visualWindow.getWidth(), visualWindow.getHeight())
+            if (isStick) {
+                if (y > stickPx) {
+                    isStick = false
+                    return
+                }
+            } else {
+                oldBounds = visualWindow.bounds
+            }
+
+            // 如果太靠近边缘，那么动态显示/隐藏边框
+            border = BorderFactory.createMatteBorder(if (y <= 0) 0 else 1, 1, 1, 1, DynamicColor.BorderColor)
+
+            visualWindow.setBounds(max(x, 0), max(y, 0), visualWindow.width, visualWindow.height)
+
+
 
             this.startPoint = newPoint
         }
 
         override fun mouseReleased(e: MouseEvent) {
             visualWindowManager.moveToFront(visualWindow)
+            isStick = visualWindow.bounds.y <= stickPx
+        }
+    }
+
+    /**
+     * 重新组装
+     */
+    protected open fun reassemble() {
+        if (expand) {
+            border = BorderFactory.createMatteBorder(if (isStickHover) 0 else 1, 1, 1, 1, DynamicColor.BorderColor)
+            visualWindow.setBounds(bounds.x, bounds.y, oldBounds.width, oldBounds.height)
+        } else {
+            val bounds = visualWindow.bounds
+            visualWindow.setBounds(bounds.x, bounds.y, bounds.width, max(toolbar.height, toolbar.preferredSize.height))
+            border = BorderFactory.createMatteBorder(0, 1, 1, 1, DynamicColor.BorderColor)
         }
 
+        // 重新渲染
+        SwingUtilities.invokeLater { SwingUtilities.updateComponentTreeUI(this) }
     }
 
 
