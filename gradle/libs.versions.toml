@@ -1,6 +1,6 @@
 [versions]
 kotlin = "2.1.10"
-slf4j = "2.0.16"
+slf4j = "2.0.17"
 pty4j = "0.13.2"
 tinylog = "2.7.0"
 kotlinx-coroutines = "1.10.1"
