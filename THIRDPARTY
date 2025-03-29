@@ -166,6 +166,10 @@ org.eclipse.jgit.ssh.apache
 Eclipse Distribution License
 https://www.eclipse.org/org/documents/edl-v10.php
 
+org.eclipse.jgit.ssh.apache.agent
+Eclipse Distribution License
+https://www.eclipse.org/org/documents/edl-v10.php
+
 org.eclipse.jgit
 Eclipse Distribution License
 https://www.eclipse.org/org/documents/edl-v10.php

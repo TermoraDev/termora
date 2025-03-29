@@ -38,6 +38,7 @@ enum class AuthenticationType {
     No,
     Password,
     PublicKey,
+    SSHAgent,
     KeyboardInteractive,
 }
 

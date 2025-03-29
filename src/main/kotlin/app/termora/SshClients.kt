@@ -1,14 +1,12 @@
 package app.termora
 
 import app.termora.keyboardinteractive.TerminalUserInteraction
-import app.termora.keymgr.KeyManager
 import app.termora.keymgr.OhKeyPairKeyPairProvider
 import app.termora.terminal.TerminalSize
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.sshd.client.ClientBuilder
 import org.apache.sshd.client.SshClient
-import org.apache.sshd.client.auth.password.PasswordIdentityProvider
 import org.apache.sshd.client.auth.password.UserAuthPasswordFactory
 import org.apache.sshd.client.channel.ChannelShell
 import org.apache.sshd.client.channel.ClientChannelEvent
@@ -21,22 +19,24 @@ import org.apache.sshd.client.keyverifier.ModifiedServerKeyAcceptor
 import org.apache.sshd.client.keyverifier.ServerKeyVerifier
 import org.apache.sshd.client.session.ClientSession
 import org.apache.sshd.common.AttributeRepository
+import org.apache.sshd.common.SshConstants
 import org.apache.sshd.common.SshException
 import org.apache.sshd.common.channel.PtyChannelConfiguration
 import org.apache.sshd.common.config.keys.KeyUtils
 import org.apache.sshd.common.global.KeepAliveHandler
 import org.apache.sshd.common.kex.BuiltinDHFactories
 import org.apache.sshd.common.keyprovider.KeyIdentityProvider
-import org.apache.sshd.common.session.SessionContext
 import org.apache.sshd.common.util.net.SshdSocketAddress
 import org.apache.sshd.core.CoreModuleProperties
 import org.apache.sshd.server.forward.AcceptAllForwardingFilter
 import org.apache.sshd.server.forward.RejectAllForwardingFilter
 import org.eclipse.jgit.internal.transport.sshd.JGitClientSession
 import org.eclipse.jgit.internal.transport.sshd.JGitSshClient
+import org.eclipse.jgit.internal.transport.sshd.agent.JGitSshAgentFactory
 import org.eclipse.jgit.transport.CredentialsProvider
 import org.eclipse.jgit.transport.sshd.IdentityPasswordProvider
 import org.eclipse.jgit.transport.sshd.ProxyData
+import org.eclipse.jgit.transport.sshd.agent.ConnectorFactory
 import org.slf4j.LoggerFactory
 import java.awt.Window
 import java.io.ByteArrayOutputStream
@@ -45,15 +45,16 @@ import java.net.Proxy
 import java.net.SocketAddress
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.security.KeyPair
 import java.security.PublicKey
 import java.time.Duration
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 import javax.swing.JOptionPane
 import javax.swing.SwingUtilities
 import kotlin.math.max
 
+@Suppress("CascadeIf")
 object SshClients {
 
     val HOST_KEY = AttributeRepository.AttributeKey<Host>()
@@ -197,21 +198,16 @@ object SshClients {
             session.keyIdentityProvider = OhKeyPairKeyPairProvider(host.authentication.password)
         }
 
-        val owner = client.properties["owner"] as Window?
-        if (owner != null) {
-            val identityProvider = IdentityProvider(host, owner)
-            session.passwordIdentityProvider = identityProvider
-            val combinedKeyIdentityProvider = CombinedKeyIdentityProvider()
-            if (session.keyIdentityProvider != null) {
-                combinedKeyIdentityProvider.addKeyKeyIdentityProvider(session.keyIdentityProvider)
+        try {
+            if (!session.auth().verify(timeout).await(timeout)) {
+                throw SshException("Authentication failed")
             }
-            combinedKeyIdentityProvider.addKeyKeyIdentityProvider(identityProvider)
-            session.keyIdentityProvider = combinedKeyIdentityProvider
-        }
-
-        val verifyTimeout = Duration.ofSeconds(timeout.seconds * 5)
-        if (!session.auth().verify(verifyTimeout).await(verifyTimeout)) {
-            throw SshException("Authentication failed")
+        } catch (e: Exception) {
+            if (e !is SshException || e.disconnectCode != SshConstants.SSH2_DISCONNECT_NO_MORE_AUTH_METHODS_AVAILABLE) throw e
+            val owner = client.properties["owner"] as Window? ?: throw e
+            val authentication = ask(host, owner) ?: throw e
+            if (authentication.type == AuthenticationType.No) throw e
+            return doOpenSession(host.copy(authentication = authentication), client)
         }
 
         session.setAttribute(HOST_KEY, host)
@@ -308,6 +304,10 @@ object SshClients {
                     UserAuthPasswordFactory.KB_INTERACTIVE
                 ).joinToString(",")
             )
+        } else if (host.authentication.type == AuthenticationType.SSHAgent) {
+            // ssh-agent
+            sshClient.agentFactory = JGitSshAgentFactory(ConnectorFactory.getDefault(), null)
+            CoreModuleProperties.PREFERRED_AUTHS.set(sshClient, UserAuthPasswordFactory.PUBLIC_KEY)
         } else {
             CoreModuleProperties.PREFERRED_AUTHS.set(
                 sshClient,
@@ -350,6 +350,24 @@ object SshClients {
         return sshClient
     }
 
+    private fun ask(host: Host, owner: Window): Authentication? {
+        val ref = AtomicReference<Authentication>(null)
+        SwingUtilities.invokeAndWait {
+            val dialog = RequestAuthenticationDialog(owner, host)
+            dialog.setLocationRelativeTo(owner)
+            val authentication = dialog.getAuthentication().apply { ref.set(this) }
+            // save
+            if (dialog.isRemembered()) {
+                hostManager.addHost(
+                    host.copy(
+                        authentication = authentication,
+                        username = dialog.getUsername(), updateDate = System.currentTimeMillis(),
+                    )
+                )
+            }
+        }
+        return ref.get()
+    }
 
     private class MyDialogServerKeyVerifier(private val owner: Window) : ServerKeyVerifier, ModifiedServerKeyAcceptor {
         override fun verifyServerKey(
@@ -417,55 +435,5 @@ object SshClients {
         }
     }
 
-
-    private class IdentityProvider(private val host: Host, private val owner: Window) : PasswordIdentityProvider,
-        KeyIdentityProvider {
-        private val asked = AtomicBoolean(false)
-        private val hostManager get() = HostManager.getInstance()
-        private val keyManager get() = KeyManager.getInstance()
-        private var authentication = Authentication.No
-
-        override fun loadPasswords(session: SessionContext): MutableIterable<String> {
-            val authentication = ask()
-            if (authentication.type != AuthenticationType.Password) {
-                return mutableListOf()
-            }
-            return mutableListOf(authentication.password)
-        }
-
-        override fun loadKeys(session: SessionContext): MutableIterable<KeyPair> {
-            val authentication = ask()
-            if (authentication.type != AuthenticationType.PublicKey) {
-                return mutableListOf()
-            }
-            val ohKeyPair = keyManager.getOhKeyPair(authentication.password) ?: return mutableListOf()
-            return mutableListOf(OhKeyPairKeyPairProvider.generateKeyPair(ohKeyPair))
-        }
-
-        private fun ask(): Authentication {
-            if (asked.compareAndSet(false, true)) {
-               askNow()
-            }
-            return authentication
-        }
-
-        private fun askNow() {
-            if (SwingUtilities.isEventDispatchThread()) {
-                val dialog = RequestAuthenticationDialog(owner, host)
-                dialog.setLocationRelativeTo(owner)
-                authentication = dialog.getAuthentication()
-                // save
-                if (dialog.isRemembered()) {
-                    val host = host.copy(
-                        authentication = authentication,
-                        username = dialog.getUsername(), updateDate = System.currentTimeMillis(),
-                    )
-                    hostManager.addHost(host)
-                }
-            } else {
-                SwingUtilities.invokeAndWait { askNow() }
-            }
-        }
-    }
 }
 

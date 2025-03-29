@@ -80,6 +80,7 @@ sshd-core = { module = "org.apache.sshd:sshd-core", version.ref = "sshd-core" }
 jgit = { module = "org.eclipse.jgit:org.eclipse.jgit", version.ref = "jgit" }
 commonmark = { module = "org.commonmark:commonmark", version.ref = "commonmark" }
 jgit-sshd = { module = "org.eclipse.jgit:org.eclipse.jgit.ssh.apache", version.ref = "jgit" }
+jgit-agent = { module = "org.eclipse.jgit:org.eclipse.jgit.ssh.apache.agent", version.ref = "jgit" }
 xodus-openAPI = { module = "org.jetbrains.xodus:xodus-openAPI", version.ref = "xodus" }
 xodus-environment = { module = "org.jetbrains.xodus:xodus-environment", version.ref = "xodus" }
 xodus-vfs = { module = "org.jetbrains.xodus:xodus-vfs", version.ref = "xodus" }

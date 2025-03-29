@@ -52,16 +52,16 @@ open class HostOptionsPane : OptionsPane() {
         val port = (generalOption.portTextField.value ?: 22) as Int
         var authentication = Authentication.No
         var proxy = Proxy.No
+        val authenticationType = generalOption.authenticationTypeComboBox.selectedItem as AuthenticationType
 
-
-        if (generalOption.authenticationTypeComboBox.selectedItem == AuthenticationType.Password) {
+        if (authenticationType == AuthenticationType.Password || authenticationType == AuthenticationType.SSHAgent) {
             authentication = authentication.copy(
-                type = AuthenticationType.Password,
+                type = authenticationType,
                 password = String(generalOption.passwordTextField.password)
             )
-        } else if (generalOption.authenticationTypeComboBox.selectedItem == AuthenticationType.PublicKey) {
+        } else if (authenticationType == AuthenticationType.PublicKey) {
             authentication = authentication.copy(
-                type = AuthenticationType.PublicKey,
+                type = authenticationType,
                 password = generalOption.publicKeyComboBox.selectedItem?.toString() ?: StringUtils.EMPTY
             )
         }
@@ -294,6 +294,7 @@ open class HostOptionsPane : OptionsPane() {
             authenticationTypeComboBox.addItem(AuthenticationType.No)
             authenticationTypeComboBox.addItem(AuthenticationType.Password)
             authenticationTypeComboBox.addItem(AuthenticationType.PublicKey)
+            authenticationTypeComboBox.addItem(AuthenticationType.SSHAgent)
 
             authenticationTypeComboBox.selectedItem = AuthenticationType.Password
 
