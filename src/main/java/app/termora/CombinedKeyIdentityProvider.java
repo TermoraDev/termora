@@ -8,6 +8,7 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.*;
 
+@Deprecated
 public class CombinedKeyIdentityProvider implements KeyIdentityProvider {
 
     private final List<KeyIdentityProvider> providers = new ArrayList<>();

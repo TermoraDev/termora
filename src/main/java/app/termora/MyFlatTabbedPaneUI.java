@@ -14,6 +14,7 @@ import static com.formdev.flatlaf.util.UIScale.scale;
 /**
  * 如果要升级 FlatLaf 需要检查是否兼容
  */
+@Deprecated
 public class MyFlatTabbedPaneUI extends FlatTabbedPaneUI {
     @Override
     protected void paintContentBorder(Graphics g, int tabPlacement, int selectedIndex) {

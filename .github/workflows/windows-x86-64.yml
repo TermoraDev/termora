@@ -21,9 +21,9 @@ jobs:
 
       - name: Installing Java
         run: |
-          curl -s --output ${{ runner.temp }}\java_package.zip -L https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk-21.0.6-windows-x64-b895.91.zip
+          curl -s --output ${{ runner.temp }}\java_package.zip -L https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk-21.0.6-windows-x64-b631.42.zip
           unzip -q ${{ runner.temp }}\java_package.zip -d ${{ runner.temp }}\jbr
-          echo "JAVA_HOME=${{ runner.temp }}\jbr\jbrsdk-21.0.6-windows-x64-b895.91" >> $env:GITHUB_ENV
+          echo "JAVA_HOME=${{ runner.temp }}\jbr\jbrsdk-21.0.6-windows-x64-b631.42" >> $env:GITHUB_ENV
 
       - uses: actions/cache@v4
         with:

@@ -44,7 +44,7 @@ jobs:
           xcrun notarytool store-credentials "$STORE_CREDENTIALS" --apple-id "$APPLE_ID" --team-id "$TEAM_ID" --password "$APPLE_PASSWORD"
 
       # download jdk
-      - run: wget -q -O $RUNNER_TEMP/java_package.tar.gz https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk-21.0.6-osx-x64-b895.91.tar.gz
+      - run: wget -q -O $RUNNER_TEMP/java_package.tar.gz https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk-21.0.6-osx-x64-b631.42.tar.gz
 
       # install jdk
       - name: Installing Java
