@@ -1,5 +1,5 @@
 [versions]
-kotlin = "2.1.20"
+kotlin = "2.1.21"
 slf4j = "2.0.17"
 pty4j = "0.13.4"
 tinylog = "2.7.0"
