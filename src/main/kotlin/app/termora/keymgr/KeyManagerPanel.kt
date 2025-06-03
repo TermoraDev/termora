@@ -645,9 +645,13 @@ class KeyManagerPanel : JPanel(BorderLayout()) {
                 return
             }
 
+            ohKeyPair = ohKeyPair.copy(
+                name = nameTextField.text,
+                remark = remarkTextField.text,
+            )
+
             if (ohKeyPair.remark.isEmpty()) {
                 ohKeyPair = ohKeyPair.copy(
-                    name = nameTextField.text,
                     remark = "Import on " + DateFormatUtils.format(Date(), I18n.getString("termora.date-format"))
                 )
             }
