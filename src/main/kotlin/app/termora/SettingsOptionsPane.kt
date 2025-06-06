@@ -604,16 +604,29 @@ class SettingsOptionsPane : OptionsPane() {
 
             shellComboBox.selectedItem = terminalSetting.localShell
 
-            val fonts = linkedSetOf("JetBrains Mono", "Source Code Pro", "Monospaced")
-            FontUtils.getAllFonts().forEach {
-                if (!fonts.contains(it.family)) {
-                    fonts.addLast(it.family)
-                }
-            }
+            fontComboBox.addItem(terminalSetting.font)
+            var fontsLoaded = false
 
-            for (font in fonts) {
-                fontComboBox.addItem(font)
-            }
+            fontComboBox.addPopupMenuListener(object : PopupMenuListener {
+                override fun popupMenuWillBecomeVisible(e: PopupMenuEvent) {
+                    if (!fontsLoaded) {
+                        val selectedItem = fontComboBox.selectedItem
+                        fontComboBox.removeAllItems();
+                        val fonts = linkedSetOf("JetBrains Mono", "Source Code Pro", "Monospaced")
+                        FontUtils.getAvailableFontFamilyNames().forEach {
+                            if (!fonts.contains(it)) {
+                                fonts.addLast(it)
+                                fontComboBox.addItem(it)
+                            }
+                        }
+                        fontComboBox.selectedItem = selectedItem
+                        fontsLoaded = true
+                    }
+                }
+
+                override fun popupMenuWillBecomeInvisible(e: PopupMenuEvent) {}
+                override fun popupMenuCanceled(e: PopupMenuEvent) {}
+            })
 
             fontComboBox.selectedItem = terminalSetting.font
             debugComboBox.selectedItem = terminalSetting.debug
