@@ -25,6 +25,7 @@ class HostDialog(owner: Window, host: Host? = null) : DialogWrapper(owner) {
         isModal = true
         title = I18n.getString("termora.new-host.title")
         setLocationRelativeTo(null)
+        pane.setSelectedIndex(0)
 
         init()
     }

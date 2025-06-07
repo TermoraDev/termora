@@ -105,10 +105,6 @@ open class OptionsPane : JPanel(BorderLayout()) {
             }
         }
         tabListModel.addElement(option)
-
-        if (tabList.selectedIndex < 0) {
-            tabList.selectedIndex = 0
-        }
     }
 
     fun removeOption(option: Option) {

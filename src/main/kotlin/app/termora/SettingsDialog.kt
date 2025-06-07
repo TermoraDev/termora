@@ -3,8 +3,6 @@ package app.termora
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.Window
-import java.awt.event.WindowAdapter
-import java.awt.event.WindowEvent
 import javax.swing.BorderFactory
 import javax.swing.JComponent
 import javax.swing.JPanel
@@ -20,8 +18,10 @@ class SettingsDialog(owner: Window) : DialogWrapper(owner) {
         title = I18n.getString("termora.setting")
         setLocationRelativeTo(null)
 
-        init()
+        val index = properties.getString("Settings-SelectedOption")?.toIntOrNull() ?: 0
+        optionsPane.setSelectedIndex(index)
 
+        init()
         initEvents()
     }
 
@@ -29,14 +29,6 @@ class SettingsDialog(owner: Window) : DialogWrapper(owner) {
         Disposer.register(disposable, object : Disposable {
             override fun dispose() {
                 properties.putString("Settings-SelectedOption", optionsPane.getSelectedIndex().toString())
-            }
-        })
-
-        addWindowListener(object : WindowAdapter() {
-            override fun windowActivated(e: WindowEvent) {
-                removeWindowListener(this)
-                val index = properties.getString("Settings-SelectedOption")?.toIntOrNull() ?: return
-                optionsPane.setSelectedIndex(index)
             }
         })
     }
