@@ -612,12 +612,11 @@ class SettingsOptionsPane : OptionsPane() {
                     if (!fontsLoaded) {
                         val selectedItem = fontComboBox.selectedItem
                         fontComboBox.removeAllItems();
-                        val fonts = linkedSetOf("JetBrains Mono", "Source Code Pro", "Monospaced")
+                        fontComboBox.addItem("JetBrains Mono")
+                        fontComboBox.addItem("Source Code Pro")
+                        fontComboBox.addItem("Monospaced")
                         FontUtils.getAvailableFontFamilyNames().forEach {
-                            if (!fonts.contains(it)) {
-                                fonts.addLast(it)
-                                fontComboBox.addItem(it)
-                            }
+                            fontComboBox.addItem(it)
                         }
                         fontComboBox.selectedItem = selectedItem
                         fontsLoaded = true
