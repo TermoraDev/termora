@@ -134,6 +134,7 @@ open class OptionsPane : JPanel(BorderLayout()) {
                     val component = option.getJComponent()
                     loadedComponents[title] = component
                     contentPanel.add(component, title)
+                    SwingUtilities.updateComponentTreeUI(component)
                 }
 
                 cardLayout.show(contentPanel, title)
