@@ -8,7 +8,6 @@ import com.jgoodies.forms.builder.FormBuilder
 import com.jgoodies.forms.layout.FormLayout
 import org.apache.commons.lang3.StringUtils
 import org.jdesktop.swingx.JXEditorPane
-import org.slf4j.LoggerFactory
 import java.awt.Dimension
 import java.awt.Window
 import java.awt.event.WindowAdapter
@@ -18,9 +17,6 @@ import javax.swing.*
 import javax.swing.event.HyperlinkEvent
 
 class MigrationDialog(owner: Window?) : DialogWrapper(owner) {
-    companion object {
-        private val log = LoggerFactory.getLogger(MigrationDialog::class.java)
-    }
 
     private var isOpened = false
 
@@ -29,6 +25,7 @@ class MigrationDialog(owner: Window?) : DialogWrapper(owner) {
         isModal = true
         isResizable = false
         controlsVisible = false
+        escapeDispose = false
 
         if (SystemInfo.isWindows || SystemInfo.isLinux) {
             title = StringUtils.EMPTY
@@ -59,16 +56,7 @@ class MigrationDialog(owner: Window?) : DialogWrapper(owner) {
 
         val editorPane = JXEditorPane()
         editorPane.contentType = "text/html"
-        editorPane.text = """
-            <html>
-              <h1 align="center">2.0 已就绪。</h1>
-              <br/>
-              <h3>1. 存储结构已更新，需迁移现有数据。只需点击 <font color="#3573F0">“迁移”</font> 即可完成操作。</h3>
-              <h3>2. <font color="#3573F0">同步功能</font> 现作为插件提供，如需使用，请前往设置中 <font color="#EA33EC">手动安装</font>。</h3>
-              <h3>3. <font color="#3573F0">数据加密</font> 功能已被 <font color="#EA33EC">移除</font>（本地数据将以简单加密方式存储），请确保你的设备处于可信环境中。</h3>
-              <h3 align="center">📎 更多信息请查看：<a href="https://github.com/TermoraDev/termora/issues/645">TermoraDev/termora#593</a></h3>
-            </html>
-        """.trimIndent()
+        editorPane.text = MigrationI18n.getString("termora.plugins.migration.message")
         editorPane.isEditable = false
         editorPane.addHyperlinkListener {
             if (it.eventType == HyperlinkEvent.EventType.ACTIVATED) {
@@ -117,7 +105,7 @@ class MigrationDialog(owner: Window?) : DialogWrapper(owner) {
     }
 
     override fun createOkAction(): AbstractAction {
-        return OkAction("迁移")
+        return OkAction(MigrationI18n.getString("termora.plugins.migration.migrate"))
     }
 
 
