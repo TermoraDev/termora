@@ -66,7 +66,7 @@ class MigrationDialog(owner: Window?) : DialogWrapper(owner) {
               <h3>1. 存储结构已更新，需迁移现有数据。只需点击 <font color="#3573F0">“迁移”</font> 即可完成操作。</h3>
               <h3>2. <font color="#3573F0">同步功能</font> 现作为插件提供，如需使用，请前往设置中 <font color="#EA33EC">手动安装</font>。</h3>
               <h3>3. <font color="#3573F0">数据加密</font> 功能已被 <font color="#EA33EC">移除</font>（本地数据将以简单加密方式存储），请确保你的设备处于可信环境中。</h3>
-              <h3 align="center">📎 更多信息请查看：<a href="https://github.com/TermoraDev/termora/issues/593">TermoraDev/termora#593</a></h3>
+              <h3 align="center">📎 更多信息请查看：<a href="https://github.com/TermoraDev/termora/issues/645">TermoraDev/termora#593</a></h3>
             </html>
         """.trimIndent()
         editorPane.isEditable = false
