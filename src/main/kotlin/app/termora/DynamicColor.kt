@@ -13,7 +13,11 @@ open class DynamicColor : Color {
             val r = regular
             val d = dark
             if (r == null || d == null) {
-                return UIManager.getColor(colorKey)
+                try {
+                    return UIManager.getColor(colorKey)
+                } catch (e: Exception) {
+                    TODO("Not yet implemented")
+                }
             }
             return if (FlatLaf.isLafDark()) d else r
         }

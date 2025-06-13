@@ -10,7 +10,7 @@ class RSA2048Test {
     fun test() {
         val data = "hello world. 中国 😄".toByteArray()
 
-        val pair = RSA.generateKeyPair()
+        val pair = RSA.generateKeyPair(2048)
 
         println("publicKey: ${Base64.encodeBase64String(pair.public.encoded)}")
         println("privateKey: ${Base64.encodeBase64String(pair.private.encoded)}")

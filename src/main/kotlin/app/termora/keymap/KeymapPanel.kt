@@ -1,8 +1,12 @@
 package app.termora.keymap
 
-import app.termora.*
+import app.termora.DynamicColor
+import app.termora.I18n
+import app.termora.Icons
+import app.termora.OptionPane
 import app.termora.actions.ActionManager
 import app.termora.actions.SwitchTabAction
+import app.termora.database.DatabaseManager
 import app.termora.keymap.KeyShortcut.Companion.toHumanText
 import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.extras.components.FlatToolBar
@@ -25,7 +29,7 @@ class KeymapPanel : JPanel(BorderLayout()) {
     private val copyBtn = JButton(Icons.copy)
     private val renameBtn = JButton(Icons.edit)
     private val deleteBtn = JButton(Icons.delete)
-    private val database get() = Database.getDatabase()
+    private val database get() = DatabaseManager.getInstance()
     private val allowKeyCodes = mutableSetOf<Int>()
 
     init {

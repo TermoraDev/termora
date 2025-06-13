@@ -1,8 +1,12 @@
 package app.termora
 
 import app.termora.actions.ActionManager
+import app.termora.database.DatabaseManager
 import app.termora.keymap.KeymapManager
-import app.termora.vfs2.sftp.MySftpFileProvider
+import app.termora.plugin.ExtensionManager
+import app.termora.plugin.PluginManager
+import app.termora.protocol.ProtocolProvider
+import app.termora.protocol.TransferProtocolProvider
 import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.FlatSystemProperties
 import com.formdev.flatlaf.extras.FlatDesktop
@@ -21,7 +25,6 @@ import org.apache.commons.lang3.SystemUtils
 import org.apache.commons.vfs2.VFS
 import org.apache.commons.vfs2.cache.WeakRefFilesCache
 import org.apache.commons.vfs2.impl.DefaultFileSystemManager
-import org.apache.commons.vfs2.provider.local.DefaultLocalFileProvider
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import java.awt.MenuItem
@@ -38,68 +41,59 @@ import java.util.concurrent.CountDownLatch
 import javax.imageio.ImageIO
 import javax.swing.*
 import kotlin.system.exitProcess
-import kotlin.system.measureTimeMillis
 
 class ApplicationRunner {
     private val log by lazy { LoggerFactory.getLogger(ApplicationRunner::class.java) }
 
     fun run() {
-        measureTimeMillis {
 
-            // 打印系统信息
-            val printSystemInfo = measureTimeMillis { printSystemInfo() }
+        // 异步初始化
+        val loadPluginThread = Thread.ofVirtual().start { PluginManager.getInstance() }
 
-            // 打开数据库
-            val openDatabase = measureTimeMillis { openDatabase() }
+        // 打印系统信息
+        printSystemInfo()
 
-            // 加载设置
-            val loadSettings = measureTimeMillis { loadSettings() }
+        // 打开数据库
+        openDatabase()
 
-            // 统计
-            val enableAnalytics = measureTimeMillis { enableAnalytics() }
+        // 加载设置
+        loadSettings()
 
-            // init ActionManager、KeymapManager、VFS
-            swingCoroutineScope.launch(Dispatchers.IO) {
-                ActionManager.getInstance()
-                KeymapManager.getInstance()
+        // 统计
+        enableAnalytics()
 
-                val fileSystemManager = DefaultFileSystemManager()
-                fileSystemManager.addProvider("sftp", MySftpFileProvider())
-                fileSystemManager.addProvider("file", DefaultLocalFileProvider())
-                fileSystemManager.filesCache = WeakRefFilesCache()
-                fileSystemManager.init()
-                VFS.setManager(fileSystemManager)
-
-                // async init
-                BackgroundManager.getInstance().getBackgroundImage()
-            }
-
-            // 设置 LAF
-            val setupLaf = measureTimeMillis { setupLaf() }
-
-            // 解密数据
-            val openDoor = measureTimeMillis { openDoor() }
-
-            // clear temporary
-            clearTemporary()
-
-            // 启动主窗口
-            val startMainFrame = measureTimeMillis { startMainFrame() }
-
-            if (log.isDebugEnabled) {
-                log.debug("printSystemInfo: {}ms", printSystemInfo)
-                log.debug("openDatabase: {}ms", openDatabase)
-                log.debug("loadSettings: {}ms", loadSettings)
-                log.debug("enableAnalytics: {}ms", enableAnalytics)
-                log.debug("setupLaf: {}ms", setupLaf)
-                log.debug("openDoor: {}ms", openDoor)
-                log.debug("startMainFrame: {}ms", startMainFrame)
-            }
-        }.let {
-            if (log.isDebugEnabled) {
-                log.debug("run: {}ms", it)
-            }
+        // init ActionManager、KeymapManager、VFS
+        swingCoroutineScope.launch(Dispatchers.IO) {
+            ActionManager.getInstance()
+            KeymapManager.getInstance()
         }
+
+        // 设置 LAF
+        setupLaf()
+
+        // clear temporary
+        clearTemporary()
+
+        // 等待插件加载完成
+        loadPluginThread.join()
+
+        // 初始化 VFS
+        val fileSystemManager = DefaultFileSystemManager()
+        for (provider in ProtocolProvider.providers.filterIsInstance<TransferProtocolProvider>()) {
+            fileSystemManager.addProvider(provider.getProtocol().lowercase(), provider.getFileProvider())
+        }
+        fileSystemManager.filesCache = WeakRefFilesCache()
+        fileSystemManager.init()
+        VFS.setManager(fileSystemManager)
+
+        // 准备就绪
+        for (extension in ExtensionManager.getInstance().getExtensions(ApplicationRunnerExtension::class.java)) {
+            extension.ready()
+        }
+
+        // 启动主窗口
+        SwingUtilities.invokeLater { startMainFrame() }
+
     }
 
     private fun clearTemporary() {
@@ -108,14 +102,6 @@ class ApplicationRunner {
             FileUtils.cleanDirectory(Application.getTemporaryDir())
         }
 
-    }
-
-    private fun openDoor() {
-        if (Doorman.getInstance().isWorking()) {
-            if (!DoormanDialog(null).open()) {
-                exitProcess(1)
-            }
-        }
     }
 
     private fun startMainFrame() {
@@ -130,8 +116,8 @@ class ApplicationRunner {
                     // 设置 Dock
                     setupMacOSDock()
                 } catch (e: Exception) {
-                    if (log.isErrorEnabled) {
-                        log.error(e.message, e)
+                    if (log.isWarnEnabled) {
+                        log.warn(e.message, e)
                     }
                 }
 
@@ -142,6 +128,9 @@ class ApplicationRunner {
             // 设置托盘
             SwingUtilities.invokeLater { setupSystemTray() }
         }
+
+        // 初始化 Scheme
+        OpenURIHandlers.getInstance()
     }
 
     private fun setupSystemTray() {
@@ -186,7 +175,7 @@ class ApplicationRunner {
     }
 
     private fun loadSettings() {
-        val language = Database.getDatabase().appearance.language
+        val language = DatabaseManager.getInstance().appearance.language
         val locale = runCatching { LocaleUtils.toLocale(language) }.getOrElse { Locale.getDefault() }
         if (log.isInfoEnabled) {
             log.info("Language: {} , Locale: {}", language, locale)
@@ -206,7 +195,7 @@ class ApplicationRunner {
         }
 
         val themeManager = ThemeManager.getInstance()
-        val appearance = Database.getDatabase().appearance
+        val appearance = DatabaseManager.getInstance().appearance
         var theme = appearance.theme
         // 如果是跟随系统
         if (appearance.followSystem) {
@@ -317,7 +306,8 @@ class ApplicationRunner {
 
     private fun openDatabase() {
         try {
-            Database.getDatabase()
+            // 初始化数据库
+            DatabaseManager.getInstance()
         } catch (e: Exception) {
             if (log.isErrorEnabled) {
                 log.error(e.message, e)
@@ -365,10 +355,11 @@ class ApplicationRunner {
     }
 
     private fun getAnalyticsUserID(): String {
-        var id = Database.getDatabase().properties.getString("AnalyticsUserID")
+        val properties = DatabaseManager.getInstance().properties
+        var id = properties.getString("AnalyticsUserID")
         if (id.isNullOrBlank()) {
-            id = UUID.randomUUID().toSimpleString()
-            Database.getDatabase().properties.putString("AnalyticsUserID", id)
+            id = randomUUID()
+            properties.putString("AnalyticsUserID", id)
         }
         return id
     }

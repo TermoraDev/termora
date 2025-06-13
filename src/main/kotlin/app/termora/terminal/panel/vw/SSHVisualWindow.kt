@@ -1,8 +1,8 @@
 package app.termora.terminal.panel.vw
 
-import app.termora.SSHTerminalTab
 import app.termora.actions.AnActionEvent
 import app.termora.actions.DataProviders
+import app.termora.plugin.internal.ssh.SSHTerminalTab
 import org.apache.commons.lang3.StringUtils
 import java.util.*
 

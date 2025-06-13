@@ -4,7 +4,6 @@ import app.termora.*
 import app.termora.actions.AnAction
 import app.termora.actions.AnActionEvent
 import app.termora.actions.DataProviders
-
 import com.formdev.flatlaf.util.SystemInfo
 import com.jgoodies.forms.builder.FormBuilder
 import com.jgoodies.forms.layout.FormLayout
@@ -13,7 +12,6 @@ import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
 import java.awt.Window
-import java.util.*
 import javax.swing.*
 import javax.swing.border.EmptyBorder
 
@@ -134,7 +132,7 @@ class MacroDialog(owner: Window) : DialogWrapper(owner) {
                 for (i in rows.indices) {
                     val m = model.getElementAt(i)
                     val macro = m.copy(
-                        id = UUID.randomUUID().toSimpleString(),
+                        id = randomUUID(),
                         name = "${m.name} ${copyBtn.text}",
                         created = now,
                         sort = now + i

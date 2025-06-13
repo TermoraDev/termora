@@ -1,0 +1,24 @@
+<termora-plugin>
+
+    <id>s3</id>
+
+    <name>S3</name>
+
+    <paid/>
+
+    <version>${projectVersion}</version>
+
+    <termora-version since=">=${rootProjectVersion}" until=""/>
+
+    <entry>app.termora.plugins.s3.S3Plugin</entry>
+
+    <descriptions>
+        <description>Connecting to MinIO or AWS or other S3-compliant object storage services</description>
+        <description language="zh_CN">支持连接到 MinIO 或 AWS 或其他兼容 S3 协议的对象存储</description>
+        <description language="zh_TW">支援連接到 MinIO 或 AWS 或其他相容 S3 協定的物件存儲</description>
+    </descriptions>
+
+    <vendor url="https://github.com/TermoraDev">TermoraDev</vendor>
+
+
+</termora-plugin>

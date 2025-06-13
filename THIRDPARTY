@@ -2,10 +2,6 @@ annotations
 Apache License 2.0
 https://github.com/JetBrains/java-annotations/blob/master/LICENSE.txt
 
-kotlin-bip39
-MIT License
-https://github.com/Electric-Coin-Company/kotlin-bip39/blob/main/LICENSE
-
 colorpicker
 BSD 3-Clause "New" or "Revised" License
 https://github.com/dheid/colorpicker/blob/main/LICENSE
@@ -17,10 +13,6 @@ https://github.com/commonmark/commonmark-java/blob/main/LICENSE.txt
 commons-codec
 Apache License 2.0
 https://github.com/apache/commons-codec/blob/master/LICENSE.txt
-
-commons-compress
-Apache License 2.0
-https://github.com/apache/commons-compress/blob/master/LICENSE.txt
 
 commons-vfs2
 Apache License 2.0
@@ -226,26 +218,6 @@ versioncompare
 Apache License 2.0
 https://github.com/G00fY2/version-compare/blob/main/LICENSE
 
-xodus-compress
-Apache License 2.0
-https://github.com/JetBrains/xodus/blob/master/LICENSE.txt
-
-xodus-environment
-Apache License 2.0
-https://github.com/JetBrains/xodus/blob/master/LICENSE.txt
-
-xodus-openAPI
-Apache License 2.0
-https://github.com/JetBrains/xodus/blob/master/LICENSE.txt
-
-xodus-utils
-Apache License 2.0
-https://github.com/JetBrains/xodus/blob/master/LICENSE.txt
-
-xodus-vfs
-Apache License 2.0
-https://github.com/JetBrains/xodus/blob/master/LICENSE.txt
-
 jediterm
 Apache License 2.0
 https://github.com/JetBrains/jediterm/blob/master/LICENSE-APACHE-2.0.txt
@@ -261,3 +233,31 @@ https://github.com/stleary/JSON-java/blob/master/LICENSE
 jSerialComm
 Apache License 2.0
 https://github.com/Fazecast/jSerialComm/blob/master/LICENSE-APACHE-2.0
+
+exposed-core
+Apache License 2.0
+https://github.com/JetBrains/Exposed/blob/main/LICENSE.txt
+
+exposed-crypt
+Apache License 2.0
+https://github.com/JetBrains/Exposed/blob/main/LICENSE.txt
+
+exposed-jdbc
+Apache License 2.0
+https://github.com/JetBrains/Exposed/blob/main/LICENSE.txt
+
+sqlite-jdbc
+Apache License 2.0
+https://www.apache.org/licenses/LICENSE-2.0.txt
+
+java-uuid-generator
+Apache License 2.0
+https://github.com/cowtowncoder/java-uuid-generator/blob/master/LICENSE
+
+semver4j
+MIT
+https://github.com/semver4j/semver4j/blob/main/LICENSE
+
+dom4j
+Plexus (https://dom4j.github.io)
+https://github.com/dom4j/dom4j/blob/master/LICENSE

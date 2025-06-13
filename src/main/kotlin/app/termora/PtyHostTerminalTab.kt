@@ -44,13 +44,14 @@ abstract class PtyHostTerminalTab(
                 startPtyConnectorReader()
 
                 // 启动命令
-                if (host.options.startupCommand.isNotBlank() && host.protocol != Protocol.SFTPPty) {
+                if (host.options.startupCommand.isNotBlank()) {
                     coroutineScope.launch(Dispatchers.IO) {
                         delay(250.milliseconds)
                         withContext(Dispatchers.Swing) {
                             val charset = ptyConnector.getCharset()
-                            ptyConnector.write(host.options.startupCommand.toByteArray(charset))
-                            ptyConnector.write(
+                            sendStartupCommand(ptyConnector, host.options.startupCommand.toByteArray(charset))
+                            sendStartupCommand(
+                                ptyConnector,
                                 terminal.getKeyEncoder().encode(TerminalKeyEvent(KeyEvent.VK_ENTER))
                                     .toByteArray(charset)
                             )
@@ -78,6 +79,10 @@ abstract class PtyHostTerminalTab(
             }
 
         }
+    }
+
+    open fun sendStartupCommand(ptyConnector: PtyConnector, bytes: ByteArray) {
+        ptyConnector.write(bytes)
     }
 
     override fun canReconnect(): Boolean {

@@ -1,0 +1,24 @@
+<termora-plugin>
+
+    <id>ftp</id>
+
+    <name>FTP</name>
+
+    <paid/>
+
+    <version>${projectVersion}</version>
+
+    <termora-version since=">=${rootProjectVersion}" until=""/>
+
+    <entry>app.termora.plugins.ftp.FTPPlugin</entry>
+
+    <descriptions>
+        <description>Connecting to FTP</description>
+        <description language="zh_CN">支持连接到到 FTP</description>
+        <description language="zh_TW">支援連接到 FTP</description>
+    </descriptions>
+
+    <vendor url="https://github.com/TermoraDev">TermoraDev</vendor>
+
+
+</termora-plugin>

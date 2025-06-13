@@ -4,7 +4,7 @@ slf4j = "2.0.17"
 pty4j = "0.13.6"
 tinylog = "2.7.0"
 kotlinx-coroutines = "1.10.2"
-flatlaf = "3.6"
+flatlaf = "3.7-SNAPSHOT"
 kotlinx-serialization-json = "1.8.1"
 commons-codec = "1.18.0"
 commons-lang3 = "3.17.0"
@@ -12,7 +12,7 @@ commons-csv = "1.14.0"
 commons-net = "3.11.1"
 commons-text = "1.13.1"
 commons-compress = "1.27.1"
-commons-vfs2="2.10.0"
+commons-vfs2 = "2.10.0"
 swingx = "1.6.5-1"
 jgoodies-forms = "1.9.0"
 jfa = "1.2.0"
@@ -41,6 +41,13 @@ jSerialComm = "2.11.0"
 ini4j = "0.5.5-2"
 restart4j = "0.0.1"
 eddsa = "0.3.0"
+exposed = "1.0.0-beta-1"
+h2 = "2.3.232"
+sqlite = "3.49.1.0"
+jug = "5.1.0"
+semver4j = "5.7.0"
+jsvg = "2.0.0"
+dom4j = "2.1.4"
 
 [libraries]
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
@@ -59,9 +66,11 @@ commons-vfs2 = { group = "org.apache.commons", name = "commons-vfs2", version.re
 pty4j = { group = "org.jetbrains.pty4j", name = "pty4j", version.ref = "pty4j" }
 ini4j = { module = "org.jetbrains.intellij.deps:ini4j", version.ref = "ini4j" }
 flatlaf = { group = "com.formdev", name = "flatlaf", version.ref = "flatlaf" }
-flatlaf-extras = { group = "com.formdev", name = "flatlaf-extras", version.ref = "flatlaf" }
+flatlafextras = { group = "com.formdev", name = "flatlaf-extras", version.ref = "flatlaf" }
+flatlafswingx = { module = "com.formdev:flatlaf-swingx", version.ref = "flatlaf" }
 testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
 testcontainers = { module = "org.testcontainers:testcontainers" }
+testcontainers-junit-jupiter = { module = "org.testcontainers:junit-jupiter" }
 swingx = { module = "org.swinglabs.swingx:swingx-all", version.ref = "swingx" }
 jgoodies-forms = { module = "com.jgoodies:jgoodies-forms", version.ref = "jgoodies-forms" }
 jna = { module = "net.java.dev.jna:jna", version.ref = "jna" }
@@ -73,7 +82,6 @@ oshi-core = { module = "com.github.oshi:oshi-core", version.ref = "oshi" }
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 restart4j = { module = "com.github.hstyi:restart4j", version.ref = "restart4j" }
 jbr-api = { module = "com.jetbrains:jbr-api", version.ref = "jbr-api" }
-flatlaf-swingx = { module = "com.formdev:flatlaf-swingx", version.ref = "flatlaf" }
 hutool = { module = "cn.hutool:hutool-all", version.ref = "hutool" }
 jsch = { module = "com.github.mwiede:jsch", version.ref = "jsch" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
@@ -95,6 +103,16 @@ colorpicker = { module = "org.drjekyll:colorpicker", version.ref = "colorpicker"
 mixpanel = { module = "com.mixpanel:mixpanel-java", version.ref = "mixpanel" }
 jSerialComm = { module = "com.fazecast:jSerialComm", version.ref = "jSerialComm" }
 eddsa = { module = "net.i2p.crypto:eddsa", version.ref = "eddsa" }
+exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
+exposed-crypt = { module = "org.jetbrains.exposed:exposed-crypt", version.ref = "exposed" }
+exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
+exposed-migration = { module = "org.jetbrains.exposed:exposed-migration", version.ref = "exposed" }
+h2 = { module = "com.h2database:h2", version.ref = "h2" }
+sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
+jug = { module = "com.fasterxml.uuid:java-uuid-generator", version.ref = "jug" }
+jsvg = { module = "com.github.weisj:jsvg", version.ref = "jsvg" }
+dom4j = { module = "org.dom4j:dom4j", version.ref = "dom4j" }
+semver4j = { module = "org.semver4j:semver4j", version.ref = "semver4j" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

@@ -1,13 +1,12 @@
 package app.termora.macro
 
 import app.termora.AES.decodeBase64
-import app.termora.toSimpleString
+import app.termora.randomUUID
 import kotlinx.serialization.Serializable
-import java.util.*
 
 @Serializable
 data class Macro(
-    val id: String = UUID.randomUUID().toSimpleString(),
+    val id: String = randomUUID(),
     val macro: String = String(),
     val name: String = String(),
     /**

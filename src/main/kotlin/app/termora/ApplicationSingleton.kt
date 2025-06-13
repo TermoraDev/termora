@@ -34,12 +34,12 @@ class ApplicationSingleton private constructor() : Disposable {
         try {
             synchronized(this) {
                 singleton = this.isSingleton
-                if (singleton != null) return singleton as Boolean
+                if (singleton != null) return singleton
 
                 if (SystemInfo.isWindows) {
                     val handle = Kernel32.INSTANCE.CreateMutex(null, false, Application.getName())
                     singleton = handle != null && Kernel32.INSTANCE.GetLastError() != WinError.ERROR_ALREADY_EXISTS
-                    if (singleton == true) {
+                    if (singleton) {
                         // 启动监听器，方便激活窗口
                         Thread.ofVirtual().start(Win32HelperWindow.getInstance())
                     } else {

@@ -1,7 +1,7 @@
 package app.termora.snippet
 
 import app.termora.Icons
-import app.termora.SimpleTreeNode
+import app.termora.tree.SimpleTreeNode
 import com.formdev.flatlaf.icons.FlatTreeClosedIcon
 import com.formdev.flatlaf.icons.FlatTreeOpenIcon
 import javax.swing.Icon

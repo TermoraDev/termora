@@ -3,6 +3,7 @@ package app.termora.sftp
 import app.termora.*
 import app.termora.actions.AnAction
 import app.termora.actions.AnActionEvent
+import app.termora.database.DatabaseChangedExtension
 import com.formdev.flatlaf.extras.components.FlatPopupMenu
 import com.formdev.flatlaf.extras.components.FlatTabbedPane
 import java.awt.event.MouseAdapter
@@ -11,7 +12,6 @@ import java.util.concurrent.atomic.AtomicBoolean
 import javax.swing.JButton
 import javax.swing.JToolBar
 import javax.swing.SwingUtilities
-import javax.swing.UIManager
 
 @Suppress("DuplicatedCode")
 class SFTPTabbed(private val transportManager: TransportManager) : FlatTabbedPane(), Disposable {
@@ -100,10 +100,10 @@ class SFTPTabbed(private val transportManager: TransportManager) : FlatTabbedPan
                     return
                 }
                 val host = hostManager.getHost(panel.host.id) ?: return
-                val dialog = HostDialog(evt.window, host)
+                val dialog = NewHostDialogV2(evt.window, host)
                 dialog.setLocationRelativeTo(evt.window)
                 dialog.isVisible = true
-                hostManager.addHost(dialog.host ?: return)
+                hostManager.addHost(dialog.host ?: return, DatabaseChangedExtension.Source.Sync)
             }
         })
 
@@ -145,8 +145,8 @@ class SFTPTabbed(private val transportManager: TransportManager) : FlatTabbedPan
 
     override fun updateUI() {
         styleMap = mapOf(
-            "focusColor" to UIManager.getColor("TabbedPane.selectedBackground"),
-            "hoverColor" to UIManager.getColor("TabbedPane.background"),
+            "focusColor" to DynamicColor("TabbedPane.background"),
+            "hoverColor" to DynamicColor("TabbedPane.background"),
             "tabHeight" to 30
         )
         super.updateUI()

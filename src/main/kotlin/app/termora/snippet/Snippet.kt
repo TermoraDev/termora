@@ -1,9 +1,8 @@
 package app.termora.snippet
 
-import app.termora.toSimpleString
+import app.termora.randomUUID
 import kotlinx.serialization.Serializable
 import org.apache.commons.lang3.StringUtils
-import java.util.*
 
 enum class SnippetType {
     Folder,
@@ -12,7 +11,7 @@ enum class SnippetType {
 
 @Serializable
 data class Snippet(
-    val id: String = UUID.randomUUID().toSimpleString(),
+    val id: String = randomUUID(),
     val name: String,
     val snippet: String = StringUtils.EMPTY,
     val parentId: String = StringUtils.EMPTY,

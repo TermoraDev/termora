@@ -2,7 +2,7 @@ package app.termora.terminal.panel
 
 import app.termora.Application
 import app.termora.ApplicationScope
-import app.termora.Database
+import app.termora.database.DatabaseManager
 import app.termora.terminal.*
 import java.awt.Graphics
 import java.net.URI
@@ -17,7 +17,7 @@ class TerminalHyperlinkPaintListener private constructor() : TerminalPaintListen
     }
 
     private val regex = Regex("https?://\\S*[^.\\s'\",()<>\\[\\]]")
-    private val isEnableHyperlink get() = Database.getDatabase().terminal.hyperlink
+    private val isEnableHyperlink get() = DatabaseManager.getInstance().terminal.hyperlink
 
     override fun before(
         offset: Int,

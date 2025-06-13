@@ -10,7 +10,7 @@ import org.apache.sshd.client.session.ClientSession
 import org.apache.sshd.sftp.client.fs.SftpFileSystem
 import kotlin.io.path.absolutePathString
 
-class MySftpFileSystem(
+internal class MySftpFileSystem(
     private val sftpFileSystem: SftpFileSystem,
     rootName: FileName,
     fileSystemOptions: FileSystemOptions

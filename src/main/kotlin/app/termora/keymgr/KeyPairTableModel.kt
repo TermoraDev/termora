@@ -2,7 +2,8 @@ package app.termora.keymgr
 
 import javax.swing.table.DefaultTableModel
 
-class KeyPairTableModel: DefaultTableModel() {
+class KeyPairTableModel() : DefaultTableModel() {
+
     override fun isCellEditable(row: Int, column: Int): Boolean {
         return false
     }

@@ -1,5 +1,6 @@
 package app.termora
 
+import app.termora.database.DatabaseManager
 import app.termora.macro.MacroPtyConnector
 import app.termora.terminal.PtyConnector
 import app.termora.terminal.PtyConnectorDelegate
@@ -14,7 +15,7 @@ import java.util.*
 
 class PtyConnectorFactory : Disposable {
     private val ptyConnectors = Collections.synchronizedList(mutableListOf<PtyConnector>())
-    private val database get() = Database.getDatabase()
+    private val database get() = DatabaseManager.getInstance()
 
     companion object {
         private val log = LoggerFactory.getLogger(PtyConnectorFactory::class.java)

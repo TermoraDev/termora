@@ -1,10 +1,10 @@
 package app.termora.actions
 
-import app.termora.Database
 import app.termora.TerminalPanelFactory
+import app.termora.database.DatabaseManager
 
 abstract class TerminalZoomAction : AnAction() {
-    protected val fontSize get() = Database.getDatabase().terminal.fontSize
+    protected val fontSize get() = DatabaseManager.getInstance().terminal.fontSize
 
     abstract fun zoom(): Boolean
 

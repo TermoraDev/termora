@@ -22,7 +22,7 @@ abstract class SSHDTest {
     protected val host
         get() = Host(
             name = sshd.containerName,
-            protocol = Protocol.SSH,
+            protocol = "SSH",
             host = "127.0.0.1",
             port = sshd.getMappedPort(2222),
             username = "foo",

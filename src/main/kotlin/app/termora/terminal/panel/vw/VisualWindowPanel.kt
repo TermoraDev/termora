@@ -1,6 +1,7 @@
 package app.termora.terminal.panel.vw
 
 import app.termora.*
+import app.termora.database.DatabaseManager
 import com.formdev.flatlaf.extras.components.FlatToolBar
 import com.formdev.flatlaf.util.SystemInfo
 import java.awt.*
@@ -17,7 +18,7 @@ open class VisualWindowPanel(protected val id: String, protected val visualWindo
     JPanel(BorderLayout()), VisualWindow {
 
     private val stickPx = 2
-    protected val properties get() = Database.getDatabase().properties
+    protected val properties get() = DatabaseManager.getInstance().properties
     private val titleLabel = JLabel()
     private val toolbar = FlatToolBar()
     private val visualWindow get() = this

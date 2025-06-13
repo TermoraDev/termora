@@ -1,7 +1,7 @@
 package app.termora.actions
 
-import app.termora.Database
 import app.termora.I18n
+import app.termora.database.DatabaseManager
 import kotlin.math.max
 
 class TerminalZoomOutAction : TerminalZoomAction() {
@@ -16,7 +16,7 @@ class TerminalZoomOutAction : TerminalZoomAction() {
 
     override fun zoom(): Boolean {
         val oldFontSize = fontSize
-        Database.getDatabase().terminal.fontSize = max(fontSize - 2, 9)
+        DatabaseManager.getInstance().terminal.fontSize = max(fontSize - 2, 9)
         return oldFontSize != fontSize
     }
 }

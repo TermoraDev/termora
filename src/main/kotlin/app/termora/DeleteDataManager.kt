@@ -1,5 +1,7 @@
 package app.termora
 
+import app.termora.database.DatabaseManager
+
 /**
  * 仅标记
  */
@@ -11,7 +13,7 @@ class DeleteDataManager private constructor() {
     }
 
     private val data = mutableMapOf<String, DeletedData>()
-    private val database get() = Database.getDatabase()
+    private val database get() = DatabaseManager.getInstance()
 
     fun removeHost(id: String, deleteDate: Long = System.currentTimeMillis()) {
         addDeletedData(DeletedData(id, "Host", deleteDate))
@@ -40,12 +42,12 @@ class DeleteDataManager private constructor() {
     private fun addDeletedData(deletedData: DeletedData) {
         if (data.containsKey(deletedData.id)) return
         data[deletedData.id] = deletedData
-        database.addDeletedData(deletedData)
+        // TODO database.addDeletedData(deletedData)
     }
 
     fun getDeletedData(): List<DeletedData> {
         if (data.isEmpty()) {
-            data.putAll(database.getDeletedData().associateBy { it.id })
+           // TODO  data.putAll(database.getDeletedData().associateBy { it.id })
         }
         return data.values.sortedBy { it.deleteDate }
     }

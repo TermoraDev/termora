@@ -1,6 +1,6 @@
 package app.termora
 
-import app.termora.native.osx.NativeMacLibrary
+import app.termora.nv.osx.NativeMacLibrary
 import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.extras.components.FlatTextPane
 import com.formdev.flatlaf.util.SystemInfo

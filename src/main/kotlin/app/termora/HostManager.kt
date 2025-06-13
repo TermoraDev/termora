@@ -1,52 +1,61 @@
 package app.termora
 
+import app.termora.Application.ohMyJson
+import app.termora.database.Data
+import app.termora.database.DataType
+import app.termora.database.DatabaseChangedExtension
+import app.termora.database.DatabaseManager
 
-class HostManager private constructor() {
+
+class HostManager private constructor() : Disposable {
     companion object {
         fun getInstance(): HostManager {
             return ApplicationScope.forApplicationScope().getOrCreate(HostManager::class) { HostManager() }
         }
     }
 
-    private val database get() = Database.getDatabase()
-    private var hosts = mutableMapOf<String, Host>()
+    private val databaseManager get() = DatabaseManager.getInstance()
 
     /**
      * 修改缓存并存入数据库
      */
-    fun addHost(host: Host) {
+    fun addHost(host: Host, source: DatabaseChangedExtension.Source = DatabaseChangedExtension.Source.User) {
         assertEventDispatchThread()
-        if (host.deleted) {
-            removeHost(host.id)
-        } else {
-            database.addHost(host)
-            hosts[host.id] = host
+        if (host.ownerType.isBlank()) {
+            throw IllegalArgumentException("Owner type cannot be null")
         }
+        databaseManager.saveAndIncrementVersion(
+            Data(
+                id = host.id,
+                ownerId = host.ownerId,
+                ownerType = host.ownerType,
+                type = DataType.Host.name,
+                data = ohMyJson.encodeToString(host),
+            ),
+            source
+        )
+
     }
 
     fun removeHost(id: String) {
-        hosts.entries.removeIf { it.value.id == id || it.value.parentId == id }
-        database.removeHost(id)
-        DeleteDataManager.getInstance().removeHost(id)
+        databaseManager.delete(id, DataType.Host.name)
     }
 
     /**
      * 第一次调用从数据库中获取，后续从缓存中获取
      */
     fun hosts(): List<Host> {
-        if (hosts.isEmpty()) {
-            database.getHosts().filter { !it.deleted }
-                .forEach { hosts[it.id] = it }
-        }
-        return hosts.values.filter { !it.deleted }
-            .sortedWith(compareBy<Host> { if (it.protocol == Protocol.Folder) 0 else 1 }.thenBy { it.sort })
+        return databaseManager.data<Host>(DataType.Host)
+            .sortedWith(compareBy<Host> { if (it.isFolder) 0 else 1 }.thenBy { it.sort })
     }
 
     /**
      * 从缓存中获取
      */
     fun getHost(id: String): Host? {
-        return hosts[id]
+        val data = databaseManager.data(id) ?: return null
+        if (data.type != DataType.Host.name) return null
+        return ohMyJson.decodeFromString(data.data)
     }
 
 }

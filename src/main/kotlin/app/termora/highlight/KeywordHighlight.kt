@@ -1,13 +1,12 @@
 package app.termora.highlight
 
-import app.termora.toSimpleString
+import app.termora.randomUUID
 import kotlinx.serialization.Serializable
 import org.apache.commons.lang3.StringUtils
-import java.util.*
 
 @Serializable
 data class KeywordHighlight(
-    val id: String = UUID.randomUUID().toSimpleString(),
+    val id: String = randomUUID(),
 
     /**
      * 关键词

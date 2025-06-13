@@ -5,8 +5,10 @@ import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 import org.jetbrains.kotlin.org.apache.commons.io.FileUtils
 import org.jetbrains.kotlin.org.apache.commons.io.filefilter.FileFilterUtils
 import org.jetbrains.kotlin.org.apache.commons.lang3.StringUtils
+import org.jetbrains.kotlin.org.apache.commons.lang3.time.DateFormatUtils
 import java.io.FileNotFoundException
 import java.nio.file.Files
+import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
@@ -21,10 +23,11 @@ plugins {
 
 
 group = "app.termora"
-version = "1.0.16"
+version = rootProject.projectDir.resolve("VERSION").readText().trim()
 
 val os: OperatingSystem = DefaultNativePlatform.getCurrentOperatingSystem()
 val arch: ArchitectureInternal = DefaultNativePlatform.getCurrentArchitecture()
+val appVersion = project.version.toString().split("-")[0]
 
 // macOS 签名信息
 val macOSSignUsername = System.getenv("TERMORA_MAC_SIGN_USER_NAME") ?: StringUtils.EMPTY
@@ -36,15 +39,16 @@ val macOSNotaryKeychainProfile = System.getenv("TERMORA_MAC_NOTARY_KEYCHAIN_PROF
 val macOSNotary = macOSSign && macOSNotaryKeychainProfile.isNotBlank()
         && System.getenv("TERMORA_MAC_NOTARY").toBoolean()
 
-repositories {
-    mavenCentral()
-    maven("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies")
-    maven("https://www.jitpack.io")
+allprojects {
+    repositories {
+        mavenCentral()
+        maven("https://packages.jetbrains.team/maven/p/ij/intellij-dependencies")
+        maven("https://www.jitpack.io")
+        maven("https://central.sonatype.com/repository/maven-snapshots")
+    }
 }
 
 dependencies {
-    // 由于签名和公证，macOS 不携带 natives
-    val useNoNativesFlatLaf = os.isMacOsX && System.getenv("ENABLE_BUILD").toBoolean()
 
     testImplementation(kotlin("test"))
     testImplementation(libs.hutool)
@@ -54,6 +58,8 @@ dependencies {
     testImplementation(libs.delight.rhino.sandbox)
     testImplementation(platform(libs.testcontainers.bom))
     testImplementation(libs.testcontainers)
+    testImplementation(libs.h2)
+    testImplementation(libs.exposed.migration)
 
 //    implementation(platform(libs.koin.bom))
 //    implementation(libs.koin.core)
@@ -67,28 +73,13 @@ dependencies {
     api(libs.commons.csv)
     api(libs.commons.net)
     api(libs.commons.text)
-    api(libs.commons.compress)
     api(libs.commons.vfs2) { exclude(group = "*", module = "*") }
     api(libs.kotlinx.coroutines.swing)
     api(libs.kotlinx.coroutines.core)
 
-    api(libs.flatlaf) {
-        artifact {
-            if (useNoNativesFlatLaf) {
-                classifier = "no-natives"
-            }
-        }
-    }
-    api(libs.flatlaf.extras) {
-        if (useNoNativesFlatLaf) {
-            exclude(group = "com.formdev", module = "flatlaf")
-        }
-    }
-    api(libs.flatlaf.swingx) {
-        if (useNoNativesFlatLaf) {
-            exclude(group = "com.formdev", module = "flatlaf")
-        }
-    }
+    api(libs.flatlaf)
+    api(libs.flatlafextras)
+    api(libs.flatlafswingx)
 
     api(libs.kotlinx.serialization.json)
     api(libs.swingx)
@@ -109,24 +100,26 @@ dependencies {
     api(libs.jgit.agent) { exclude(group = "*", module = "sshd-osgi") }
     api(libs.eddsa)
     api(libs.jnafilechooser)
-    api(libs.xodus.vfs)
-    api(libs.xodus.openAPI)
-    api(libs.xodus.environment)
-    api(libs.bip39)
+
     api(libs.colorpicker)
     api(libs.mixpanel)
     api(libs.jSerialComm)
     api(libs.ini4j)
     api(libs.restart4j)
+    api(libs.exposed.core)
+    api(libs.exposed.crypt)
+    api(libs.exposed.jdbc)
+    api(libs.sqlite)
+    api(libs.jug)
+    api(libs.semver4j)
+    api(libs.jsvg)
+    api(libs.dom4j) { exclude(group = "*", module = "*") }
 }
 
 application {
     val args = mutableListOf(
-        "-Xmx2g",
-        "-XX:+UseZGC",
-        "-XX:+ZUncommit",
-        "-XX:+ZGenerational",
-        "-XX:ZUncommitDelay=60",
+        "-Xmx2048m",
+        "-Drelease-date=${DateFormatUtils.format(Date(), "yyyy-MM-dd")}"
     )
 
     if (os.isMacOsX) {
@@ -139,7 +132,7 @@ application {
         args.add("-Dapple.awt.application.appearance=system")
     }
 
-    args.add("-Dapp-version=${project.version}")
+    args.add("-DTERMORA_PLUGIN_DIRECTORY=${layout.buildDirectory.get().asFile.absolutePath}${File.separator}plugins")
 
     if (os.isLinux) {
         args.add("-Dsun.java2d.opengl=true")
@@ -153,6 +146,7 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             from(components["java"])
+
             pom {
                 name = project.name
                 description = "Termora is a terminal emulator and SSH client for Windows, macOS and Linux"
@@ -189,8 +183,10 @@ tasks.register<Copy>("copy-dependencies") {
     from(configurations.runtimeClasspath).into(dir)
     val jna = libs.jna.asProvider().get()
     val pty4j = libs.pty4j.get()
+    val flatlaf = libs.flatlaf.get()
     val jSerialComm = libs.jSerialComm.get()
     val restart4j = libs.restart4j.get()
+    val sqlite = libs.sqlite.get()
 
     // 对 JNA 和 PTY4J 的本地库提取
     // 提取出来是为了单独签名，不然无法通过公证
@@ -254,6 +250,22 @@ tasks.register<Copy>("copy-dependencies") {
                     )) {
                         e.setExecutable(true)
                     }
+                } else if ("${sqlite.name}-${sqlite.version}" == file.nameWithoutExtension) {
+                    val targetDir = FileUtils.getFile(dylib, sqlite.name)
+                    FileUtils.forceMkdir(targetDir)
+                    // @formatter:off
+                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "org/sqlite/native/Mac/${archName}/*", "-d", targetDir.absolutePath) }
+                    // @formatter:on
+                    // 删除所有二进制类库
+                    exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/*") }
+                } else if ("${flatlaf.name}-${flatlaf.version}" == file.nameWithoutExtension) {
+                    val targetDir = FileUtils.getFile(dylib, flatlaf.name)
+                    FileUtils.forceMkdir(targetDir)
+                    val isArm = arch.isArm
+                    // @formatter:off
+                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "com/formdev/flatlaf/natives/*macos*${if (isArm) "arm" else "x86"}*", "-d", targetDir.absolutePath) }
+                    // @formatter:on
+                    exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*") }
                 }
             }
 
@@ -330,6 +342,48 @@ tasks.register<Copy>("copy-dependencies") {
                             exec { commandLine("zip", "-d", file.absolutePath, "linux/aarch64/*") }
                         }
                     }
+                } else if ("${sqlite.name}-${sqlite.version}" == file.nameWithoutExtension) {
+                    exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Linux-*") }
+                    exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/FreeBSD/*") }
+                    exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Mac/*") }
+                    if (os.isWindows) {
+                        exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Linux/*") }
+                        exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Windows/armv7/*") }
+                        exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Windows/x86/*") }
+                        if (arch.isArm) {
+                            exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Windows/x86_64/*") }
+                        } else {
+                            exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Windows/aarch64/*") }
+                        }
+                    } else if (os.isLinux) {
+                        exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Windows/*") }
+                        exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Linux/arm*") }
+                        exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Linux/ppc64/*") }
+                        exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Linux/riscv64/*") }
+                        exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Linux/x86/*") }
+                        if (arch.isArm) {
+                            exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Linux/x86_64/*") }
+                        } else {
+                            exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Linux/aarch64/*") }
+                        }
+                    }
+                } else if ("${flatlaf.name}-${flatlaf.version}" == file.nameWithoutExtension) {
+                    exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*macos*") }
+                    if (os.isWindows) {
+                        exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*linux*") }
+                        if (arch.isArm) {
+                            exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*x86*") }
+                        } else {
+                            exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*x86.dll") }
+                        }
+                    } else if (os.isLinux) {
+                        exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*windows*") }
+                        if (arch.isArm) {
+                            exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*x86*") }
+                        } else {
+                            exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*arm*") }
+                        }
+                    }
                 }
             }
         }
@@ -343,6 +397,7 @@ tasks.register<Exec>("jlink") {
         "java.logging",
         "java.management",
         "java.rmi",
+        "java.sql",
         "java.security.jgss",
         "jdk.crypto.ec",
         "jdk.unsupported",
@@ -368,26 +423,23 @@ tasks.register<Exec>("jpackage") {
 
     val buildDir = layout.buildDirectory.get()
     val options = mutableListOf(
-        "--add-exports java.base/sun.nio.ch=ALL-UNNAMED",
-        "-Xmx2g",
-        "-XX:+UseZGC",
-        "-XX:+ZUncommit",
-        "-XX:+ZGenerational",
-        "-XX:ZUncommitDelay=60",
+        "-Xmx2048m",
         "-XX:+HeapDumpOnOutOfMemoryError",
         "-Dlogger.console.level=off",
         "-Dkotlinx.coroutines.debug=off",
         "-Dapp-version=${project.version}",
+        "-Drelease-date=${DateFormatUtils.format(Date(), "yyyy-MM-dd")}",
+        "--add-exports java.base/sun.nio.ch=ALL-UNNAMED",
     )
 
     options.add("-Dsun.java2d.metal=true")
 
     if (os.isMacOsX) {
         // NSWindow
+        options.add("-Dapple.awt.application.appearance=system")
         options.add("--add-opens java.desktop/java.awt=ALL-UNNAMED")
         options.add("--add-opens java.desktop/sun.lwawt=ALL-UNNAMED")
         options.add("--add-opens java.desktop/sun.lwawt.macosx=ALL-UNNAMED")
-        options.add("-Dapple.awt.application.appearance=system")
         options.add("--add-opens java.desktop/sun.lwawt.macosx.concurrent=ALL-UNNAMED")
         options.add("--add-exports java.desktop/com.apple.eawt=ALL-UNNAMED")
     }
@@ -399,7 +451,7 @@ tasks.register<Exec>("jpackage") {
     val arguments = mutableListOf("${Jvm.current().javaHome}/bin/jpackage")
     arguments.addAll(listOf("--runtime-image", "${buildDir}/jlink"))
     arguments.addAll(listOf("--name", project.name.uppercaseFirstChar()))
-    arguments.addAll(listOf("--app-version", "${project.version}"))
+    arguments.addAll(listOf("--app-version", appVersion.toString()))
     arguments.addAll(listOf("--main-jar", tasks.jar.get().archiveFileName.get()))
     arguments.addAll(listOf("--main-class", application.mainClass.get()))
     arguments.addAll(listOf("--input", "$buildDir/libs"))
@@ -408,6 +460,7 @@ tasks.register<Exec>("jpackage") {
     arguments.addAll(listOf("--java-options", options.joinToString(StringUtils.SPACE)))
     arguments.addAll(listOf("--vendor", "TermoraDev"))
     arguments.addAll(listOf("--copyright", "TermoraDev"))
+    arguments.addAll(listOf("--app-content", "$buildDir/plugins"))
 
     if (os.isWindows) {
         arguments.addAll(
@@ -470,20 +523,22 @@ tasks.register("dist") {
         // 清空目录
         exec { commandLine(gradlew, "clean") }
 
+        // 构建自带的插件
+        exec { commandLine(gradlew, ":plugins:migration:build") }
+
         // 打包并复制依赖
         exec {
-            commandLine(gradlew, "jar", "copy-dependencies")
-            environment("ENABLE_BUILD" to true)
+            commandLine(gradlew, ":jar", ":copy-dependencies")
         }
 
         // 检查依赖的开源协议
-        exec { commandLine(gradlew, "check-license") }
+        exec { commandLine(gradlew, ":check-license") }
 
         // jlink
-        exec { commandLine(gradlew, "jlink") }
+        exec { commandLine(gradlew, ":jlink") }
 
         // 打包
-        exec { commandLine(gradlew, "jpackage") }
+        exec { commandLine(gradlew, ":jpackage") }
 
         // 根据不同的系统构建不同的二进制包
         pack()
@@ -558,7 +613,7 @@ fun packOnWindows(distributionDir: Directory, finalFilenameWithoutExtension: Str
             "iscc",
             "/DMyAppId=${projectName}",
             "/DMyAppName=${projectName}",
-            "/DMyAppVersion=${project.version}",
+            "/DMyAppVersion=${appVersion}",
             "/DMyOutputDir=${distributionDir.asFile.absolutePath}",
             "/DMySetupIconFile=${FileUtils.getFile(projectDir, "src", "main", "resources", "icons", "termora.ico")}",
             "/DMySourceDir=${layout.buildDirectory.dir("jpackage/images/win-msi.image/${projectName}").get().asFile}",
@@ -571,7 +626,7 @@ fun packOnWindows(distributionDir: Directory, finalFilenameWithoutExtension: Str
     exec {
         commandLine(
             "cmd", "/c", "move",
-            "${projectName}-${project.version}.msi",
+            "${projectName}-${appVersion}.msi",
             "${finalFilenameWithoutExtension}.msi"
         )
         workingDir = distributionDir.asFile
@@ -587,7 +642,7 @@ fun packOnMac(distributionDir: Directory, finalFilenameWithoutExtension: String,
 
     // rename
     // @formatter:off
-    exec { commandLine("mv", distributionDir.file("${projectName}-${project.version}.dmg").asFile.absolutePath, dmgFile.absolutePath,) }
+    exec { commandLine("mv", distributionDir.file("${projectName}-${appVersion}.dmg").asFile.absolutePath, dmgFile.absolutePath,) }
     // @formatter:on
 
     // sign dmg
@@ -767,6 +822,10 @@ kotlin {
     jvmToolchain {
         languageVersion = JavaLanguageVersion.of(21)
     }
+}
+
+java {
+    withSourcesJar()
 }
 
 idea {

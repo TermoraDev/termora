@@ -58,6 +58,7 @@ Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: de
 [InstallDelete]
 Type: files; Name: "{app}\app\*.jar"
 Type: filesandordirs; Name: "{app}\runtime\*"
+Type: filesandordirs; Name: "{app}\plugins\*"
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall; Check: ShouldPromptStart

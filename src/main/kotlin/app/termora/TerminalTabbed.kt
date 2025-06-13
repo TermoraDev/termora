@@ -2,9 +2,14 @@ package app.termora
 
 
 import app.termora.actions.*
+import app.termora.database.DatabaseChangedExtension
+import app.termora.database.DatabaseManager
 import app.termora.findeverywhere.BasicFilterFindEverywhereProvider
 import app.termora.findeverywhere.FindEverywhereProvider
 import app.termora.findeverywhere.FindEverywhereResult
+import app.termora.plugin.internal.sftppty.SFTPPtyProtocolProvider
+import app.termora.plugin.internal.sftppty.SFTPPtyTerminalTab
+import app.termora.plugin.internal.ssh.SSHProtocolProvider
 import app.termora.terminal.DataKey
 import com.formdev.flatlaf.FlatLaf
 import com.formdev.flatlaf.extras.components.FlatPopupMenu
@@ -31,8 +36,8 @@ class TerminalTabbed(
     private val toolbar = termoraToolBar.getJToolBar()
     private val actionManager = ActionManager.getInstance()
     private val dataProviderSupport = DataProviderSupport()
-    private val titleProperty = UUID.randomUUID().toSimpleString()
-    private val appearance get() = Database.getDatabase().appearance
+    private val appearance get() = DatabaseManager.getInstance().appearance
+    private val titleProperty = randomUUID()
     private val iconListener = PropertyChangeListener { e ->
         val source = e.source
         if (e.propertyName == "icon" && source is TerminalTab) {
@@ -242,10 +247,12 @@ class TerminalTabbed(
             override fun actionPerformed(evt: AnActionEvent) {
                 if (tab is HostTerminalTab) {
                     val host = hostManager.getHost(tab.host.id) ?: return
-                    val dialog = HostDialog(evt.window, host)
+                    val dialog = NewHostDialogV2(evt.window, host)
                     dialog.setLocationRelativeTo(evt.window)
                     dialog.isVisible = true
-                    hostManager.addHost(dialog.host ?: return)
+
+                    // Sync 模式，触发 reload
+                    hostManager.addHost(dialog.host ?: return, DatabaseChangedExtension.Source.Sync)
                 }
             }
         })
@@ -274,7 +281,7 @@ class TerminalTabbed(
         if (tab is HostTerminalTab) {
             val openHostAction = actionManager.getAction(OpenHostAction.OPEN_HOST)
             if (openHostAction != null) {
-                if (tab.host.protocol == Protocol.SSH || tab.host.protocol == Protocol.SFTPPty) {
+                if (tab.host.protocol == SSHProtocolProvider.PROTOCOL || tab.host.protocol == SFTPPtyProtocolProvider.PROTOCOL) {
                     popupMenu.addSeparator()
                     val sftpCommand = popupMenu.add(I18n.getString("termora.tabbed.contextmenu.sftp-command"))
                     sftpCommand.addActionListener { openSFTPPtyTab(tab, openHostAction, it) }
@@ -382,7 +389,7 @@ class TerminalTabbed(
 
         var host = tab.host
 
-        if (host.protocol == Protocol.SSH) {
+        if (host.protocol == SSHProtocolProvider.PROTOCOL) {
             val envs = tab.host.options.envs().toMutableMap()
             val currentDir = tab.getData(DataProviders.Terminal)?.getTerminalModel()
                 ?.getData(DataKey.CurrentDir, StringUtils.EMPTY) ?: StringUtils.EMPTY
@@ -392,7 +399,7 @@ class TerminalTabbed(
             }
 
             host = host.copy(
-                protocol = Protocol.SFTPPty, updateDate = System.currentTimeMillis(),
+                protocol = SFTPPtyProtocolProvider.PROTOCOL,
                 options = host.options.copy(env = envs.toPropertiesString())
             )
         }

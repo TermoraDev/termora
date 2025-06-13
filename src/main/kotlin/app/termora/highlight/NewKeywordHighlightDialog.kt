@@ -1,6 +1,10 @@
 package app.termora.highlight
 
-import app.termora.*
+import app.termora.DialogWrapper
+import app.termora.DynamicColor
+import app.termora.I18n
+import app.termora.Icons
+import app.termora.database.DatabaseManager
 import app.termora.terminal.ColorPalette
 import app.termora.terminal.TerminalColor
 import com.formdev.flatlaf.FlatClientProperties
@@ -25,7 +29,7 @@ class NewKeywordHighlightDialog(
     val colorPalette: ColorPalette
 ) : DialogWrapper(owner) {
     private val formMargin = "7dlu"
-    private val keywordHighlightView by lazy { KeywordHighlightView(fontSize = Database.getDatabase().terminal.fontSize) }
+    private val keywordHighlightView by lazy { KeywordHighlightView(fontSize = DatabaseManager.getInstance().terminal.fontSize) }
 
     val keywordTextField = FlatTextField()
     val descriptionTextField = FlatTextField()

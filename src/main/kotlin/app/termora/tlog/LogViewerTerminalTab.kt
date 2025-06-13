@@ -1,6 +1,9 @@
 package app.termora.tlog
 
-import app.termora.*
+import app.termora.Host
+import app.termora.Icons
+import app.termora.PtyHostTerminalTab
+import app.termora.WindowScope
 import app.termora.terminal.PtyConnector
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -16,7 +19,7 @@ class LogViewerTerminalTab(
     windowScope,
     Host(
         name = file.name,
-        protocol = Protocol.Local
+        protocol = "Local"
     ),
     LogViewerTerminal()
 ) {

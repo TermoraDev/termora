@@ -1,0 +1,23 @@
+<termora-plugin>
+
+    <id>bg</id>
+
+    <name>Customize Background</name>
+
+    <version>${projectVersion}</version>
+
+    <entry>app.termora.plugins.bg.BGPlugin</entry>
+
+    <termora-version since=">=${rootProjectVersion}" until=""/>
+
+
+    <descriptions>
+        <description>Customize application background</description>
+        <description language="zh_CN">自定义应用程序背景</description>
+        <description language="zh_TW">自訂應用程式背景</description>
+    </descriptions>
+
+    <vendor url="https://github.com/TermoraDev">TermoraDev</vendor>
+
+
+</termora-plugin>

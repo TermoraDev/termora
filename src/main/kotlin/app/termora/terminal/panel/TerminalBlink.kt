@@ -1,8 +1,8 @@
 package app.termora.terminal.panel
 
 import app.termora.ApplicationScope
-import app.termora.Database
 import app.termora.Disposable
+import app.termora.database.DatabaseManager
 import app.termora.terminal.*
 import kotlinx.coroutines.*
 import java.util.concurrent.atomic.AtomicBoolean
@@ -12,7 +12,7 @@ class TerminalBlink(terminal: Terminal) : Disposable {
 
 
     private var cursorBlinkJob: Job? = null
-    private val terminalSettings get() = Database.getDatabase().terminal
+    private val terminalSettings get() = DatabaseManager.getInstance().terminal
     private val isDisposed = AtomicBoolean(false)
     private val globalBlink get() = GlobalBlink.getInstance()
     private val coroutineScope get() = globalBlink.coroutineScope

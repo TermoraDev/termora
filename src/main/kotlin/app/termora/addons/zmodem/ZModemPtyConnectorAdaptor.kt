@@ -1,7 +1,7 @@
 package app.termora.addons.zmodem
 
 import app.termora.I18n
-import app.termora.native.FileChooser
+import app.termora.nv.FileChooser
 import app.termora.terminal.ControlCharacters
 import app.termora.terminal.PtyConnectorDelegate
 import app.termora.terminal.StreamPtyConnector

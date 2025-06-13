@@ -149,7 +149,7 @@ class TerminalLoggerDataListener(private val terminal: Terminal) : DataListener 
             try {
                 Paths.get(dir.absolutePath, "${host.id}.${now}.log").toFile()
             } catch (e: Exception) {
-                Paths.get(dir.absolutePath, "${UUID.randomUUID().toSimpleString()}.${now}.log").toFile()
+                Paths.get(dir.absolutePath, "${randomUUID()}.${now}.log").toFile()
             }
         }
     }

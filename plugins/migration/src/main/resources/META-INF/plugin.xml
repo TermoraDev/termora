@@ -1,0 +1,24 @@
+<termora-plugin>
+
+    <id>migration</id>
+
+    <name>Migration</name>
+
+    <version>${projectVersion}</version>
+
+    <!-- since: >=xxx , or >xxx -->
+    <!-- until: <=xxx , or <xxx -->
+    <termora-version since=">=${rootProjectVersion}" until=""/>
+
+    <entry>app.termora.plugins.migration.MigrationPlugin</entry>
+
+    <descriptions>
+        <description>Migrate version 1.x configuration files to 2.x</description>
+        <description language="zh_CN">将 1.x 版本的配置文件迁移到 2.x</description>
+        <description language="zh_TW">將 1.x 版本的設定檔移轉到 2.x</description>
+    </descriptions>
+
+    <vendor url="https://github.com/TermoraDev">TermoraDev</vendor>
+
+
+</termora-plugin>

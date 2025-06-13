@@ -1,6 +1,10 @@
 package app.termora.snippet
 
-import app.termora.*
+import app.termora.Disposable
+import app.termora.DocumentAdaptor
+import app.termora.DynamicColor
+import app.termora.database.DatabaseManager
+import app.termora.tree.TreeUtils
 import com.formdev.flatlaf.extras.components.FlatTextArea
 import com.formdev.flatlaf.ui.FlatRoundBorder
 import com.formdev.flatlaf.util.SystemInfo
@@ -22,7 +26,7 @@ import javax.swing.undo.UndoManager
 class SnippetPanel : JPanel(BorderLayout()), Disposable {
     companion object {
         private val log = LoggerFactory.getLogger(SnippetPanel::class.java)
-        private val properties get() = Database.getDatabase().properties
+        private val properties get() = DatabaseManager.getInstance().properties
         private val snippetManager get() = SnippetManager.getInstance()
     }
 

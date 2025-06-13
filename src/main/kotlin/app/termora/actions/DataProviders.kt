@@ -1,6 +1,7 @@
 package app.termora.actions
 
 import app.termora.terminal.DataKey
+import app.termora.tree.NewHostTree
 
 object DataProviders {
     val TerminalPanel = DataKey(app.termora.terminal.panel.TerminalPanel::class)
@@ -17,6 +18,6 @@ object DataProviders {
 
 
     object Welcome {
-        val HostTree = DataKey(app.termora.NewHostTree::class)
+        val HostTree = DataKey(NewHostTree::class)
     }
 }

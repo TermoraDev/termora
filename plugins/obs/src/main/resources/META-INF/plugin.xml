@@ -1,0 +1,24 @@
+<termora-plugin>
+
+    <id>obs</id>
+
+    <name>Huawei OBS</name>
+
+    <paid/>
+
+    <version>${projectVersion}</version>
+
+    <termora-version since=">=${rootProjectVersion}" until=""/>
+
+    <entry>app.termora.plugins.obs.OBSPlugin</entry>
+
+    <descriptions>
+        <description>Connecting to Huawei OBS</description>
+        <description language="zh_CN">支持连接到华为云对象存储</description>
+        <description language="zh_TW">支援連接到華為雲端物件存儲</description>
+    </descriptions>
+
+    <vendor url="https://github.com/TermoraDev">TermoraDev</vendor>
+
+
+</termora-plugin>

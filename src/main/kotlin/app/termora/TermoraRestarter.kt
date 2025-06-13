@@ -37,8 +37,9 @@ class TermoraRestarter {
 
     }
 
+    val isSupported get() = !restarting.get() && checkIsSupported()
+
     private val restarting = AtomicBoolean(false)
-    private val isSupported get() = !restarting.get() && checkIsSupported()
     private val isLinuxAppImage by lazy { System.getenv("LinuxAppImage")?.toBoolean() == true }
     private val startupCommand by lazy { ProcessHandle.current().info().command().getOrNull() }
     private val macOSApplicationPath by lazy {
@@ -66,22 +67,26 @@ class TermoraRestarter {
     /**
      * 计划重启，如果当前进程支持重启，那么会询问用户是否重启。如果不支持重启，那么弹窗提示需要手动重启。
      */
-    fun scheduleRestart(owner: Component?, commands: List<String> = emptyList()) {
+    fun scheduleRestart(owner: Component?, ask: Boolean = true, commands: List<String> = emptyList()) {
 
         if (isSupported) {
-            if (OptionPane.showConfirmDialog(
-                    owner,
-                    I18n.getString("termora.settings.restart.message"),
-                    I18n.getString("termora.settings.restart.title"),
-                    messageType = JOptionPane.QUESTION_MESSAGE,
-                    optionType = JOptionPane.YES_NO_OPTION,
-                    options = arrayOf(
+            if (ask) {
+                if (OptionPane.showConfirmDialog(
+                        owner,
+                        I18n.getString("termora.settings.restart.message"),
                         I18n.getString("termora.settings.restart.title"),
-                        I18n.getString("termora.cancel")
-                    ),
-                    initialValue = I18n.getString("termora.settings.restart.title")
-                ) == JOptionPane.YES_OPTION
-            ) {
+                        messageType = JOptionPane.QUESTION_MESSAGE,
+                        optionType = JOptionPane.YES_NO_OPTION,
+                        options = arrayOf(
+                            I18n.getString("termora.settings.restart.title"),
+                            I18n.getString("termora.cancel")
+                        ),
+                        initialValue = I18n.getString("termora.settings.restart.title")
+                    ) == JOptionPane.YES_OPTION
+                ) {
+                    restart(commands)
+                }
+            } else {
                 restart(commands)
             }
         } else {

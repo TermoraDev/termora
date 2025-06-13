@@ -72,7 +72,7 @@ class PosixFilePermissionDialog(
         )
 
         val builder = FormBuilder.create().padding("0, $formMargin, $formMargin, $formMargin")
-            .layout(layout).debug(true)
+            .layout(layout).debug(false)
 
         builder.add("${I18n.getString("termora.transport.permissions.file-folder-permissions")}:").xyw(1, 1, 5)
 

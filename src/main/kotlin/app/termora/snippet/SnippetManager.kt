@@ -1,9 +1,14 @@
 package app.termora.snippet
 
+import app.termora.Application.ohMyJson
 import app.termora.ApplicationScope
-import app.termora.Database
 import app.termora.DeleteDataManager
+import app.termora.account.AccountManager
 import app.termora.assertEventDispatchThread
+import app.termora.database.Data
+import app.termora.database.DataType
+import app.termora.database.DatabaseManager
+import app.termora.database.OwnerType
 
 
 class SnippetManager private constructor() {
@@ -13,8 +18,7 @@ class SnippetManager private constructor() {
         }
     }
 
-    private val database get() = Database.getDatabase()
-    private var snippets = mutableMapOf<String, Snippet>()
+    private val database get() = DatabaseManager.getInstance()
 
     /**
      * 修改缓存并存入数据库
@@ -24,14 +28,23 @@ class SnippetManager private constructor() {
         if (snippet.deleted) {
             removeSnippet(snippet.id)
         } else {
-            database.addSnippet(snippet)
-            snippets[snippet.id] = snippet
+            val accountId = AccountManager.getInstance().getAccountId()
+
+            database.saveAndIncrementVersion(
+                Data(
+                    id = snippet.id,
+                    ownerId = accountId,
+                    ownerType = OwnerType.User.name,
+                    type = DataType.Snippet.name,
+                    data = ohMyJson.encodeToString(snippet),
+                )
+            )
+
         }
     }
 
     fun removeSnippet(id: String) {
-        snippets.entries.removeIf { it.value.id == id || it.value.parentId == id }
-        database.removeSnippet(id)
+        database.delete(id, DataType.Snippet.name)
         DeleteDataManager.getInstance().removeSnippet(id)
     }
 
@@ -39,11 +52,7 @@ class SnippetManager private constructor() {
      * 第一次调用从数据库中获取，后续从缓存中获取
      */
     fun snippets(): List<Snippet> {
-        if (snippets.isEmpty()) {
-            database.getSnippets().filter { !it.deleted }
-                .forEach { snippets[it.id] = it }
-        }
-        return snippets.values.filter { !it.deleted }
+        return database.data<Snippet>(DataType.Snippet)
             .sortedWith(compareBy<Snippet> { if (it.type == SnippetType.Folder) 0 else 1 }.thenBy { it.sort })
     }
 

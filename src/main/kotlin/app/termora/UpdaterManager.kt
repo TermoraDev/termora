@@ -3,6 +3,7 @@ package app.termora
 import app.termora.Application.ohMyJson
 import kotlinx.serialization.json.*
 import okhttp3.Request
+import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.commonmark.node.BulletList
@@ -11,6 +12,7 @@ import org.commonmark.node.Paragraph
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.AttributeProvider
 import org.commonmark.renderer.html.HtmlRenderer
+import org.semver4j.Semver
 import org.slf4j.LoggerFactory
 import java.time.Instant
 import java.util.*
@@ -64,14 +66,23 @@ class UpdaterManager private constructor() {
 
     fun fetchLatestVersion(): LatestVersion {
         try {
+            val isBetaVersion = Application.isBetaVersion()
+            val url = StringBuilder("https://api.github.com/repos/TermoraDev/termora/releases")
+            if (isBetaVersion) {
+                url.append("?per_page=10")
+            } else {
+                url.append("/latest")
+            }
+
             val request = Request.Builder().get()
-                .url("https://api.github.com/repos/TermoraDev/termora/releases/latest")
+                .url(url.toString())
                 .build()
             val response = Application.httpClient.newCall(request).execute()
-            if (!response.isSuccessful) {
+            if (response.isSuccessful.not()) {
                 if (log.isErrorEnabled) {
                     log.error("Failed to fetch latest version, response was ${response.code}")
                 }
+                IOUtils.closeQuietly(response)
                 return LatestVersion.self
             }
 
@@ -80,7 +91,9 @@ class UpdaterManager private constructor() {
                 return LatestVersion.self
             }
 
-            val json = ohMyJson.parseToJsonElement(text).jsonObject
+            val json = if (isBetaVersion) getLatestBetaRelease(text) else ohMyJson.parseToJsonElement(text).jsonObject
+            if (json == null) return LatestVersion.self
+
             val version = json.getValue("tag_name").jsonPrimitive.content
             val prerelease = json.getValue("prerelease").jsonPrimitive.boolean
             val draft = json.getValue("draft").jsonPrimitive.boolean
@@ -145,4 +158,22 @@ class UpdaterManager private constructor() {
         return LatestVersion.self
     }
 
+    private fun getLatestBetaRelease(text: String): JsonObject? {
+        val releases = parseReleases(text)
+        if (releases.isEmpty()) return null
+        return releases.maxByOrNull { it.first }?.second
+    }
+
+    private fun parseReleases(text: String): List<Pair<Semver, JsonObject>> {
+        val array = ohMyJson.parseToJsonElement(text).jsonArray
+        val releases = mutableListOf<Pair<Semver, JsonObject>>()
+        for (e in array) {
+            val version = e.jsonObject.getValue("tag_name").jsonPrimitive.content
+            val prerelease = e.jsonObject.getValue("prerelease").jsonPrimitive.boolean
+            if (prerelease.not()) continue
+            val semver = Semver.parse(version) ?: continue
+            releases.add(semver to e.jsonObject)
+        }
+        return releases
+    }
 }

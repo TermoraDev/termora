@@ -4,10 +4,11 @@ package app.termora
 import app.termora.actions.DataProvider
 import app.termora.actions.DataProviderSupport
 import app.termora.actions.DataProviders
+import app.termora.database.DatabaseManager
+import app.termora.plugin.ExtensionManager
 import app.termora.sftp.SFTPTab
 import app.termora.terminal.DataKey
 import com.formdev.flatlaf.FlatClientProperties
-import com.formdev.flatlaf.FlatLaf
 import com.formdev.flatlaf.ui.FlatRootPaneUI
 import com.formdev.flatlaf.ui.FlatTitlePane
 import com.formdev.flatlaf.util.SystemInfo
@@ -42,7 +43,7 @@ class TermoraFrame : JFrame(), DataProvider {
     private val terminalTabbed = TerminalTabbed(windowScope, toolbar, tabbedPane)
     private val dataProviderSupport = DataProviderSupport()
     private val welcomePanel = WelcomePanel(windowScope)
-    private val sftp get() = Database.getDatabase().sftp
+    private val sftp get() = DatabaseManager.getInstance().sftp
     private var notifyListeners = emptyArray<NotifyListener>()
 
 
@@ -216,6 +217,10 @@ class TermoraFrame : JFrame(), DataProvider {
         glassPane.isOpaque = false
         glassPane.isVisible = true
 
+        for (extension in ExtensionManager.getInstance().getExtensions(GlassPaneAwareExtension::class.java)) {
+            extension.setGlassPane(this, glassPane)
+        }
+
 
         Disposer.register(windowScope, terminalTabbed)
         add(terminalTabbed, BorderLayout.CENTER)
@@ -260,19 +265,22 @@ class TermoraFrame : JFrame(), DataProvider {
 
 
     private class GlassPane : JComponent() {
+
         init {
             isFocusable = false
         }
 
-        override fun paintComponent(g: Graphics) {
-            val img = BackgroundManager.getInstance().getBackgroundImage() ?: return
-            val g2d = g as Graphics2D
-            g2d.composite = AlphaComposite.getInstance(
-                AlphaComposite.SRC_OVER,
-                if (FlatLaf.isLafDark()) 0.2f else 0.1f
-            )
-            g2d.drawImage(img, 0, 0, width, height, null)
-            g2d.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER)
+        override fun paintComponent(g2d: Graphics) {
+            if (g2d !is Graphics2D) return
+            val extensions = ExtensionManager.getInstance()
+                .getExtensions(GlassPaneExtension::class.java)
+            if (extensions.isNotEmpty()) {
+                for (extension in extensions) {
+                    if (extension.paint(this, g2d)) {
+                        return
+                    }
+                }
+            }
         }
 
         override fun contains(x: Int, y: Int): Boolean {

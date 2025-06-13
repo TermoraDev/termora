@@ -21,7 +21,7 @@ import java.nio.file.attribute.PosixFilePermission
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.io.path.*
 
-class MySftpFileObject(
+internal class MySftpFileObject(
     private val sftpFileSystem: SftpFileSystem,
     fileName: AbstractFileName,
     fileSystem: MySftpFileSystem

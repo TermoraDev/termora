@@ -198,7 +198,7 @@ object SshClients {
                 }
                 // 映射完毕之后修改Host和端口
                 jumpHosts[i + 1] =
-                    nextHost.copy(host = address.hostName, port = address.port, updateDate = System.currentTimeMillis())
+                    nextHost.copy(host = address.hostName, port = address.port)
             }
         }
 
@@ -440,11 +440,10 @@ object SshClients {
                     hostManager.addHost(
                         h.copy(
                             authentication = authentication,
-                            username = dialog.getUsername(), updateDate = System.currentTimeMillis(),
+                            username = dialog.getUsername(),
                         )
                     )
                 }
-
             }
         }
         return ref.get()
@@ -683,7 +682,7 @@ object SshClients {
                 // 获取代理连接器
                 val clientProxyConnector = getClientProxyConnector(host, address) ?: return targetAddress
 
-                val id = UUID.randomUUID().toSimpleString()
+                val id = randomUUID()
                 entry.setProperty(CLIENT_PROXY_CONNECTOR, id)
                 sshClient.clientProxyConnectors[id] = clientProxyConnector
 

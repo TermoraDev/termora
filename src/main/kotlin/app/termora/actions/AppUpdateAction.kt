@@ -7,7 +7,6 @@ import com.sun.jna.platform.win32.Advapi32
 import com.sun.jna.platform.win32.WinError
 import com.sun.jna.platform.win32.WinNT
 import com.sun.jna.platform.win32.WinReg
-import io.github.g00fy2.versioncompare.Version
 import kotlinx.coroutines.*
 import kotlinx.coroutines.swing.Swing
 import okhttp3.Request
@@ -15,6 +14,7 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
 import org.jdesktop.swingx.JXEditorPane
+import org.semver4j.Semver
 import org.slf4j.LoggerFactory
 import java.awt.Dimension
 import java.awt.KeyboardFocusManager
@@ -28,7 +28,6 @@ import javax.swing.JOptionPane
 import javax.swing.JScrollPane
 import javax.swing.UIManager
 import javax.swing.event.HyperlinkEvent
-import kotlin.concurrent.fixedRateTimer
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
@@ -61,29 +60,46 @@ class AppUpdateAction private constructor() : AnAction(
 
 
     private fun scheduleUpdate() {
-        fixedRateTimer(
-            name = "check-update-timer",
-            initialDelay = 3.minutes.inWholeMilliseconds,
-            period = 5.hours.inWholeMilliseconds, daemon = true
-        ) {
-            if (!isRemindMeNextTime) {
-                coroutineScope.launch(Dispatchers.IO) { checkUpdate() }
+        coroutineScope.launch(Dispatchers.IO) {
+            // 启动 3 分钟后才是检查
+            if (Application.isUnknownVersion().not()) {
+                delay(3.minutes)
+            }
+
+            while (coroutineScope.isActive) {
+                // 下次提醒我
+                if (isRemindMeNextTime) break
+
+                try {
+                    checkUpdate()
+                } catch (e: Exception) {
+                    if (log.isWarnEnabled) {
+                        log.warn(e.message, e)
+                    }
+                }
+
+                // 之后每 3 小时检查一次
+                delay(3.hours.inWholeMilliseconds)
+
             }
         }
     }
 
     private suspend fun checkUpdate() {
-        if (Application.isUnknownVersion()) {
-            return
-        }
 
         val latestVersion = updaterManager.fetchLatestVersion()
         if (latestVersion.isSelf) {
             return
         }
 
-        val newVersion = Version(latestVersion.version)
-        val version = Version(Application.getVersion())
+        // 之所以放到后面检查是不是开发版本，是需要发起一次检测请求，以方便调试
+        if (Application.isUnknownVersion()) {
+            return
+        }
+
+
+        val newVersion = Semver.parse(latestVersion.version) ?: return
+        val version = Semver.parse(Application.getVersion()) ?: return
         if (newVersion <= version) {
             return
         }
@@ -120,7 +136,7 @@ class AppUpdateAction private constructor() : AnAction(
             .build()
             .newCall(Request.Builder().url(asset.downloadUrl).build())
             .execute()
-        if (!response.isSuccessful) {
+        if (response.isSuccessful.not()) {
             if (log.isErrorEnabled) {
                 log.warn("Failed to download latest version ${latestVersion.version}, response code ${response.code}")
             }
@@ -227,7 +243,7 @@ class AppUpdateAction private constructor() : AnAction(
             log.info("restart {}", commands.joinToString(StringUtils.SPACE))
         }
 
-        TermoraRestarter.getInstance().scheduleRestart(owner, commands)
+        TermoraRestarter.getInstance().scheduleRestart(owner, true, commands)
 
     }
 

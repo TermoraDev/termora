@@ -3,6 +3,8 @@ package app.termora.sftp
 import app.termora.*
 import app.termora.actions.AnActionEvent
 import app.termora.actions.SettingsAction
+import app.termora.database.DatabaseManager
+import app.termora.plugin.ExtensionManager
 import app.termora.sftp.FileSystemViewTable.AskTransfer.Action
 import app.termora.vfs2.VFSWalker
 import app.termora.vfs2.sftp.MySftpFileObject
@@ -43,6 +45,8 @@ import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.regex.Pattern
 import javax.swing.*
+import javax.swing.event.PopupMenuEvent
+import javax.swing.event.PopupMenuListener
 import javax.swing.table.DefaultTableCellRenderer
 import kotlin.collections.ArrayDeque
 import kotlin.collections.List
@@ -51,6 +55,7 @@ import kotlin.collections.contains
 import kotlin.collections.filter
 import kotlin.collections.filterIsInstance
 import kotlin.collections.find
+import kotlin.collections.firstOrNull
 import kotlin.collections.forEach
 import kotlin.collections.isEmpty
 import kotlin.collections.isNotEmpty
@@ -76,7 +81,7 @@ class FileSystemViewTable(
         private val log = LoggerFactory.getLogger(FileSystemViewTable::class.java)
     }
 
-    private val sftp get() = Database.getDatabase().sftp
+    private val sftp get() = DatabaseManager.getInstance().sftp
     private val model = FileSystemViewTableModel()
     private val table = this
     private val owner get() = SwingUtilities.getWindowAncestor(this)
@@ -88,6 +93,7 @@ class FileSystemViewTable(
                 as FileSystemViewPanel
     private val actionManager get() = ActionManager.getInstance()
     private val isDisposed = AtomicBoolean(false)
+    private var isPopupMenu = false
 
     init {
         initViews()
@@ -115,7 +121,7 @@ class FileSystemViewTable(
 
         setDefaultRenderer(Any::class.java, object : DefaultTableCellRenderer() {
             override fun getTableCellRendererComponent(
-                table: JTable?,
+                table: JTable,
                 value: Any?,
                 isSelected: Boolean,
                 hasFocus: Boolean,
@@ -124,7 +130,11 @@ class FileSystemViewTable(
             ): Component {
                 foreground = null
                 val c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column)
-                icon = if (column == FileSystemViewTableModel.COLUMN_NAME) model.getFileIcon(row) else null
+                var icon = if (column == FileSystemViewTableModel.COLUMN_NAME) model.getFileIcon(row) else null
+                if ((table.hasFocus() || isPopupMenu) && isSelected && icon is DynamicIcon) {
+                    icon = icon.dark
+                }
+                super.icon = icon
                 foreground = if (!isSelected && model.getFileObject(row).isHidden)
                     UIManager.getColor("textInactiveText") else foreground
                 return c
@@ -393,6 +403,19 @@ class FileSystemViewTable(
             transfer.isEnabled = sftpPanel.canTransfer(table)
         }
 
+        popupMenu.addPopupMenuListener(object : PopupMenuListener {
+            override fun popupMenuWillBecomeVisible(e: PopupMenuEvent) {
+                isPopupMenu = true
+            }
+
+            override fun popupMenuWillBecomeInvisible(e: PopupMenuEvent) {
+                isPopupMenu = false
+            }
+
+            override fun popupMenuCanceled(e: PopupMenuEvent?) {
+            }
+
+        })
 
         popupMenu.show(table, e.x, e.y)
     }
@@ -534,28 +557,48 @@ class FileSystemViewTable(
     }
 
     private fun listenFileChange(localPath: FileObject, remotePath: FileObject) {
-        try {
-            val p = localPath.absolutePathString()
-            if (sftp.editCommand.isNotBlank()) {
-                ProcessBuilder(parseCommand(MessageFormat.format(sftp.editCommand, p))).start()
-            } else if (SystemInfo.isMacOS) {
-                ProcessBuilder("open", "-a", "TextEdit", p).start()
-            } else if (SystemInfo.isWindows) {
-                ProcessBuilder("notepad", p).start()
-            } else {
+
+        val editCommand = sftp.editCommand
+        var disposable: Disposable? = null
+        val extension = ExtensionManager.getInstance()
+            .getExtensions(SFTPEditFileExtension::class.java).firstOrNull()
+
+        if (editCommand.isBlank() && extension != null) {
+            try {
+                disposable = extension.edit(owner, localPath)
+            } catch (e: Exception) {
+                SwingUtilities.invokeLater {
+                    OptionPane.showMessageDialog(
+                        owner,
+                        ExceptionUtils.getRootCauseMessage(e),
+                        messageType = JOptionPane.ERROR_MESSAGE
+                    )
+                }
                 return
             }
-        } catch (e: Exception) {
-            if (log.isErrorEnabled) {
-                log.error(e.message, e)
+        } else {
+            try {
+                val p = localPath.absolutePathString()
+                if (editCommand.isNotBlank()) {
+                    ProcessBuilder(parseCommand(MessageFormat.format(editCommand, p))).start()
+                } else if (SystemInfo.isMacOS) {
+                    ProcessBuilder("open", "-a", "TextEdit", p).start()
+                } else if (SystemInfo.isWindows) {
+                    ProcessBuilder("notepad", p).start()
+                } else {
+                    return
+                }
+            } catch (e: Exception) {
+                if (log.isErrorEnabled) {
+                    log.error(e.message, e)
+                }
+                return
             }
-            return
         }
 
         var lastModifiedTime = localPath.content.lastModifiedTime
-
-        coroutineScope.launch(Dispatchers.IO) {
-            while (coroutineScope.isActive) {
+        val job = coroutineScope.launch(Dispatchers.IO) {
+            while (isActive) {
                 try {
 
                     if (isDisposed.get()) break
@@ -584,6 +627,14 @@ class FileSystemViewTable(
                 delay(500.milliseconds)
             }
 
+        }
+
+        if (disposable != null) {
+            Disposer.register(disposable, object : Disposable {
+                override fun dispose() {
+                    if (job.isActive) job.cancel()
+                }
+            })
         }
     }
 

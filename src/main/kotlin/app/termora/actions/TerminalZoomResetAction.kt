@@ -1,7 +1,7 @@
 package app.termora.actions
 
-import app.termora.Database
 import app.termora.I18n
+import app.termora.database.DatabaseManager
 
 class TerminalZoomResetAction : TerminalZoomAction() {
     companion object {
@@ -19,7 +19,8 @@ class TerminalZoomResetAction : TerminalZoomAction() {
         if (fontSize == defaultFontSize) {
             return false
         }
-        Database.getDatabase().terminal.fontSize = defaultFontSize
+
+        DatabaseManager.getInstance().terminal.fontSize = defaultFontSize
         return true
     }
 }

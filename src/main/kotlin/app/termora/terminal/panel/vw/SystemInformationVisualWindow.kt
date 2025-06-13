@@ -1,6 +1,7 @@
 package app.termora.terminal.panel.vw
 
 import app.termora.*
+import app.termora.plugin.internal.ssh.SSHTerminalTab
 import com.jgoodies.forms.builder.FormBuilder
 import com.jgoodies.forms.layout.FormLayout
 import kotlinx.coroutines.Dispatchers

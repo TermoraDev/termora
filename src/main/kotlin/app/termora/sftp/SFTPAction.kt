@@ -2,14 +2,16 @@ package app.termora.sftp
 
 import app.termora.HostManager
 import app.termora.HostTerminalTab
+import app.termora.I18n
 import app.termora.Icons
-import app.termora.Protocol
 import app.termora.actions.AnAction
 import app.termora.actions.AnActionEvent
 import app.termora.actions.DataProviders
+import app.termora.plugin.internal.sftppty.SFTPPtyProtocolProvider
+import app.termora.plugin.internal.ssh.SSHProtocolProvider
 import org.apache.commons.lang3.StringUtils
 
-class SFTPAction : AnAction("SFTP", Icons.folder) {
+class SFTPAction : AnAction(I18n.getString("termora.transport.sftp"), Icons.folder) {
     private val hostManager get() = HostManager.getInstance()
 
     override fun actionPerformed(evt: AnActionEvent) {
@@ -35,7 +37,7 @@ class SFTPAction : AnAction("SFTP", Icons.folder) {
         if (hostId.isBlank()) {
             val tab = terminalTabbedManager.getSelectedTerminalTab()
             if (tab is HostTerminalTab) {
-                if (tab.host.protocol == Protocol.SSH || tab.host.protocol == Protocol.SFTPPty) {
+                if (tab.host.protocol == SSHProtocolProvider.PROTOCOL || tab.host.protocol == SFTPPtyProtocolProvider.PROTOCOL) {
                     hostId = tab.host.id
                 }
             }

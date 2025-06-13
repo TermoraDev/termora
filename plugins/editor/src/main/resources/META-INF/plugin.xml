@@ -1,0 +1,22 @@
+<termora-plugin>
+
+    <id>editor</id>
+
+    <name>SFTP File Editor</name>
+
+    <version>${projectVersion}</version>
+
+    <termora-version since=">=${rootProjectVersion}" until=""/>
+
+    <entry>app.termora.plugins.editor.EditorPlugin</entry>
+
+    <descriptions>
+        <description>Edit SFTP files using the built-in editor</description>
+        <description language="zh_CN">使用内置编辑器编辑 SFTP 文件</description>
+        <description language="zh_TW">使用內建編輯器編輯 SFTP 文件</description>
+    </descriptions>
+
+    <vendor url="https://github.com/TermoraDev">TermoraDev</vendor>
+
+
+</termora-plugin>

@@ -1,9 +1,10 @@
 package app.termora.highlight
 
+import app.termora.account.AccountOwner
 import javax.swing.table.DefaultTableModel
 
-class KeywordHighlightTableModel : DefaultTableModel() {
-    private val rows get() = KeywordHighlightManager.getInstance().getKeywordHighlights()
+class KeywordHighlightTableModel(private val accountOwner: AccountOwner) : DefaultTableModel() {
+    private val rows get() = KeywordHighlightManager.getInstance().getKeywordHighlights(accountOwner.id)
 
     override fun isCellEditable(row: Int, column: Int): Boolean {
         return false
@@ -13,7 +14,9 @@ class KeywordHighlightTableModel : DefaultTableModel() {
         return rows[row]
     }
 
+    @Suppress("SENSELESS_COMPARISON")
     override fun getRowCount(): Int {
+        if (accountOwner == null) return 0
         return rows.size
     }
 

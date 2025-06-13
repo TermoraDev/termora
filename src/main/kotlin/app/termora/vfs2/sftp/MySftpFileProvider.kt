@@ -5,11 +5,11 @@ import org.apache.commons.vfs2.FileName
 import org.apache.commons.vfs2.FileSystem
 import org.apache.commons.vfs2.FileSystemOptions
 import org.apache.commons.vfs2.provider.AbstractOriginatingFileProvider
-import org.apache.sshd.sftp.client.SftpClientFactory
 
-class MySftpFileProvider : AbstractOriginatingFileProvider() {
+internal class MySftpFileProvider private constructor() : AbstractOriginatingFileProvider() {
 
     companion object {
+        val instance by lazy { MySftpFileProvider() }
         val capabilities = listOf(
             Capability.CREATE,
             Capability.DELETE,
@@ -31,13 +31,13 @@ class MySftpFileProvider : AbstractOriginatingFileProvider() {
     }
 
     override fun doCreateFileSystem(rootFileName: FileName, fileSystemOptions: FileSystemOptions): FileSystem {
-        val clientSession = MySftpFileSystemConfigBuilder.getInstance()
-            .getClientSession(fileSystemOptions)
-        if (clientSession == null) {
+        val sftpFileSystem = MySftpFileSystemConfigBuilder.getInstance()
+            .getSftpFileSystem(fileSystemOptions)
+        if (sftpFileSystem == null) {
             throw IllegalArgumentException("client session not found")
         }
         return MySftpFileSystem(
-            SftpClientFactory.instance().createSftpFileSystem(clientSession),
+            sftpFileSystem,
             rootFileName,
             fileSystemOptions
         )

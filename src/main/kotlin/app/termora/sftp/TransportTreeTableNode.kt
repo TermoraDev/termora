@@ -4,7 +4,6 @@ import app.termora.I18n
 import app.termora.formatBytes
 import app.termora.formatSeconds
 import app.termora.vfs2.sftp.MySftpFileSystem
-import app.termora.vfs2.sftp.MySftpFileSystemConfigBuilder
 import org.apache.commons.vfs2.FileObject
 import org.eclipse.jgit.internal.transport.sshd.JGitClientSession
 import org.jdesktop.swingx.treetable.DefaultMutableTreeTableNode
@@ -31,9 +30,9 @@ class TransportTreeTableNode(transport: Transport) : DefaultMutableTreeTableNode
     }
 
     private fun formatPath(file: FileObject): String {
-        if (file.fileSystem is MySftpFileSystem) {
-            val session = MySftpFileSystemConfigBuilder.getInstance()
-                .getClientSession(file.fileSystem.fileSystemOptions) as JGitClientSession
+        val fileSystem = file.fileSystem
+        if (fileSystem is MySftpFileSystem) {
+            val session = fileSystem.getClientSession() as JGitClientSession
             val hostname = session.hostConfigEntry.hostName
             return hostname + ":" + file.name.path
         }

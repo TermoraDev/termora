@@ -1,0 +1,23 @@
+<termora-plugin>
+
+    <id>geo</id>
+
+    <name>Geo</name>
+
+    <version>${projectVersion}</version>
+
+    <entry>app.termora.plugins.geo.GeoPlugin</entry>
+
+    <termora-version since=">=${rootProjectVersion}" until=""/>
+
+
+    <descriptions>
+        <description>Display the geographical location of the host</description>
+        <description language="zh_CN">显示主机的地理位置</description>
+        <description language="zh_TW">顯示主機的地理位置</description>
+    </descriptions>
+
+    <vendor url="https://github.com/TermoraDev">TermoraDev</vendor>
+
+
+</termora-plugin>

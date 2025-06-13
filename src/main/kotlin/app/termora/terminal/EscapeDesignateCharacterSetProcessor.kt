@@ -1,5 +1,6 @@
 package app.termora.terminal
 
+import app.termora.terminal.EscapeDesignateCharacterSetProcessor.Companion.Graphic
 import org.slf4j.LoggerFactory
 
 class EscapeDesignateCharacterSetProcessor(terminal: Terminal, reader: TerminalReader) :

@@ -55,9 +55,6 @@ abstract class HostTerminalTab(
     }
 
     override fun getIcon(): Icon {
-        if (host.protocol == Protocol.Local || host.protocol == Protocol.SSH) {
-            return if (unread) Icons.terminalUnread else Icons.terminal
-        }
         return Icons.terminal
     }
 

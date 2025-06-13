@@ -1,6 +1,6 @@
 package app.termora.terminal.panel
 
-import app.termora.Database
+import app.termora.database.DatabaseManager
 import java.awt.Rectangle
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -10,7 +10,7 @@ class TerminalPanelMouseFloatingToolBarAdapter(
     private val terminalDisplay: TerminalDisplay
 ) : MouseAdapter() {
 
-    private val floatingToolbarEnable get() = Database.getDatabase().terminal.floatingToolbar
+    private val floatingToolbarEnable get() = DatabaseManager.getInstance().terminal.floatingToolbar
 
     override fun mouseMoved(e: MouseEvent) {
         if (!floatingToolbarEnable) {

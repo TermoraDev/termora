@@ -1,6 +1,8 @@
 package app.termora
 
-import app.termora.native.osx.NativeMacLibrary
+import app.termora.database.DatabaseManager
+import app.termora.nv.osx.NativeMacLibrary
+import app.termora.plugin.ExtensionManager
 import com.formdev.flatlaf.ui.FlatNativeWindowsLibrary
 import com.formdev.flatlaf.util.SystemInfo
 import com.sun.jna.Pointer
@@ -37,9 +39,10 @@ class TermoraFrameManager : Disposable {
     }
 
     private val frames = mutableListOf<TermoraFrame>()
-    private val properties get() = Database.getDatabase().properties
+    private val properties get() = DatabaseManager.getInstance().properties
     private val isDisposed = AtomicBoolean(false)
-    private val isBackgroundRunning get() = Database.getDatabase().appearance.backgroundRunning
+    private val isBackgroundRunning get() = DatabaseManager.getInstance().appearance.backgroundRunning
+    private val frameExtensions get() = ExtensionManager.getInstance().getExtensions(FrameExtension::class.java)
 
     fun createWindow(): TermoraFrame {
         val frame = TermoraFrame().apply { registerCloseCallback(this) }
@@ -65,13 +68,17 @@ class TermoraFrameManager : Disposable {
         }
 
         frame.addNotifyListener(object : NotifyListener {
-            private val opacity get() = Database.getDatabase().appearance.opacity
+            private val opacity get() = DatabaseManager.getInstance().appearance.opacity
             override fun addNotify() {
                 val opacity = this.opacity
                 if (opacity >= 1.0) return
                 setOpacity(frame, opacity)
             }
         })
+
+        for (extension in frameExtensions) {
+            extension.customize(frame)
+        }
 
         return frame.apply { frames.add(this) }
     }
@@ -213,7 +220,7 @@ class TermoraFrameManager : Disposable {
         } else if (SystemInfo.isWindows) {
             val alpha = ((opacity * 255).toInt() and 0xFF).toByte()
             val hwnd = WinDef.HWND(Pointer.createConstant(FlatNativeWindowsLibrary.getHWND(window)))
-            val exStyle = User32.INSTANCE.GetWindowLong(hwnd, User32.GWL_EXSTYLE)
+            val exStyle = User32.INSTANCE.GetWindowLong(hwnd, GWL_EXSTYLE)
             if (exStyle and WS_EX_LAYERED == 0) {
                 User32.INSTANCE.SetWindowLong(hwnd, GWL_EXSTYLE, exStyle or WS_EX_LAYERED)
             }

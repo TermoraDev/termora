@@ -2,7 +2,6 @@ package app.termora
 
 import kotlinx.serialization.Serializable
 import org.apache.commons.lang3.StringUtils
-import java.util.*
 
 
 fun Map<*, *>.toPropertiesString(): String {
@@ -14,24 +13,6 @@ fun Map<*, *>.toPropertiesString(): String {
         }
     }
     return env.toString()
-}
-
-fun UUID.toSimpleString(): String {
-    return toString().replace("-", StringUtils.EMPTY)
-}
-
-enum class Protocol {
-    Folder,
-    SSH,
-    Local,
-    Serial,
-    RDP,
-
-    /**
-     * 交互式的 SFTP，此协议只在系统内部交互不应该暴露给用户也不应该持久化
-     */
-    @Transient
-    SFTPPty
 }
 
 
@@ -106,6 +87,9 @@ data class SerialComm(
     val flowControl: SerialCommFlowControl = SerialCommFlowControl.None,
 )
 
+@Serializable
+data class HostTag(val text: String)
+
 
 @Serializable
 data class Options(
@@ -149,6 +133,16 @@ data class Options(
      * X11 Server,Format: host.port. default: localhost:0
      */
     val x11Forwarding: String = StringUtils.EMPTY,
+
+    /**
+     * 标签 [app.termora.tag.Tag.id]
+     */
+    val tags: List<String> = emptyList(),
+
+    /**
+     * 扩展，如果要使用此
+     */
+    val extras: Map<String, String> = emptyMap(),
 ) {
     companion object {
         val Default = Options()
@@ -253,7 +247,7 @@ data class Host(
     /**
      * 唯一ID
      */
-    val id: String = UUID.randomUUID().toSimpleString(),
+    val id: String = randomUUID(),
     /**
      * 名称
      */
@@ -261,7 +255,7 @@ data class Host(
     /**
      * 协议
      */
-    val protocol: Protocol,
+    val protocol: String,
     /**
      * 主机
      */
@@ -309,24 +303,22 @@ data class Host(
      * 所属者
      */
     val ownerId: String = "0",
+
     /**
      * 创建者
      */
     val creatorId: String = "0",
-    /**
-     * 创建时间
-     */
-    val createDate: Long = System.currentTimeMillis(),
-    /**
-     * 更新时间
-     */
-    val updateDate: Long = System.currentTimeMillis(),
 
     /**
-     * 是否已经删除
+     * 所属者类型，默认是：用户
      */
-    val deleted: Boolean = false
+    val ownerType: String = StringUtils.EMPTY,
+    val deleted: Boolean = false,
+    var createDate: Long = 0L,
+    var updateDate: Long = 0L,
 ) {
+
+    val isFolder get() = StringUtils.equalsIgnoreCase(protocol, "Folder")
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

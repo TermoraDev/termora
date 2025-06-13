@@ -1,7 +1,6 @@
 package app.termora
 
 import app.termora.Application.ohMyJson
-import kotlinx.serialization.encodeToString
 import kotlin.test.Test
 
 class HostTest {
@@ -11,7 +10,7 @@ class HostTest {
             """
             {
               "name": "test",
-              "protocol": "SSH",
+              "protocol": SSHProtocolProvider.PROTOCOL,
               "test": ""
             }
         """.trimIndent()

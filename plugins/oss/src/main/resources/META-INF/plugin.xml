@@ -1,0 +1,24 @@
+<termora-plugin>
+
+    <id>oss</id>
+
+    <name>Alibaba OSS</name>
+
+    <paid/>
+
+    <version>${projectVersion}</version>
+
+    <termora-version since=">=${rootProjectVersion}" until=""/>
+
+    <entry>app.termora.plugins.oss.OSSPlugin</entry>
+
+    <descriptions>
+        <description>Connecting to Alibaba OSS</description>
+        <description language="zh_CN">支持连接到阿里云对象存储</description>
+        <description language="zh_TW">支援連接到阿里雲物件存儲</description>
+    </descriptions>
+
+    <vendor url="https://github.com/TermoraDev">TermoraDev</vendor>
+
+
+</termora-plugin>

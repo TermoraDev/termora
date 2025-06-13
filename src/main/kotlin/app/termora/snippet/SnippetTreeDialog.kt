@@ -1,6 +1,11 @@
 package app.termora.snippet
 
-import app.termora.*
+import app.termora.DialogWrapper
+import app.termora.Disposable
+import app.termora.Disposer
+import app.termora.I18n
+import app.termora.database.DatabaseManager
+import app.termora.tree.TreeUtils
 import org.apache.commons.lang3.StringUtils
 import java.awt.Dimension
 import java.awt.Window
@@ -13,7 +18,7 @@ import javax.swing.SwingUtilities
 
 class SnippetTreeDialog(owner: Window) : DialogWrapper(owner) {
     private val snippetTree = SnippetTree()
-    private val properties get() = Database.getDatabase().properties
+    private val properties get() = DatabaseManager.getInstance().properties
 
     var lastNode: SnippetTreeNode? = null
 

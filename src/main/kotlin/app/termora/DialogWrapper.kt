@@ -2,7 +2,7 @@ package app.termora
 
 import app.termora.actions.AnAction
 import app.termora.actions.AnActionEvent
-import app.termora.native.osx.NativeMacLibrary
+import app.termora.nv.osx.NativeMacLibrary
 import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.util.SystemInfo
 import com.jetbrains.JBR
@@ -147,11 +147,15 @@ abstract class DialogWrapper(owner: Window?) : JDialog(owner) {
     }
 
     protected open fun createActions(): List<AbstractAction> {
-        return listOf(createOkAction(), CancelAction())
+        return listOf(createOkAction(), createCancelAction())
     }
 
     protected open fun createOkAction(): AbstractAction {
         return OkAction()
+    }
+
+    protected open fun createCancelAction(): AbstractAction {
+        return CancelAction()
     }
 
     protected open fun createJButtonForAction(action: Action): JButton {
@@ -196,30 +200,32 @@ abstract class DialogWrapper(owner: Window?) : JDialog(owner) {
         rootPane.actionMap.put("close", object : AnAction() {
             override fun actionPerformed(evt: AnActionEvent) {
                 val c = KeyboardFocusManager.getCurrentKeyboardFocusManager().focusOwner
-                val popups: List<JPopupMenu> = SwingUtils.getDescendantsOfType(
-                    JPopupMenu::class.java,
-                    c as Container, true
-                )
+                if (c != null) {
+                    val popups: List<JPopupMenu> = SwingUtils.getDescendantsOfType(
+                        JPopupMenu::class.java,
+                        c as Container, true
+                    )
 
-                var openPopup = false
-                for (p in popups) {
-                    p.isVisible = false
-                    openPopup = true
-                }
+                    var openPopup = false
+                    for (p in popups) {
+                        p.isVisible = false
+                        openPopup = true
+                    }
 
-                val window = c as? Window ?: SwingUtilities.windowForComponent(c)
-                if (window != null) {
-                    val windows = window.ownedWindows
-                    for (w in windows) {
-                        if (w.isVisible && w.javaClass.getName().endsWith("HeavyWeightWindow")) {
-                            openPopup = true
-                            w.dispose()
+                    val window = c as? Window ?: SwingUtilities.windowForComponent(c)
+                    if (window != null) {
+                        val windows = window.ownedWindows
+                        for (w in windows) {
+                            if (w.isVisible && w.javaClass.getName().endsWith("HeavyWeightWindow")) {
+                                openPopup = true
+                                w.dispose()
+                            }
                         }
                     }
-                }
 
-                if (openPopup) {
-                    return
+                    if (openPopup) {
+                        return
+                    }
                 }
 
                 SwingUtilities.invokeLater { doCancelAction() }

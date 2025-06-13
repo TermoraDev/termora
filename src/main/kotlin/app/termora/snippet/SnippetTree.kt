@@ -2,10 +2,10 @@ package app.termora.snippet
 
 import app.termora.I18n
 import app.termora.OptionPane
-import app.termora.SimpleTree
-import app.termora.SimpleTreeNode
 import app.termora.actions.AnAction
 import app.termora.actions.AnActionEvent
+import app.termora.tree.SimpleTree
+import app.termora.tree.SimpleTreeNode
 import com.formdev.flatlaf.extras.components.FlatPopupMenu
 import java.awt.event.MouseEvent
 import javax.swing.DropMode
@@ -69,7 +69,7 @@ class SnippetTree : SimpleTree() {
         }
 
         rename.addActionListener { startEditingAtPath(TreePath(model.getPathToRoot(lastNode))) }
-        refresh.addActionListener { refreshNode(lastNode) }
+        refresh.addActionListener { model.reload(lastNode) }
         expandAll.addActionListener {
             for (node in getSelectionSimpleTreeNodes(true)) {
                 expandPath(TreePath(model.getPathToRoot(node)))
@@ -133,11 +133,15 @@ class SnippetTree : SimpleTree() {
         model.nodeStructureChanged(n)
     }
 
-    override fun rebase(node: SimpleTreeNode<*>, parent: SimpleTreeNode<*>) {
+    override fun rebase(node: SimpleTreeNode<*>, parent: SimpleTreeNode<*>, index: Int) {
+        // 从原来的父移除
+        model.removeNodeFromParent(node)
+
         val nNode = node as? SnippetTreeNode ?: return
         val nParent = parent as? SnippetTreeNode ?: return
         nNode.data = nNode.data.copy(parentId = nParent.data.id, updateDate = System.currentTimeMillis())
-        snippetManager.addSnippet(nNode.data)
+
+        model.insertNodeInto(nNode, nParent, index)
     }
 
     override fun getSelectionSimpleTreeNodes(include: Boolean): List<SnippetTreeNode> {

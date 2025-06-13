@@ -1,16 +1,26 @@
 package app.termora.highlight
 
 import app.termora.ApplicationScope
+import app.termora.Disposable
+import app.termora.Disposer
+import app.termora.account.Account
+import app.termora.account.AccountExtension
+import app.termora.account.AccountManager
+import app.termora.assertEventDispatchThread
+import app.termora.database.DataType
+import app.termora.database.DatabaseChangedExtension
+import app.termora.plugin.internal.extension.DynamicExtensionHandler
 import app.termora.terminal.*
 import app.termora.terminal.panel.TerminalDisplay
 import app.termora.terminal.panel.TerminalPaintListener
 import app.termora.terminal.panel.TerminalPanel
 import org.slf4j.LoggerFactory
 import java.awt.Graphics
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 import kotlin.random.Random
 
-class KeywordHighlightPaintListener private constructor() : TerminalPaintListener {
+class KeywordHighlightPaintListener private constructor() : TerminalPaintListener, Disposable {
 
     companion object {
         fun getInstance(): KeywordHighlightPaintListener {
@@ -23,6 +33,44 @@ class KeywordHighlightPaintListener private constructor() : TerminalPaintListene
     }
 
     private val keywordHighlightManager get() = KeywordHighlightManager.getInstance()
+    private val keywordHighlights = mutableListOf<KeywordHighlight>()
+    private val isFirst = AtomicBoolean(true)
+
+    init {
+        // 数据变更时刷新
+        DynamicExtensionHandler.getInstance().register(DatabaseChangedExtension::class.java, object :
+            DatabaseChangedExtension {
+            override fun onDataChanged(
+                id: String,
+                type: String,
+                action: DatabaseChangedExtension.Action,
+                source: DatabaseChangedExtension.Source
+            ) {
+                if (type == DataType.KeywordHighlight.name || (id.isBlank() && type.isBlank())) {
+                    reload()
+                }
+            }
+        }).let { Disposer.register(this, it) }
+
+
+        // 账户变更时
+        DynamicExtensionHandler.getInstance().register(AccountExtension::class.java, object :
+            AccountExtension {
+            override fun onAccountChanged(oldAccount: Account, newAccount: Account) {
+                reload()
+            }
+        }).let { Disposer.register(this, it) }
+
+    }
+
+    private fun reload() {
+        assertEventDispatchThread()
+        keywordHighlights.clear()
+        for (ownerId in AccountManager.getInstance().getOwnerIds()) {
+            keywordHighlights.addAll(keywordHighlightManager.getKeywordHighlights(ownerId))
+        }
+    }
+
 
     override fun before(
         offset: Int,
@@ -32,7 +80,15 @@ class KeywordHighlightPaintListener private constructor() : TerminalPaintListene
         terminalDisplay: TerminalDisplay,
         terminal: Terminal
     ) {
-        for (highlight in keywordHighlightManager.getKeywordHighlights()) {
+
+        if (isFirst.get()) {
+            if (isFirst.compareAndSet(true, false)) {
+                // 立即刷新
+                reload()
+            }
+        }
+
+        for (highlight in keywordHighlights) {
             if (!highlight.enabled) {
                 continue
             }

@@ -1,13 +1,12 @@
 package app.termora.vfs2.sftp
 
 import app.termora.SSHDTest
-import app.termora.toSimpleString
+import app.termora.randomUUID
 import org.apache.commons.vfs2.*
 import org.apache.commons.vfs2.impl.DefaultFileSystemManager
 import org.apache.commons.vfs2.provider.local.DefaultLocalFileProvider
 import org.apache.sshd.sftp.client.SftpClientFactory
 import java.io.File
-import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -18,7 +17,7 @@ class MySftpFileProviderTest : SSHDTest() {
     companion object {
         init {
             val fileSystemManager = DefaultFileSystemManager()
-            fileSystemManager.addProvider("sftp", MySftpFileProvider())
+            fileSystemManager.addProvider("sftp", MySftpFileProvider.instance)
             fileSystemManager.addProvider("file", DefaultLocalFileProvider())
             fileSystemManager.init()
             VFS.setManager(fileSystemManager)
@@ -87,7 +86,7 @@ class MySftpFileProviderTest : SSHDTest() {
     @Test
     fun testCopy() {
         val file = newFileObject("/config/sshd.pid")
-        val filepath = File("build", UUID.randomUUID().toSimpleString())
+        val filepath = File("build", randomUUID())
         val localFile = getVFS().resolveFile("file://${filepath.absolutePath}")
 
         localFile.copyFrom(file, Selectors.SELECT_ALL)
@@ -106,7 +105,8 @@ class MySftpFileProviderTest : SSHDTest() {
     private fun newFileObject(path: String): FileObject {
         val vfs = getVFS()
         val fileSystemOptions = FileSystemOptions()
-        MySftpFileSystemConfigBuilder.getInstance().setClientSession(fileSystemOptions, newClientSession())
+        MySftpFileSystemConfigBuilder.getInstance()
+            .setSftpFileSystem(fileSystemOptions, SftpClientFactory.instance().createSftpFileSystem(newClientSession()))
         return vfs.resolveFile("sftp://${path}", fileSystemOptions)
     }
 

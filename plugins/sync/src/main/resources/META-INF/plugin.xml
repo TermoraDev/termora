@@ -1,0 +1,22 @@
+<termora-plugin>
+
+    <id>sync</id>
+
+    <name>Sync</name>
+
+    <version>${projectVersion}</version>
+
+    <termora-version since=">=${rootProjectVersion}" until=""/>
+
+    <entry>app.termora.plugins.sync.SyncPlugin</entry>
+
+    <descriptions>
+        <description>Data sync to Gist or WebDAV</description>
+        <description language="zh_CN">支持将配置同步到 Gist 或 WebDAV</description>
+        <description language="zh_TW">支援將設定同步到 Gist 或 WebDAV</description>
+    </descriptions>
+
+    <vendor url="https://github.com/TermoraDev">TermoraDev</vendor>
+
+
+</termora-plugin>

@@ -1,0 +1,75 @@
+minio
+Apache License 2.0
+https://github.com/minio/minio-java/blob/master/LICENSE
+
+aliyun-sdk-oss
+Apache License 2.0
+https://www.apache.org/licenses/LICENSE-2.0.html
+
+jaxb-api
+BSD 3-Clause "New" or "Revised" License
+https://github.com/jakartaee/jaxb-api/blob/master/LICENSE.md
+
+activation
+COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL) Version 1.1
+https://github.com/javaee/activation/blob/master/LICENSE.txt
+
+jaxb-runtime
+BSD 3-Clause "New" or "Revised" License
+https://github.com/eclipse-ee4j/jaxb-ri/blob/master/LICENSE.md
+
+esdk-obs-java-bundle
+HUAWEI LICENSE
+https://github.com/huaweicloud/huaweicloud-sdk-java-obs/blob/master/LICENSE
+
+xodus-compress
+Apache License 2.0
+https://github.com/JetBrains/xodus/blob/master/LICENSE.txt
+
+xodus-environment
+Apache License 2.0
+https://github.com/JetBrains/xodus/blob/master/LICENSE.txt
+
+xodus-openAPI
+Apache License 2.0
+https://github.com/JetBrains/xodus/blob/master/LICENSE.txt
+
+xodus-utils
+Apache License 2.0
+https://github.com/JetBrains/xodus/blob/master/LICENSE.txt
+
+xodus-vfs
+Apache License 2.0
+https://github.com/JetBrains/xodus/blob/master/LICENSE.txt
+
+kotlin-bip39
+MIT License
+https://github.com/Electric-Coin-Company/kotlin-bip39/blob/main/LICENSE
+
+commons-compress
+Apache License 2.0
+https://github.com/apache/commons-compress/blob/master/LICENSE.txt
+
+cos_api
+MIT License
+https://github.com/tencentyun/cos-java-sdk-v5/blob/master/LICENSE
+
+AutoComplete
+BSD-3-Clause license
+https://github.com/bobbylight/AutoComplete/blob/master/LICENSE.md
+
+RSTALanguageSupport
+BSD-3-Clause license
+https://github.com/bobbylight/RSTALanguageSupport/blob/master/README.md
+
+RSyntaxTextArea
+BSD-3-Clause license
+https://github.com/bobbylight/RSyntaxTextArea/blob/master/LICENSE.md
+
+MaxMind GeoIP2 API
+Apache License, Version 2.0
+https://www.apache.org/licenses/LICENSE-2.0.html
+
+GeoLite2 (https://www.maxmind.com)
+Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)
+https://creativecommons.org/licenses/by-sa/4.0/

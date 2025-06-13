@@ -1,23 +1,24 @@
 package app.termora
 
+import app.termora.database.DatabaseManager
+import app.termora.plugin.Extension
+import app.termora.plugin.ExtensionManager
 import com.formdev.flatlaf.FlatLaf
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange
 import com.jthemedetecor.OsThemeDetector
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
-import java.util.*
 import java.util.function.Consumer
 import javax.swing.PopupFactory
 import javax.swing.SwingUtilities
 import javax.swing.UIManager
-import javax.swing.event.EventListenerList
 
-interface ThemeChangeListener : EventListener {
+interface ThemeChangeExtension : Extension {
     fun onChanged()
 }
 
-class ThemeManager private constructor() {
+internal class ThemeManager private constructor() {
 
 
     companion object {
@@ -27,7 +28,7 @@ class ThemeManager private constructor() {
         }
     }
 
-    val appearance by lazy { Database.getDatabase().appearance }
+    val appearance by lazy { DatabaseManager.getInstance().appearance }
     val themes = mapOf(
         "Light" to LightLaf::class.java.name,
         "Dark" to DarkLaf::class.java.name,
@@ -57,7 +58,6 @@ class ThemeManager private constructor() {
         "Chalk" to ChalkLaf::class.java.name,
     )
 
-    private var listenerList = EventListenerList()
 
     /**
      * 当前的主题
@@ -112,7 +112,8 @@ class ThemeManager private constructor() {
             FlatAnimatedLafChange.hideSnapshotWithAnimation()
         }
 
-        listenerList.getListeners(ThemeChangeListener::class.java).forEach { it.onChanged() }
+        ExtensionManager.getInstance().getExtensions(ThemeChangeExtension::class.java)
+            .forEach { it.onChanged() }
     }
 
     private fun immediateChange(classname: String) {
@@ -127,12 +128,5 @@ class ThemeManager private constructor() {
         }
     }
 
-    fun addThemeChangeListener(listener: ThemeChangeListener) {
-        listenerList.add(ThemeChangeListener::class.java, listener)
-    }
-
-    fun removeThemeChangeListener(listener: ThemeChangeListener) {
-        listenerList.remove(ThemeChangeListener::class.java, listener)
-    }
 
 }

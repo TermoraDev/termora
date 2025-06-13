@@ -1,13 +1,16 @@
 package app.termora
 
+import com.formdev.flatlaf.FlatSystemProperties
 import com.formdev.flatlaf.util.SystemInfo
 import com.pty4j.util.PtyUtil
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.SystemUtils
+import org.slf4j.LoggerFactory
 import org.tinylog.configuration.Configuration
 import java.io.File
 import kotlin.system.exitProcess
+import kotlin.system.measureTimeMillis
 
 class ApplicationInitializr {
 
@@ -29,7 +32,11 @@ class ApplicationInitializr {
         checkSingleton()
 
         // 启动
-        ApplicationRunner().run()
+        val runtime = measureTimeMillis { ApplicationRunner().run() }
+        val log = LoggerFactory.getLogger(javaClass)
+        if (log.isInfoEnabled) {
+            log.info("Application initialization ${runtime}ms")
+        }
 
     }
 
@@ -69,6 +76,17 @@ class ApplicationInitializr {
         if (restart4j.exists()) {
             System.setProperty("restarter.path", restart4j.absolutePath)
         }
+
+        val sqlite = FileUtils.getFile(dylib, "sqlite-jdbc")
+        if (sqlite.exists()) {
+            System.setProperty("org.sqlite.lib.path", sqlite.absolutePath)
+        }
+
+        val flatlaf = FileUtils.getFile(dylib, "flatlaf")
+        if (flatlaf.exists()) {
+            System.setProperty(FlatSystemProperties.NATIVE_LIBRARY_PATH, flatlaf.absolutePath)
+        }
+
     }
 
     /**

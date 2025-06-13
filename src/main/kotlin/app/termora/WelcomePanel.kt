@@ -2,9 +2,13 @@ package app.termora
 
 
 import app.termora.actions.*
+import app.termora.database.DatabaseManager
 import app.termora.findeverywhere.FindEverywhereProvider
 import app.termora.findeverywhere.FindEverywhereResult
+import app.termora.plugin.internal.ssh.SSHProtocolProvider
 import app.termora.terminal.DataKey
+import app.termora.tree.NewHostTree
+import app.termora.tree.NewHostTreeModel
 import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.FlatLaf
 import com.formdev.flatlaf.extras.FlatSVGIcon
@@ -18,12 +22,11 @@ import java.awt.Dimension
 import java.awt.KeyboardFocusManager
 import java.awt.event.*
 import javax.swing.*
-import javax.swing.event.DocumentEvent
 import kotlin.math.max
 
 class WelcomePanel(private val windowScope: WindowScope) : JPanel(BorderLayout()), Disposable, TerminalTab,
     DataProvider {
-    private val properties get() = Database.getDatabase().properties
+    private val properties get() = DatabaseManager.getInstance().properties
     private val rootPanel = JPanel(BorderLayout())
     private val searchTextField = FlatTextField()
     private val hostTree = NewHostTree()
@@ -33,9 +36,9 @@ class WelcomePanel(private val windowScope: WindowScope) : JPanel(BorderLayout()
     private val dataProviderSupport = DataProviderSupport()
     private val hostTreeModel = hostTree.model as NewHostTreeModel
     private var lastFocused: Component? = null
-    private val filterableHostTreeModel = FilterableHostTreeModel(hostTree) {
-        searchTextField.text.isBlank()
-    }
+//    private val filterableHostTreeModel = FilterableHostTreeModel(hostTree) {
+//        searchTextField.text.isBlank()
+//    }
 
     init {
         initView()
@@ -141,17 +144,17 @@ class WelcomePanel(private val windowScope: WindowScope) : JPanel(BorderLayout()
         panel.add(scrollPane, BorderLayout.CENTER)
         panel.border = BorderFactory.createEmptyBorder(10, 0, 0, 0)
 
-        hostTree.model = filterableHostTreeModel
-        TreeUtils.loadExpansionState(
-            hostTree,
-            properties.getString("Welcome.HostTree.state", StringUtils.EMPTY)
-        )
+//        hostTree.model = filterableHostTreeModel
+        hostTree.name = "WelcomeHostTree"
+        hostTree.restoreExpansions()
 
         return panel
     }
 
 
     private fun initEvents() {
+
+        Disposer.register(this, hostTree)
 
         addComponentListener(object : ComponentAdapter() {
             override fun componentShown(e: ComponentEvent) {
@@ -175,11 +178,11 @@ class WelcomePanel(private val windowScope: WindowScope) : JPanel(BorderLayout()
             override fun find(pattern: String): List<FindEverywhereResult> {
                 var filter = hostTreeModel.root.getAllChildren()
                     .map { it.host }
-                    .filter { it.protocol != Protocol.Folder }
+                    .filter { it.isFolder.not() }
 
                 if (pattern.isNotBlank()) {
                     filter = filter.filter {
-                        if (it.protocol == Protocol.SSH) {
+                        if (it.protocol == SSHProtocolProvider.PROTOCOL) {
                             it.name.contains(pattern, true) || it.host.contains(pattern, true)
                         } else {
                             it.name.contains(pattern, true)
@@ -200,7 +203,8 @@ class WelcomePanel(private val windowScope: WindowScope) : JPanel(BorderLayout()
         })
 
 
-        filterableHostTreeModel.addFilter {
+        /*filterableHostTreeModel.addFilter {
+            if (it !is HostTreeNode) return@addFilter false
             val text = searchTextField.text
             val host = it.host
             text.isBlank() || host.name.contains(text, true)
@@ -216,7 +220,7 @@ class WelcomePanel(private val windowScope: WindowScope) : JPanel(BorderLayout()
                     hostTree.expandAll()
                 }
             }
-        })
+        })*/
 
         searchTextField.addKeyListener(object : KeyAdapter() {
             private val event = ActionEvent(hostTree, ActionEvent.ACTION_PERFORMED, StringUtils.EMPTY)
@@ -290,11 +294,10 @@ class WelcomePanel(private val windowScope: WindowScope) : JPanel(BorderLayout()
 
     override fun dispose() {
         properties.putString("WelcomeFullContent", fullContent.toString())
-        properties.putString("Welcome.HostTree.state", TreeUtils.saveExpansionState(hostTree))
     }
 
     private inner class HostFindEverywhereResult(val host: Host) : FindEverywhereResult {
-        private val showMoreInfo get() = properties.getString("HostTree.showMoreInfo", "false").toBoolean()
+        private val showMoreInfo get() = EnableManager.getInstance().isShowMoreInfo()
 
         override fun actionPerformed(e: ActionEvent) {
             ActionManager.getInstance()
@@ -315,8 +318,8 @@ class WelcomePanel(private val windowScope: WindowScope) : JPanel(BorderLayout()
             if (showMoreInfo) {
                 val color = UIManager.getColor(if (isSelected) "textHighlightText" else "textInactiveText")
                 val moreInfo = when (host.protocol) {
-                    Protocol.SSH -> "${host.username}@${host.host}"
-                    Protocol.Serial -> host.options.serialComm.port
+                    SSHProtocolProvider.PROTOCOL -> "${host.username}@${host.host}"
+                    "Serial" -> host.options.serialComm.port
                     else -> StringUtils.EMPTY
                 }
                 if (moreInfo.isNotBlank()) {

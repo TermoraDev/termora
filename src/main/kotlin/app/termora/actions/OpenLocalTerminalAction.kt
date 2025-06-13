@@ -1,6 +1,9 @@
 package app.termora.actions
 
-import app.termora.*
+import app.termora.Host
+import app.termora.I18n
+import app.termora.Icons
+import app.termora.OpenHostActionEvent
 
 class OpenLocalTerminalAction : AnAction(
     I18n.getString("termora.find-everywhere.quick-command.local-terminal"),
@@ -24,7 +27,7 @@ class OpenLocalTerminalAction : AnAction(
                 Host(
                     id = "local",
                     name = name,
-                    protocol = Protocol.Local
+                    protocol = "Local"
                 ),
                 evt
             )

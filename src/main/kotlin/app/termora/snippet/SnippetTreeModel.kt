@@ -1,9 +1,10 @@
 package app.termora.snippet
 
 import app.termora.I18n
-import app.termora.SimpleTreeModel
+import app.termora.tree.SimpleTreeModel
 import javax.swing.tree.MutableTreeNode
 import javax.swing.tree.TreeNode
+import kotlin.math.min
 
 class SnippetTreeModel : SimpleTreeModel<Snippet>(
     SnippetTreeNode(
@@ -60,7 +61,12 @@ class SnippetTreeModel : SimpleTreeModel<Snippet>(
     }
 
     override fun insertNodeInto(newChild: MutableTreeNode, parent: MutableTreeNode, index: Int) {
-        super.insertNodeInto(newChild, parent, index)
+        super.insertNodeInto(newChild, parent, min(index, parent.childCount))
+
+        if (newChild is SnippetTreeNode) {
+            snippetManager.addSnippet(newChild.data)
+        }
+
         // 重置所有排序
         if (parent is SnippetTreeNode) {
             for ((i, c) in parent.children().toList().filterIsInstance<SnippetTreeNode>().withIndex()) {

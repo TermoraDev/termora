@@ -8,7 +8,10 @@ import java.awt.*
 import java.awt.event.*
 import java.awt.image.BufferedImage
 import java.util.*
-import javax.swing.*
+import javax.swing.ImageIcon
+import javax.swing.JDialog
+import javax.swing.JLabel
+import javax.swing.SwingUtilities
 import kotlin.math.abs
 
 class MyTabbedPane : FlatTabbedPane() {
@@ -23,15 +26,13 @@ class MyTabbedPane : FlatTabbedPane() {
 
     init {
         isFocusable = false
-        initEvents()
-    }
 
-    override fun updateUI() {
         styleMap = mapOf(
-            "focusColor" to UIManager.getColor("TabbedPane.selectedBackground"),
-            "hoverColor" to UIManager.getColor("TabbedPane.background"),
+            "focusColor" to DynamicColor("TabbedPane.background"),
+            "hoverColor" to DynamicColor("TabbedPane.background"),
         )
-        super.updateUI()
+
+        initEvents()
     }
 
     private fun initEvents() {

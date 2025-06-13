@@ -4,15 +4,16 @@ import app.termora.*
 import app.termora.actions.DataProvider
 import app.termora.actions.DataProviderSupport
 import app.termora.findeverywhere.FindEverywhereProvider
+import app.termora.protocol.FileObjectRequest
+import app.termora.protocol.TransferProtocolProvider
+import app.termora.sftp.internal.local.LocalTransferProtocolProvider
 import app.termora.terminal.DataKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import okio.withLock
-import org.apache.commons.lang3.SystemUtils
 import org.apache.commons.vfs2.FileObject
-import org.apache.commons.vfs2.VFS
 import java.awt.BorderLayout
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
@@ -31,7 +32,7 @@ class SFTPPanel : JPanel(BorderLayout()), DataProvider, Disposable {
     private val localHost = Host(
         id = "local",
         name = I18n.getString("termora.transport.local"),
-        protocol = Protocol.Local,
+        protocol = "Local",
     )
 
     init {
@@ -91,7 +92,8 @@ class SFTPPanel : JPanel(BorderLayout()), DataProvider, Disposable {
             I18n.getString("termora.transport.local"),
             FileSystemViewPanel(
                 localHost,
-                VFS.getManager().resolveFile("file:///${SystemUtils.USER_HOME}").fileSystem,
+                TransferProtocolProvider.valueOf(LocalTransferProtocolProvider.PROTOCOL)!!
+                    .getRootFileObject(FileObjectRequest(localHost)).file,
                 transportManager,
                 coroutineScope
             )
@@ -175,7 +177,7 @@ class SFTPPanel : JPanel(BorderLayout()), DataProvider, Disposable {
 
         val sourcePanel = SwingUtilities.getAncestorOfClass(FileSystemViewPanel::class.java, source)
                 as? FileSystemViewPanel ?: return false
-        val targetPanel = target as? FileSystemViewPanel ?: return false
+        val targetPanel = target
         if (sourcePanel.isDisposed || targetPanel.isDisposed) return false
         val myTargetWorkdir = (targetWorkdir ?: targetPanel.getWorkdir())
         val mySourceWorkdir = (sourceWorkdir ?: sourcePanel.getWorkdir())

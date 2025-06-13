@@ -1,8 +1,12 @@
 package app.termora.keymgr
 
+import app.termora.Application.ohMyJson
 import app.termora.ApplicationScope
-import app.termora.Database
 import app.termora.DeleteDataManager
+import app.termora.account.AccountOwner
+import app.termora.database.Data
+import app.termora.database.DataType
+import app.termora.database.DatabaseManager
 
 class KeyManager private constructor() {
     companion object {
@@ -11,34 +15,44 @@ class KeyManager private constructor() {
         }
     }
 
-    private val keyPairs = mutableSetOf<OhKeyPair>()
-    private val database get() = Database.getDatabase()
+    private val databaseManager get() = DatabaseManager.getInstance()
 
-    init {
-        keyPairs.addAll(database.getKeyPairs())
-    }
 
-    fun addOhKeyPair(keyPair: OhKeyPair) {
+    fun addOhKeyPair(keyPair: OhKeyPair, accountOwner: AccountOwner) {
         if (keyPair == OhKeyPair.empty) {
             return
         }
-        keyPairs.remove(keyPair)
-        keyPairs.add(keyPair)
-        database.addKeyPair(keyPair)
+
+        databaseManager.saveAndIncrementVersion(
+            Data(
+                id = keyPair.id,
+                ownerId = accountOwner.id,
+                ownerType = accountOwner.type.name,
+                type = DataType.KeyPair.name,
+                data = ohMyJson.encodeToString(keyPair),
+            )
+        )
     }
 
     fun removeOhKeyPair(id: String) {
-        keyPairs.removeIf { it.id == id }
-        database.removeKeyPair(id)
+        databaseManager.delete(id, DataType.KeyPair.name)
         DeleteDataManager.getInstance().removeKeyPair(id)
     }
 
     fun getOhKeyPairs(): List<OhKeyPair> {
-        return keyPairs.sortedBy { it.sort }
+        return databaseManager.data<OhKeyPair>(DataType.KeyPair)
+    }
+
+    fun getOhKeyPairs(ownerId: String): List<OhKeyPair> {
+        return databaseManager.data(DataType.KeyPair, ownerId)
     }
 
     fun getOhKeyPair(id: String): OhKeyPair? {
-        return keyPairs.findLast { it.id == id }
+        val data = databaseManager.data(id) ?: return null
+        if (data.type != DataType.KeyPair.name) {
+            return null
+        }
+        return ohMyJson.decodeFromString(data.data)
     }
 
 }

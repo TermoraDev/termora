@@ -6,10 +6,7 @@ import app.termora.Icons
 import app.termora.actions.AnAction
 import app.termora.actions.AnActionEvent
 import app.termora.terminal.ControlCharacters
-import app.termora.terminal.Null
 import app.termora.terminal.panel.TerminalWriter
-import org.apache.commons.lang3.StringUtils
-import org.apache.commons.text.StringEscapeUtils
 
 class SnippetAction private constructor() : AnAction(I18n.getString("termora.snippet.title"), Icons.codeSpan) {
     companion object {

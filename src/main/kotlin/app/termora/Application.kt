@@ -10,6 +10,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.SystemUtils
+import org.apache.commons.lang3.time.DateUtils
 import org.slf4j.LoggerFactory
 import java.awt.Desktop
 import java.io.File
@@ -17,6 +18,7 @@ import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
+import java.util.*
 import kotlin.math.ln
 import kotlin.math.pow
 
@@ -95,23 +97,53 @@ object Application {
         return dir
     }
 
-    fun getDatabaseFile(): File {
-        return FileUtils.getFile(getBaseDataDir(), "storage")
-    }
-
     fun getVersion(): String {
-        var version = System.getProperty("jpackage.app-version")
+        var version = System.getProperty("app-version")
+
         if (version.isNullOrBlank()) {
-            version = System.getProperty("app-version")
+            version = System.getProperty("jpackage.app-version")
         }
+
         if (version.isNullOrBlank()) {
-            version = "unknown"
+            if (getAppPath().isBlank()) {
+                val versionFile = File("VERSION")
+                if (versionFile.exists() && versionFile.isFile) {
+                    version = versionFile.readText().trim()
+                }
+            }
+
+            if (version.isNullOrBlank()) {
+                version = "unknown"
+            }
         }
+
         return version
     }
 
+    /**
+     * 未知版本通常是开发版本
+     */
     fun isUnknownVersion(): Boolean {
         return getVersion().contains("unknown")
+    }
+
+    fun getUserAgent(): String {
+        return "${getName()}/${getVersion()}; ${SystemUtils.OS_NAME}/${SystemUtils.OS_VERSION}(${SystemUtils.OS_ARCH}); ${SystemUtils.JAVA_VM_NAME}/${SystemUtils.JAVA_VERSION}"
+    }
+
+    /**
+     * 是否是测试版
+     */
+    fun isBetaVersion(): Boolean {
+        return getVersion().contains("beta")
+    }
+
+    fun getReleaseDate(): Date {
+        val releaseDate = System.getProperty("release-date")
+        if (releaseDate.isNullOrBlank()) {
+            return Date()
+        }
+        return runCatching { DateUtils.parseDate(releaseDate, "yyyy-MM-dd") }.getOrNull() ?: Date()
     }
 
     fun getAppPath(): String {

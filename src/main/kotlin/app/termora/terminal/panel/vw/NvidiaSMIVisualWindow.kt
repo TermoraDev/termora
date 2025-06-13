@@ -1,6 +1,10 @@
 package app.termora.terminal.panel.vw
 
-import app.termora.*
+import app.termora.Disposer
+import app.termora.I18n
+import app.termora.Icons
+import app.termora.SshClients
+import app.termora.plugin.internal.ssh.SSHTerminalTab
 import com.formdev.flatlaf.extras.FlatSVGIcon
 import com.jgoodies.forms.builder.FormBuilder
 import com.jgoodies.forms.layout.FormLayout

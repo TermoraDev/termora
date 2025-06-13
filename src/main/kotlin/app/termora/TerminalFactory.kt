@@ -1,5 +1,6 @@
 package app.termora
 
+import app.termora.database.DatabaseManager
 import app.termora.terminal.*
 import app.termora.terminal.panel.TerminalPanel
 import app.termora.tlog.TerminalLoggerDataListener
@@ -45,7 +46,7 @@ class TerminalFactory private constructor() : Disposable {
 
     open class MyTerminalModel(terminal: Terminal) : TerminalModelImpl(terminal) {
         private val colorPalette by lazy { MyColorPalette(terminal) }
-        private val config get() = Database.getDatabase().terminal
+        private val config get() = DatabaseManager.getInstance().terminal
 
         init {
             this.setData(DataKey.CursorStyle, config.cursor)

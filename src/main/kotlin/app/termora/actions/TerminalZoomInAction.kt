@@ -1,7 +1,7 @@
 package app.termora.actions
 
-import app.termora.Database
 import app.termora.I18n
+import app.termora.database.DatabaseManager
 
 class TerminalZoomInAction : TerminalZoomAction() {
     companion object {
@@ -14,7 +14,7 @@ class TerminalZoomInAction : TerminalZoomAction() {
     }
 
     override fun zoom(): Boolean {
-        Database.getDatabase().terminal.fontSize += 2
+        DatabaseManager.getInstance().terminal.fontSize += 2
         return true
     }
 }

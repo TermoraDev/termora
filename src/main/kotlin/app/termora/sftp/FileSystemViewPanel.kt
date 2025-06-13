@@ -2,10 +2,10 @@ package app.termora.sftp
 
 import app.termora.*
 import app.termora.actions.DataProvider
+import app.termora.database.DatabaseManager
 import app.termora.terminal.DataKey
 import app.termora.vfs2.sftp.MySftpFileSystem
 import com.formdev.flatlaf.extras.components.FlatToolBar
-import com.formdev.flatlaf.util.SystemInfo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,13 +27,13 @@ import javax.swing.*
 
 class FileSystemViewPanel(
     val host: Host,
-    private var fileSystem: FileSystem,
+    private val homeDirectory: FileObject,
     private val transportManager: TransportManager,
     private val coroutineScope: CoroutineScope,
 ) : JPanel(BorderLayout()), Disposable, DataProvider, FileSystemProvider {
 
-    private val properties get() = Database.getDatabase().properties
-    private val sftp get() = Database.getDatabase().sftp
+    private var fileSystem: FileSystem = homeDirectory.fileSystem
+    private val properties get() = DatabaseManager.getInstance().properties
     private val table = FileSystemViewTable(this, transportManager, coroutineScope)
     private val disposed = AtomicBoolean(false)
     private var nextReloadTicks = emptyArray<Consumer<Unit>>()
@@ -41,7 +41,6 @@ class FileSystemViewPanel(
     private val owner get() = SwingUtilities.getWindowAncestor(this)
     private val loadingPanel = LoadingPanel()
     private val layeredPane = LayeredPane()
-    private val homeDirectory = getHomeDirectory()
     private val nav = FileSystemViewNav(this, homeDirectory)
     private var workdir = homeDirectory
     private val model get() = table.model as FileSystemViewTableModel
@@ -382,33 +381,6 @@ class FileSystemViewPanel(
                 }
             }
         }
-    }
-
-    private fun getHomeDirectory(): FileObject {
-        val fileSystem = this.fileSystem
-        if (fileSystem is MySftpFileSystem) {
-            val host = fileSystem.getClientSession().getAttribute(SshClients.HOST_KEY)
-                ?: return fileSystem.resolveFile(fileSystem.getDefaultDir())
-            val defaultDirectory = host.options.sftpDefaultDirectory
-            if (defaultDirectory.isNotBlank()) {
-                return fileSystem.resolveFile(defaultDirectory)
-            }
-            return fileSystem.resolveFile(fileSystem.getDefaultDir())
-        }
-
-        if (sftp.defaultDirectory.isNotBlank()) {
-            val resolveFile = if (fileSystem is LocalFileSystem && SystemInfo.isWindows) {
-                VFS.getManager().resolveFile("file://${sftp.defaultDirectory}")
-            } else {
-                fileSystem.resolveFile("file://${sftp.defaultDirectory}")
-            }
-            if (resolveFile.exists()) {
-                setFileSystem(resolveFile.fileSystem)
-                return resolveFile
-            }
-        }
-
-        return fileSystem.resolveFile("file://${SystemUtils.USER_HOME}")
     }
 
     fun getWorkdir(): FileObject {
