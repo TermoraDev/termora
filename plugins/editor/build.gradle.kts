@@ -11,7 +11,7 @@ dependencies {
     testImplementation(kotlin("test"))
     compileOnly(project(":"))
     implementation("com.fifesoft:rsyntaxtextarea:3.6.0")
-    implementation("com.fifesoft:languagesupport:3.3.0")
+    implementation("com.fifesoft:languagesupport:3.4.0")
     implementation("com.fifesoft:autocomplete:3.3.2")
 }
 
