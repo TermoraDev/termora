@@ -55,6 +55,7 @@ class HostManager private constructor() : Disposable {
     fun getHost(id: String): Host? {
         val data = databaseManager.data(id) ?: return null
         if (data.type != DataType.Host.name) return null
+        if (data.deleted) return null
         return ohMyJson.decodeFromString(data.data)
     }
 
