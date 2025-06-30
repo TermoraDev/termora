@@ -46,7 +46,7 @@ h2 = "2.3.232"
 sqlite = "3.50.2.0"
 jug = "5.1.0"
 semver4j = "6.0.0"
-jsvg = "1.4.0"
+jsvg = "2.0.0"
 dom4j = "2.1.4"
 
 [libraries]
