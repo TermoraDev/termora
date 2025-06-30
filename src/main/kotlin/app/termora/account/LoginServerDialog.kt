@@ -59,6 +59,7 @@ class LoginServerDialog(owner: Window) : DialogWrapper(owner) {
         size = Dimension(max(preferredSize.width, UIManager.getInt("Dialog.width") - 250), preferredSize.height)
         setLocationRelativeTo(owner)
 
+        passwordField.putClientProperty(FlatClientProperties.STYLE, mapOf("showCapsLock" to true))
 
         addWindowListener(object : WindowAdapter() {
             override fun windowOpened(e: WindowEvent) {
