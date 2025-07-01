@@ -47,7 +47,7 @@ sqlite = "3.50.2.0"
 jug = "5.1.0"
 semver4j = "6.0.0"
 jsvg = "1.4.0"
-dom4j = "2.1.4"
+dom4j = "2.2.0"
 
 [libraries]
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
