@@ -237,11 +237,17 @@ internal class TransportNavigationPanel(private val navigator: TransportNavigato
             button.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON)
             button.addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent) {
-                    if (navigator.loading) return
-                    if (path == navigator.workdir) {
-                        setTextFieldText(path)
-                    } else {
-                        navigator.navigateTo(path.absolutePathString())
+                    if (SwingUtilities.isLeftMouseButton(e)) {
+                        if (navigator.loading) return
+                        if (path == navigator.workdir) {
+                            setTextFieldText(path)
+                        } else {
+                            if (path.fileSystem.isWindowsFileSystem() && path.pathString == path.fileSystem.separator) {
+                                navigator.navigateTo(path.pathString)
+                            } else {
+                                navigator.navigateTo(path.absolutePathString())
+                            }
+                        }
                     }
                 }
             })

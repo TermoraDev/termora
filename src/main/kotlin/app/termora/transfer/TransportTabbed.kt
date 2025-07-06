@@ -139,7 +139,8 @@ internal class TransportTabbed(
     }
 
     fun addLocalTab() {
-        val host = Host(name = "Local", protocol = LocalProtocolProvider.PROTOCOL)
+        // local id 必须固定，不然书签无法使用
+        val host = Host(id = "local", name = "Local", protocol = LocalProtocolProvider.PROTOCOL)
         val fs = FileSystems.getDefault()
         val support = DefaultTransportSupport(fs, fs.getPath(getDefaultLocalPath()))
         val panel = TransportPanel(internalTransferManager, host, object : TransportSupportLoader {

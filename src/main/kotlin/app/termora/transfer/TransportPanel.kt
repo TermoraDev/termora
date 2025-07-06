@@ -249,9 +249,9 @@ internal class TransportPanel(
                 val workdir = workdir ?: return
                 if (e.actionCommand.isNullOrBlank()) {
                     if (bookmarkBtn.isBookmark) {
-                        bookmarkBtn.deleteBookmark(workdir.absolutePathString())
+                        bookmarkBtn.deleteBookmark(workdir.pathString)
                     } else {
-                        bookmarkBtn.addBookmark(workdir.absolutePathString())
+                        bookmarkBtn.addBookmark(workdir.pathString)
                     }
                     bookmarkBtn.isBookmark = bookmarkBtn.isBookmark.not()
                 } else {
@@ -263,7 +263,8 @@ internal class TransportPanel(
         homeBtn.addActionListener(createSmartAction(object : AbstractAction() {
             override fun actionPerformed(e: ActionEvent) {
                 if (loader.isLoaded()) {
-                    navigator.navigateTo(loader.getSyncTransportSupport().getDefaultPath().absolutePathString())
+                    val home = loader.getSyncTransportSupport().getDefaultPath().absolutePathString()
+                    reload(newPath = home, requestFocus = true)
                 }
             }
         }))
@@ -344,7 +345,7 @@ internal class TransportPanel(
         addPropertyChangeListener("workdir") { evt ->
             val newValue = evt.newValue
             if (newValue is Path) {
-                bookmarkBtn.isBookmark = bookmarkBtn.getBookmarks().contains(newValue.absolutePathString())
+                bookmarkBtn.isBookmark = bookmarkBtn.getBookmarks().contains(newValue.pathString)
             }
         }
 
@@ -404,14 +405,6 @@ internal class TransportPanel(
             }
         })
 
-        table.addKeyListener(object : KeyAdapter() {
-            override fun keyPressed(e: KeyEvent) {
-                if (e.keyCode == KeyEvent.VK_ENTER) {
-                    enterSelectionFolder()
-                }
-            }
-        })
-
         // https://github.com/TermoraDev/termora/issues/401
         table.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
@@ -467,6 +460,12 @@ internal class TransportPanel(
             }
         })
 
+        table.actionMap.put("EnterSelectionFolder", object : AbstractAction() {
+            override fun actionPerformed(e: ActionEvent) {
+                enterSelectionFolder()
+            }
+        })
+
         // 快速导航
         table.addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
@@ -494,6 +493,7 @@ internal class TransportPanel(
         if (SystemInfo.isMacOS.not()) {
             inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0), "Reload")
         }
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "EnterSelectionFolder")
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_R, toolkit.menuShortcutKeyMaskEx), "Reload")
     }
 
@@ -601,7 +601,12 @@ internal class TransportPanel(
             if (workdir != null) registerSelectRow(workdir.name)
         }
 
-        navigator.navigateTo(path.absolutePathString())
+        // Windows 比较特殊，显示盘符页
+        if (path.fileSystem.isWindowsFileSystem() && path.pathString == path.fileSystem.separator) {
+            navigator.navigateTo(path.pathString)
+        } else {
+            navigator.navigateTo(path.absolutePathString())
+        }
     }
 
     private fun registerSelectRow(name: String) {
