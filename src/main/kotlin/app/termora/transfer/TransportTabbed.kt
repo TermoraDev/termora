@@ -70,9 +70,8 @@ internal class TransportTabbed(
                     showContextMenu(index, e)
                 } else if (SwingUtilities.isLeftMouseButton(e) && e.clickCount % 2 == 0) {
                     val tab = getTransportPanel(index) ?: return
-                    if (tab.loader.isOpened().not()) {
-                        tab.reload()
-                    }
+                    if (tab.loader.isOpening() || tab.loader.isOpened()) return
+                    tab.reload()
                 }
             }
         })
@@ -156,7 +155,7 @@ internal class TransportTabbed(
                 return true
             }
         })
-        addTab(I18n.getString("termora.transport.local"), panel)
+        addTab(I18n.getString("termora.transport.local"), TransportViewer.MyIcon.Success, panel)
         super.setTabClosable(0, false)
     }
 
@@ -171,7 +170,7 @@ internal class TransportTabbed(
         val popupMenu = FlatPopupMenu()
 
         // 克隆
-        val clone = popupMenu.add(I18n.getString("termora.tabbed.contextmenu.clone"))
+        val clone = popupMenu.add(I18n.getString("termora.copy"))
         clone.addActionListener(object : AnAction() {
             override fun actionPerformed(evt: AnActionEvent) {
                 val c = addSelectionTab()

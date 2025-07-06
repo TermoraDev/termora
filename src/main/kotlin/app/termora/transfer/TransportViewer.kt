@@ -3,11 +3,10 @@ package app.termora.transfer
 import app.termora.Disposable
 import app.termora.Disposer
 import app.termora.DynamicColor
-import app.termora.Icons
 import app.termora.actions.DataProvider
 import kotlinx.coroutines.*
 import kotlinx.coroutines.swing.Swing
-import java.awt.BorderLayout
+import java.awt.*
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
 import java.nio.file.Path
@@ -78,9 +77,9 @@ internal class TransportViewer : JPanel(BorderLayout()), DataProvider, Disposabl
 
         coroutineScope.launch(Dispatchers.Swing) {
             while (isActive) {
-                delay(250.milliseconds)
                 checkDisconnected(leftTabbed)
                 checkDisconnected(rightTabbed)
+                delay(250.milliseconds)
             }
         }
 
@@ -93,11 +92,17 @@ internal class TransportViewer : JPanel(BorderLayout()), DataProvider, Disposabl
             val tab = tabbed.getTransportPanel(i) ?: continue
             val icon = tabbed.getIconAt(i)
             if (tab.loader.isOpened()) {
-                if (icon == null) continue
-                tabbed.setIconAt(i, null)
+                if (icon != MyIcon.Success) {
+                    tabbed.setIconAt(i, MyIcon.Success)
+                }
+            } else if (tab.loader.isOpening()) {
+                if (icon != MyIcon.Warning) {
+                    tabbed.setIconAt(i, MyIcon.Warning)
+                }
             } else {
-                if (icon == Icons.breakpoint) continue
-                tabbed.setIconAt(i, Icons.breakpoint)
+                if (icon != MyIcon.Error) {
+                    tabbed.setIconAt(i, MyIcon.Error)
+                }
             }
         }
     }
@@ -140,6 +145,36 @@ internal class TransportViewer : JPanel(BorderLayout()), DataProvider, Disposabl
 
     override fun dispose() {
         coroutineScope.cancel()
+    }
+
+    internal class MyIcon(private val color: Color) : Icon {
+        private val size = 10
+
+
+        // https://plugins.jetbrains.com/docs/intellij/icons-style.html#action-icons
+        companion object {
+            val Success = MyIcon(DynamicColor(Color(89, 168, 105), Color(73, 156, 84)))
+            val Error = MyIcon(DynamicColor(Color(219, 88, 96), Color(199, 84, 80)))
+            val Warning = MyIcon(DynamicColor(Color(237, 162, 0), Color(240, 167, 50)))
+        }
+
+        override fun paintIcon(c: Component, g: Graphics, x: Int, y: Int) {
+            if (g is Graphics2D) {
+                g.color = color
+                val centerX = x + (iconWidth - size) / 2
+                val centerY = y + (iconHeight - size) / 2
+                g.fillRoundRect(centerX, centerY, size, size, size, size)
+            }
+        }
+
+        override fun getIconWidth(): Int {
+            return 16
+        }
+
+        override fun getIconHeight(): Int {
+            return 16
+        }
+
     }
 
 }
