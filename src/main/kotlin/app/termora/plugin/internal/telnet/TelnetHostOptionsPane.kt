@@ -19,14 +19,13 @@ import java.awt.event.ComponentEvent
 import java.nio.charset.Charset
 import javax.swing.*
 
-@Suppress("CascadeIf")
-open class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPane() {
+class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPane() {
     protected val generalOption = GeneralOption()
 
     // telnet 不支持代理密码
-    protected val proxyOption = BasicProxyOption(authenticationTypes = listOf())
-    protected val terminalOption = TerminalOption()
-    protected val owner: Window get() = SwingUtilities.getWindowAncestor(this)
+    private val proxyOption = BasicProxyOption(authenticationTypes = listOf())
+    private val terminalOption = TerminalOption()
+    private val owner: Window get() = SwingUtilities.getWindowAncestor(this)
 
     init {
         addOption(generalOption)
@@ -35,7 +34,7 @@ open class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : Optio
     }
 
 
-    open fun getHost(): Host {
+    fun getHost(): Host {
         val name = generalOption.nameTextField.text
         val protocol = TelnetProtocolProvider.PROTOCOL
         val host = generalOption.hostTextField.text
@@ -70,6 +69,7 @@ open class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : Optio
             env = terminalOption.environmentTextArea.text,
             startupCommand = terminalOption.startupCommandTextField.text,
             serialComm = serialComm,
+            extras = mutableMapOf("backspace" to (terminalOption.backspaceComboBox.selectedItem as Backspace).name)
         )
 
         return Host(
@@ -106,6 +106,8 @@ open class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : Optio
         terminalOption.charsetComboBox.selectedItem = host.options.encoding
         terminalOption.environmentTextArea.text = host.options.env
         terminalOption.startupCommandTextField.text = host.options.startupCommand
+        terminalOption.backspaceComboBox.selectedItem =
+            Backspace.valueOf(host.options.extras["backspace"] ?: Backspace.Delete.name)
 
     }
 
@@ -119,18 +121,11 @@ open class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : Optio
             return false
         }
 
-        if (StringUtils.equalsIgnoreCase(host.protocol, TelnetProtocolProvider.PROTOCOL)) {
+        if (host.authentication.type == AuthenticationType.Password) {
             if (validateField(generalOption.usernameTextField)) {
                 return false
             }
-        }
-
-        if (host.authentication.type == AuthenticationType.Password) {
             if (validateField(generalOption.passwordTextField)) {
-                return false
-            }
-        } else if (host.authentication.type == AuthenticationType.PublicKey) {
-            if (validateField(generalOption.publicKeyComboBox)) {
                 return false
             }
         }
@@ -341,8 +336,9 @@ open class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : Optio
     }
 
 
-    protected inner class TerminalOption : JPanel(BorderLayout()), Option {
+    private inner class TerminalOption : JPanel(BorderLayout()), Option {
         val charsetComboBox = JComboBox<String>()
+        val backspaceComboBox = JComboBox<Backspace>()
         val startupCommandTextField = OutlineTextField()
         val environmentTextArea = FixedLengthTextArea(2048)
 
@@ -354,6 +350,10 @@ open class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : Optio
 
         private fun initView() {
             add(getCenterComponent(), BorderLayout.CENTER)
+
+            backspaceComboBox.addItem(Backspace.Delete)
+            backspaceComboBox.addItem(Backspace.Backspace)
+            backspaceComboBox.addItem(Backspace.VT220)
 
 
             environmentTextArea.setFocusTraversalKeys(
@@ -399,7 +399,7 @@ open class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : Optio
         private fun getCenterComponent(): JComponent {
             val layout = FormLayout(
                 "left:pref, $FORM_MARGIN, default:grow",
-                "pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref"
+                "pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref"
             )
 
             var rows = 1
@@ -407,6 +407,8 @@ open class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : Optio
             val panel = FormBuilder.create().layout(layout)
                 .add("${I18n.getString("termora.new-host.terminal.encoding")}:").xy(1, rows)
                 .add(charsetComboBox).xy(3, rows).apply { rows += step }
+                .add("${I18n.getString("termora.new-host.terminal.backspace")}:").xy(1, rows)
+                .add(backspaceComboBox).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.new-host.terminal.startup-commands")}:").xy(1, rows)
                 .add(startupCommandTextField).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.new-host.terminal.env")}:").xy(1, rows)
@@ -419,4 +421,28 @@ open class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : Optio
         }
     }
 
+    enum class Backspace {
+        /**
+         * 0x08
+         */
+        Backspace,
+
+        /**
+         * 0x7F 默认
+         */
+        Delete,
+
+        /**
+         * ESC[3~
+         */
+        VT220, ;
+
+        override fun toString(): String {
+            return when (this) {
+                Backspace -> "ASCII Backspace (0x08)"
+                Delete -> "ASCII Delete (0x7F)"
+                VT220 -> "VT220 Delete (ESC[3~)"
+            }
+        }
+    }
 }

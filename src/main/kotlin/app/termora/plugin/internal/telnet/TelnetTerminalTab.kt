@@ -1,8 +1,12 @@
 package app.termora.plugin.internal.telnet
 
 import app.termora.*
+import app.termora.terminal.ControlCharacters
+import app.termora.terminal.KeyEncoderImpl
 import app.termora.terminal.PtyConnector
+import app.termora.terminal.TerminalKeyEvent
 import org.apache.commons.net.telnet.*
+import java.awt.event.KeyEvent
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.nio.charset.Charset
@@ -41,6 +45,16 @@ class TelnetTerminalTab(
 
         telnet.connect(host.host, host.port)
         telnet.keepAlive = true
+
+        val encoder = terminal.getKeyEncoder()
+        if (encoder is KeyEncoderImpl) {
+            val backspace = host.options.extras["backspace"]
+            if (backspace == TelnetHostOptionsPane.Backspace.Backspace.name) {
+                encoder.putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_BACK_SPACE), String(byteArrayOf(0x08)))
+            } else if (backspace == TelnetHostOptionsPane.Backspace.VT220.name) {
+                encoder.putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_BACK_SPACE), "${ControlCharacters.ESC}[3~")
+            }
+        }
 
         return ptyConnectorFactory.decorate(TelnetStreamPtyConnector(telnet, telnet.charset))
     }

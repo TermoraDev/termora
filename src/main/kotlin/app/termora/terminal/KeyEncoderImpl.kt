@@ -28,8 +28,8 @@ open class KeyEncoderImpl(private val terminal: Terminal) : KeyEncoder, DataList
 
         configureLeftRight()
 
-        // Ctrl + C
-        putCode(TerminalKeyEvent(keyCode = 8), String(byteArrayOf(127)))
+        // Ctrl + C: 0x7F ASCII Delete
+        putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_BACK_SPACE), String(byteArrayOf(0x7F)))
 
         // Enter
         if (terminalModel.getData(DataKey.AutoNewline, false)) {
@@ -113,7 +113,7 @@ open class KeyEncoderImpl(private val terminal: Terminal) : KeyEncoder, DataList
         return terminal
     }
 
-    private fun putCode(event: TerminalKeyEvent, encode: String) {
+    internal fun putCode(event: TerminalKeyEvent, encode: String) {
         mapping[event] = encode
     }
 
@@ -202,7 +202,7 @@ open class KeyEncoderImpl(private val terminal: Terminal) : KeyEncoder, DataList
                 || key == KeyEvent.VK_PAGE_UP || key == KeyEvent.VK_PAGE_DOWN
     }
 
-    fun arrowKeysApplicationSequences() {
+    private fun arrowKeysApplicationSequences() {
         // Up
         putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_UP), encode = "${ControlCharacters.ESC}OA")
         // Down
@@ -213,7 +213,7 @@ open class KeyEncoderImpl(private val terminal: Terminal) : KeyEncoder, DataList
         putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_RIGHT), encode = "${ControlCharacters.ESC}OC")
     }
 
-    fun arrowKeysAnsiCursorSequences() {
+    private fun arrowKeysAnsiCursorSequences() {
         // Up
         putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_UP), encode = "${ControlCharacters.ESC}[A")
         // Down
@@ -227,7 +227,7 @@ open class KeyEncoderImpl(private val terminal: Terminal) : KeyEncoder, DataList
     /**
      * Alt + Left/Right
      */
-    fun configureLeftRight() {
+    private fun configureLeftRight() {
         if (SystemInfo.isMacOS) {
             putCode(
                 TerminalKeyEvent(keyCode = KeyEvent.VK_LEFT, TerminalEvent.ALT_MASK),
@@ -262,7 +262,7 @@ open class KeyEncoderImpl(private val terminal: Terminal) : KeyEncoder, DataList
     }
 
 
-    fun keypadApplicationSequences() {
+    private fun keypadApplicationSequences() {
         // Up
         putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_KP_UP), encode = "${ControlCharacters.ESC}OA")
         // Down
@@ -277,7 +277,7 @@ open class KeyEncoderImpl(private val terminal: Terminal) : KeyEncoder, DataList
         putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_END), encode = "${ControlCharacters.ESC}OF")
     }
 
-    fun keypadAnsiSequences() {
+    private fun keypadAnsiSequences() {
         // Up
         putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_KP_UP), encode = "${ControlCharacters.ESC}[A")
         // Down
