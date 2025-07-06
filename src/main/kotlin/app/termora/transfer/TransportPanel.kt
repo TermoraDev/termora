@@ -433,10 +433,10 @@ internal class TransportPanel(
                     if (attributes.isDirectory) {
                         enterSelectionFolder()
                     } else {
-                        transferManager.addTransfer(
-                            listOf(model.getPath(row) to attributes),
-                            InternalTransferManager.TransferMode.Transfer
-                        )
+                        val paths = listOf(model.getPath(row) to attributes)
+                        if (loader.isOpened() && transferManager.canTransfer(paths.map { it.first })) {
+                            transferManager.addTransfer(paths, InternalTransferManager.TransferMode.Transfer)
+                        }
                     }
                 } else if (SwingUtilities.isRightMouseButton(e)) {
                     val r = table.rowAtPoint(e.point)
@@ -1117,7 +1117,7 @@ internal class TransportPanel(
 
     private inner class MyDefaultTableCellRenderer : DefaultTableCellRenderer() {
         override fun getTableCellRendererComponent(
-            table: JTable?,
+            table: JTable,
             value: Any?,
             isSelected: Boolean,
             hasFocus: Boolean,
@@ -1146,6 +1146,7 @@ internal class TransportPanel(
                 text = StringUtils.EMPTY
             }
 
+            foreground = null
             val c = super.getTableCellRendererComponent(table, text, isSelected, hasFocus, row, column)
             icon = null
 
@@ -1175,6 +1176,12 @@ internal class TransportPanel(
                     } else {
                         NativeIcons.fileIcon
                     }
+                }
+            }
+
+            if (loader.isOpened().not()) {
+                if (isSelected.not()) {
+                    foreground = UIManager.getColor("textInactiveText")
                 }
             }
 
