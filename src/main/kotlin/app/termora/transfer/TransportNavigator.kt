@@ -8,7 +8,7 @@ interface TransportNavigator {
     val loading: Boolean
     val workdir: Path?
 
-    fun navigateTo(destination: Path): Boolean
+    fun navigateTo(destination: String): Boolean
 
     fun addPropertyChangeListener(propertyName: String, listener: PropertyChangeListener)
     fun removePropertyChangeListener(propertyName: String, listener: PropertyChangeListener)

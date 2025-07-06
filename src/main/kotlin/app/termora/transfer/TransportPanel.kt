@@ -59,9 +59,9 @@ import kotlin.io.path.*
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-class TransportPanel(
+internal class TransportPanel(
     private val transferManager: InternalTransferManager,
-    var host: Host,
+    val host: Host,
     val loader: TransportSupportLoader,
 ) : JPanel(BorderLayout()), DataProvider, Disposable, TransportNavigator {
     companion object {
@@ -118,9 +118,6 @@ class TransportPanel(
     private val disposed = AtomicBoolean(false)
     private val futures = Collections.synchronizedSet(mutableSetOf<Future<*>>())
 
-    private val _fileSystem by lazy { getSupport().fileSystem }
-    private val defaultPath by lazy { getSupport().path }
-
 
     /**
      * 工作目录
@@ -154,7 +151,7 @@ class TransportPanel(
         toolbar.add(prevBtn)
         toolbar.add(homeBtn)
         toolbar.add(nextBtn)
-        toolbar.add(TransportNavigationPanel(loader, this))
+        toolbar.add(TransportNavigationPanel(this))
         toolbar.add(bookmarkBtn)
         toolbar.add(parentBtn)
         toolbar.add(eyeBtn)
@@ -235,7 +232,7 @@ class TransportPanel(
 
         Disposer.register(this, editTransferListener)
 
-        refreshBtn.addActionListener { reload() }
+        refreshBtn.addActionListener { reload(requestFocus = true) }
 
         prevBtn.addActionListener { navigator.back() }
         nextBtn.addActionListener { navigator.forward() }
@@ -243,7 +240,7 @@ class TransportPanel(
         parentBtn.addActionListener(createSmartAction(object : AbstractAction() {
             override fun actionPerformed(e: ActionEvent) {
                 if (hasParent.not()) return
-                navigator.navigateTo(model.getPath(0))
+                reload(newPath = model.getPath(0).absolutePathString(), requestFocus = true)
             }
         }))
 
@@ -258,14 +255,16 @@ class TransportPanel(
                     }
                     bookmarkBtn.isBookmark = bookmarkBtn.isBookmark.not()
                 } else {
-                    navigateTo(_fileSystem.getPath(e.actionCommand))
+                    navigateTo(e.actionCommand)
                 }
             }
         }))
 
         homeBtn.addActionListener(createSmartAction(object : AbstractAction() {
             override fun actionPerformed(e: ActionEvent) {
-                navigator.navigateTo(_fileSystem.getPath(defaultPath))
+                if (loader.isLoaded()) {
+                    navigator.navigateTo(loader.getSyncTransportSupport().getDefaultPath().absolutePathString())
+                }
             }
         }))
 
@@ -273,7 +272,7 @@ class TransportPanel(
             override fun actionPerformed(e: ActionEvent) {
                 showHiddenFiles = showHiddenFiles.not()
                 eyeBtn.icon = if (showHiddenFiles) Icons.eye else Icons.eyeClose
-                reload()
+                reload(requestFocus = true)
             }
         }))
 
@@ -289,8 +288,11 @@ class TransportPanel(
         transferManager.addTransferListener(object : TransferListener {
             override fun onTransferChanged(transfer: Transfer, state: TransferTreeTableNode.State) {
                 if (state != TransferTreeTableNode.State.Done && state != TransferTreeTableNode.State.Failed) return
-                if (transfer.target().fileSystem != _fileSystem) return
-                if (transfer.target() == workdir || transfer.target().parent == workdir) {
+                val target = transfer.target()
+                if (loader.isLoaded()) {
+                    if (target.fileSystem != loader.getSyncTransportSupport().getFileSystem()) return
+                }
+                if (target.pathString == workdir?.pathString || target.parent.pathString == workdir?.pathString) {
                     reload(requestFocus = false)
                 }
             }
@@ -362,7 +364,7 @@ class TransportPanel(
                     undoManager.addEdit(object : AbstractUndoableEdit() {
                         override fun undo() {
                             super.undo()
-                            if (navigator.navigateTo(oldValue)) {
+                            if (navigator.reload(newPath = oldValue.absolutePathString(), requestFocus = true)) {
                                 undoOrRedo = true
                                 undoOrRedoPath = oldValue
                             }
@@ -370,7 +372,7 @@ class TransportPanel(
 
                         override fun redo() {
                             super.redo()
-                            if (navigator.navigateTo(newValue)) {
+                            if (navigator.reload(newPath = newValue.absolutePathString(), requestFocus = true)) {
                                 undoOrRedo = true
                                 undoOrRedoPath = newValue
                             }
@@ -524,7 +526,6 @@ class TransportPanel(
             }
 
             private fun getTransferData(support: TransferSupport, load: Boolean): TransferData? {
-                if (loader.isLoaded.not()) return null
                 val workdir = workdir ?: return null
                 val dropLocation = support.dropLocation as? JTable.DropLocation ?: return null
                 val row = if (dropLocation.isInsertRow) 0 else sorter.convertRowIndexToModel(dropLocation.row)
@@ -540,7 +541,8 @@ class TransportPanel(
                     if (transferTransferable.component == panel) return null
                     paths.addAll(transferTransferable.files)
                 } else if (support.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
-                    if (_fileSystem.isLocallyFileSystem()) return null
+                    if (loader.isLoaded() && loader.getSyncTransportSupport().getFileSystem().isLocallyFileSystem())
+                        return null
                     if (load) {
                         val files = support.transferable.getTransferData(DataFlavor.javaFileListFlavor) as List<*>
                         if (files.isEmpty()) return null
@@ -577,22 +579,12 @@ class TransportPanel(
 
     }
 
-    fun getTableModel(): TransportTableModel {
-        return model
+    private suspend fun getFileSystem(): FileSystem {
+        return loader.getTransportSupport().getFileSystem()
     }
 
-    fun getFileSystem(): FileSystem {
-        return _fileSystem
-    }
-
-    /**
-     * 不能在 EDT 线程调用
-     */
-    private fun getSupport(): TransportSupport {
-        if (SwingUtilities.isEventDispatchThread()) {
-            throw WrongThreadException("AWT EventQueue")
-        }
-        return loader.get()
+    private suspend fun getTransportSupport(): TransportSupport {
+        return loader.getTransportSupport()
     }
 
     private fun enterSelectionFolder() {
@@ -609,7 +601,7 @@ class TransportPanel(
             if (workdir != null) registerSelectRow(workdir.name)
         }
 
-        navigator.navigateTo(path)
+        navigator.navigateTo(path.absolutePathString())
     }
 
     private fun registerSelectRow(name: String) {
@@ -626,7 +618,11 @@ class TransportPanel(
         }
     }
 
-    private fun reload(oldPath: Path? = workdir, newPath: Path? = workdir, requestFocus: Boolean = false): Boolean {
+    fun reload(
+        oldPath: String? = workdir?.absolutePathString(),
+        newPath: String? = workdir?.absolutePathString(),
+        requestFocus: Boolean = false
+    ): Boolean {
         assertEventDispatchThread()
 
         if (loading) return false
@@ -662,20 +658,26 @@ class TransportPanel(
         return true
     }
 
-    private suspend fun doReload(oldPath: Path? = null, newPath: Path? = null, requestFocus: Boolean = false): Path {
+    private suspend fun doReload(
+        oldPath: String? = null,
+        newPath: String? = null,
+        requestFocus: Boolean = false
+    ): Path {
 
+        val support = getTransportSupport()
+        val fileSystem = support.getFileSystem()
         val workdir = newPath ?: oldPath
 
         if (workdir == null) {
-            val path = _fileSystem.getPath(defaultPath)
-            return doReload(null, path)
+            val path = support.getDefaultPath()
+            return doReload(null, path.absolutePathString())
         }
 
-        val path = workdir
+        val path = fileSystem.getPath(workdir)
         val first = AtomicBoolean(false)
         var parent = path.parent
-        if (parent == null && _fileSystem.isWindowsFileSystem() && workdir.pathString != _fileSystem.separator) {
-            parent = _fileSystem.getPath(_fileSystem.separator)
+        if (parent == null && fileSystem.isWindowsFileSystem() && path.pathString != fileSystem.separator) {
+            parent = fileSystem.getPath(fileSystem.separator)
         }
         val files = mutableListOf<Pair<Path, Attributes>>()
         if ((parent != null).also { hasParent = it }) {
@@ -696,8 +698,8 @@ class TransportPanel(
             files.clear()
         }
 
-        if (_fileSystem.isWindowsFileSystem() && workdir.pathString == _fileSystem.separator) {
-            for (path in _fileSystem.rootDirectories) {
+        if (fileSystem.isWindowsFileSystem() && path.pathString == fileSystem.separator) {
+            for (path in fileSystem.rootDirectories) {
                 val attributes = getAttributes(path)
                 files.add(path to attributes)
             }
@@ -716,7 +718,7 @@ class TransportPanel(
         if (requestFocus)
             coroutineScope.launch(Dispatchers.Swing) { table.requestFocusInWindow() }
 
-        return workdir
+        return path
     }
 
     private fun listFiles(path: Path): Stream<Pair<Path, Attributes>> {
@@ -787,21 +789,24 @@ class TransportPanel(
         }
     }
 
-
     private fun showContextmenu(rows: Array<Int>, e: MouseEvent) {
         val files = rows.map { model.getPath(it) to model.getAttributes(it) }
-        val popupMenu = TransportPopupMenu(owner, model, transferManager, _fileSystem, files)
+        val popupMenu = TransportPopupMenu(owner, model, transferManager, loader, files)
         popupMenu.addActionListener(PopupMenuActionListener(files))
         popupMenu.show(table, e.x, e.y)
     }
 
-    override fun navigateTo(destination: Path): Boolean {
+
+    override fun navigateTo(destination: String): Boolean {
         assertEventDispatchThread()
 
         if (loading) return false
-        if (workdir == destination) return false
 
-        return reload(workdir, destination)
+        if (loader.isOpened()) {
+            if (workdir?.absolutePathString() == destination) return false
+        }
+
+        return reload(newPath = destination)
     }
 
     override fun getHistory(): List<Path> {
@@ -825,7 +830,7 @@ class TransportPanel(
     }
 
     private fun setNewWorkdir(destination: Path) {
-        val oldValue = workdir
+        val oldValue = if (destination.fileSystem == workdir?.fileSystem) workdir else null
         workdir = destination
         firePropertyChange("workdir", oldValue, destination)
     }
@@ -912,8 +917,12 @@ class TransportPanel(
                     val millis = Files.getLastModifiedTime(localPath).toMillis()
                     if (oldMillis == millis) continue
 
+                    // 正在编辑时可能会出现断线的情况 ，安全获取
+                    val fs = getFileSystem()
+                    if (fs.isOpen.not()) continue
+
                     // 发送到服务器
-                    transferManager.addHighTransfer(localPath, target)
+                    transferManager.addHighTransfer(localPath, fs.getPath(target.absolutePathString()))
                     oldMillis = millis
                 }
             }
@@ -1009,8 +1018,9 @@ class TransportPanel(
             } else if (actionCommand == TransportPopupMenu.ActionCommand.NewFolder || actionCommand == TransportPopupMenu.ActionCommand.NewFile) {
                 val name = e.source.toString()
                 val workdir = workdir ?: return
-                val path = workdir.resolve(name)
                 processPath(e.source.toString()) {
+                    // 因为此时可能已经断线，任何 Path 都不可完全相信
+                    val path = getFileSystem().getPath(workdir.resolve(name).absolutePathString())
                     if (actionCommand == TransportPopupMenu.ActionCommand.NewFolder)
                         path.createDirectories()
                     else
@@ -1022,6 +1032,9 @@ class TransportPanel(
                 processPath(e.source.toString()) { source.moveTo(target) }
             } else if (actionCommand == TransportPopupMenu.ActionCommand.Rmrf) {
                 transferManager.addTransfer(files, InternalTransferManager.TransferMode.Rmrf)
+            } else if (actionCommand == TransportPopupMenu.ActionCommand.Reconnect) {
+                // reload now
+                reload()
             } else if (actionCommand == TransportPopupMenu.ActionCommand.ChangePermissions) {
                 val c = e.source as TransportPopupMenu.ChangePermission
                 val path = files.first().first
@@ -1137,8 +1150,8 @@ class TransportPanel(
             icon = null
 
             if (column == TransportTableModel.COLUMN_NAME) {
-                if (_fileSystem.isWindowsFileSystem()) {
-                    val path = model.getPath(sorter.convertRowIndexToModel(row))
+                val path = model.getPath(sorter.convertRowIndexToModel(row))
+                if (path.fileSystem.isWindowsFileSystem()) {
                     icon = if (attributes.isParent) {
                         NativeIcons.folderIcon
                     } else {

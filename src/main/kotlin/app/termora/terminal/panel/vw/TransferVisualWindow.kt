@@ -99,9 +99,11 @@ internal class TransferVisualWindow(tab: SSHTerminalTab, visualWindowManager: Vi
                 if (key == DataKey.CurrentDir) {
                     val dir = DataKey.CurrentDir.clazz.cast(data)
                     val navigator = getTransportNavigator() ?: return
-                    val path = navigator.getFileSystem().getPath(dir)
-                    if (path == navigator.workdir) return
-                    navigator.navigateTo(path)
+                    val loader = navigator.loader
+                    if (loader.isOpened().not()) return
+                    val fileSystem = loader.getSyncTransportSupport().getFileSystem()
+                    val path = fileSystem.getPath(dir)
+                    navigator.navigateTo(path.absolutePathString())
                 }
             }
         })
@@ -146,14 +148,25 @@ internal class TransferVisualWindow(tab: SSHTerminalTab, visualWindowManager: Vi
             try {
                 val session = getSession()
                 val fileSystem = SftpClientFactory.instance().createSftpFileSystem(session)
-                val support = TransportSupport(fileSystem, fileSystem.defaultDir.absolutePathString())
+                val support = DefaultTransportSupport(fileSystem, fileSystem.defaultDir)
                 withContext(Dispatchers.Swing) {
                     val internalTransferManager = MyInternalTransferManager()
                     val transportPanel = TransportPanel(
                         internalTransferManager, tab.host,
-                        TransportSupportLoader { support })
-                    internalTransferManager.setTransferPanel(transportPanel)
+                        object : TransportSupportLoader {
+                            override suspend fun getTransportSupport(): TransportSupport {
+                                return support
+                            }
 
+                            override fun getSyncTransportSupport(): TransportSupport {
+                                return support
+                            }
+
+                            override fun isLoaded(): Boolean {
+                                return true
+                            }
+                        })
+                    internalTransferManager.setTransferPanel(transportPanel)
                     Disposer.register(transportPanel, object : Disposable {
                         override fun dispose() {
                             panel.remove(transportPanel)

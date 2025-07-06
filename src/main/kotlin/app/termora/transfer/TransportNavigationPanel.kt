@@ -2,7 +2,6 @@ package app.termora.transfer
 
 import app.termora.DynamicColor
 import app.termora.Icons
-import app.termora.OptionPane
 import app.termora.transfer.TransportPanel.Companion.isWindowsFileSystem
 import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.extras.FlatSVGIcon
@@ -14,8 +13,6 @@ import com.formdev.flatlaf.util.SystemInfo
 import org.apache.commons.io.FilenameUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.SystemUtils
-import org.apache.commons.lang3.exception.ExceptionUtils
-import org.slf4j.LoggerFactory
 import java.awt.CardLayout
 import java.awt.Dimension
 import java.awt.Insets
@@ -24,7 +21,6 @@ import java.awt.event.*
 import java.beans.PropertyChangeEvent
 import java.beans.PropertyChangeListener
 import java.nio.file.Path
-import java.util.function.Supplier
 import javax.swing.*
 import javax.swing.event.PopupMenuEvent
 import javax.swing.event.PopupMenuListener
@@ -33,13 +29,9 @@ import kotlin.io.path.name
 import kotlin.io.path.pathString
 import kotlin.math.round
 
-class TransportNavigationPanel(
-    private val support: Supplier<TransportSupport>,
-    private val navigator: TransportNavigator
-) : JPanel() {
+internal class TransportNavigationPanel(private val navigator: TransportNavigator) : JPanel() {
 
     companion object {
-        private val log = LoggerFactory.getLogger(TransportNavigationPanel::class.java)
         private const val TEXT_FIELD = "TextField"
         private const val SEGMENTS = "Segments"
 
@@ -50,7 +42,6 @@ class TransportNavigationPanel(
 
     }
 
-    private val owner get() = SwingUtilities.getWindowAncestor(this)
     private val layeredPane = LayeredPane()
     private val textField = FlatTextField()
     private val downBtn = JButton(Icons.chevronDown)
@@ -115,8 +106,7 @@ class TransportNavigationPanel(
         val itemListener = object : ItemListener {
             override fun itemStateChanged(e: ItemEvent) {
                 val path = comboBox.selectedItem as Path? ?: return
-                if (navigator.loading) return
-                navigator.navigateTo(path)
+                navigator.navigateTo(path.absolutePathString())
             }
         }
 
@@ -179,17 +169,7 @@ class TransportNavigationPanel(
             override fun actionPerformed(e: ActionEvent) {
                 if (navigator.loading) return
                 if (textField.text.isBlank()) return
-
-                try {
-                    val path = support.get().fileSystem.getPath(textField.text)
-                    navigator.navigateTo(path)
-                } catch (e: Exception) {
-                    if (log.isErrorEnabled) log.error(e.message, e)
-                    OptionPane.showMessageDialog(
-                        owner, ExceptionUtils.getRootCauseMessage(e),
-                        messageType = JOptionPane.ERROR_MESSAGE
-                    )
-                }
+                navigator.navigateTo(textField.text)
             }
         })
 
@@ -261,7 +241,7 @@ class TransportNavigationPanel(
                     if (path == navigator.workdir) {
                         setTextFieldText(path)
                     } else {
-                        navigator.navigateTo(path)
+                        navigator.navigateTo(path.absolutePathString())
                     }
                 }
             })
@@ -353,7 +333,7 @@ class TransportNavigationPanel(
                     text = item.pathString
                 }
             }
-            popupMenu.add(text).addActionListener { navigator.navigateTo(item) }
+            popupMenu.add(text).addActionListener { navigator.navigateTo(item.absolutePathString()) }
         }
         popupMenu.show(
             button,

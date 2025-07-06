@@ -34,6 +34,7 @@ object Icons {
     val empty by lazy { DynamicIcon("icons/empty.svg") }
     val changelog by lazy { DynamicIcon("icons/changelog.svg", "icons/changelog_dark.svg") }
     val add by lazy { DynamicIcon("icons/add.svg", "icons/add_dark.svg") }
+    val breakpoint by lazy { DynamicIcon("icons/breakpoint.svg", "icons/breakpoint_dark.svg") }
     val softWrap by lazy { DynamicIcon("icons/softWrap.svg", "icons/softWrap_dark.svg") }
     val scrollUp by lazy { DynamicIcon("icons/scrollUp.svg", "icons/scrollUp_dark.svg") }
     val reformatCode by lazy { DynamicIcon("icons/reformatCode.svg", "icons/reformatCode_dark.svg") }

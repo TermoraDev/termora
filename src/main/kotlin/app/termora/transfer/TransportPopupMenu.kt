@@ -6,6 +6,7 @@ import app.termora.Icons
 import app.termora.OptionPane
 import app.termora.transfer.TransportPanel.Companion.isLocallyFileSystem
 import com.formdev.flatlaf.extras.components.FlatPopupMenu
+import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.sshd.sftp.client.fs.SftpFileSystem
 import java.awt.Window
@@ -13,7 +14,6 @@ import java.awt.datatransfer.StringSelection
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
 import java.awt.event.KeyEvent
-import java.nio.file.FileSystem
 import java.nio.file.Path
 import java.nio.file.attribute.PosixFilePermission
 import java.util.*
@@ -26,11 +26,11 @@ import kotlin.io.path.absolutePathString
 import kotlin.io.path.name
 
 
-class TransportPopupMenu(
+internal class TransportPopupMenu(
     private val owner: Window,
     private val model: TransportTableModel,
     private val transferManager: InternalTransferManager,
-    private val fileSystem: FileSystem,
+    private val loader: TransportSupportLoader,
     private val files: List<Pair<Path, TransportTableModel.Attributes>>
 ) : FlatPopupMenu() {
     private val paths = files.map { it.first }
@@ -71,25 +71,45 @@ class TransportPopupMenu(
     private fun initView() {
         inheritsPopupMenu = false
 
+        if (loader.isOpened().not()) {
+            val reconnect = add(I18n.getString("termora.tabbed.contextmenu.reconnect"))
+            reconnect.addActionListener { e -> fireActionPerformed(e, ActionCommand.Reconnect) }
+            return
+        }
+
+        val fileSystem = if (loader.isLoaded()) loader.getSyncTransportSupport().getFileSystem() else null
+
         add(transferMenu)
         add(editMenu)
         addSeparator()
         add(copyPathMenu)
-        if (fileSystem.isLocallyFileSystem()) add(openInFinderMenu)
+        if (fileSystem?.isLocallyFileSystem() == true) {
+            add(openInFinderMenu)
+        }
         addSeparator()
         add(renameMenu)
         add(deleteMenu)
-        if (fileSystem is SftpFileSystem) add(rmrfMenu)
+        if (fileSystem is SftpFileSystem) {
+            add(rmrfMenu)
+        }
         add(changePermissionsMenu)
         addSeparator()
         add(refreshMenu)
         addSeparator()
         add(newMenu)
 
+        // 开发环境提供断线
+        if (Application.getAppPath().isBlank() && loader.isOpened()) {
+            addSeparator()
+            add("Disconnect").addActionListener {
+                IOUtils.closeQuietly(loader.getSyncTransportSupport().getFileSystem())
+            }
+        }
+
         transferMenu.isEnabled = hasParent.not() && files.isNotEmpty() && transferManager.canTransfer(paths)
         copyPathMenu.isEnabled = files.isNotEmpty()
-        openInFinderMenu.isEnabled = files.isNotEmpty() && fileSystem.isLocallyFileSystem()
-        editMenu.isEnabled = files.isNotEmpty() && fileSystem.isLocallyFileSystem().not()
+        openInFinderMenu.isEnabled = files.isNotEmpty() && fileSystem?.isLocallyFileSystem() == true
+        editMenu.isEnabled = files.isNotEmpty() && fileSystem?.isLocallyFileSystem() != true
                 && files.all { it.second.isFile && it.second.isSymbolicLink.not() }
         renameMenu.isEnabled = hasParent.not() && files.size == 1
         deleteMenu.isEnabled = hasParent.not() && files.isNotEmpty()
@@ -211,6 +231,7 @@ class TransportPopupMenu(
         Refresh,
         ChangePermissions,
         Rmrf,
+        Reconnect,
     }
 
     data class ChangePermission(val permissions: Set<PosixFilePermission>, val includeSubFolder: Boolean)

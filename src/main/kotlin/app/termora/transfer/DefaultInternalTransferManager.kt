@@ -65,7 +65,9 @@ class DefaultInternalTransferManager(
 
 
     override fun canTransfer(paths: List<Path>): Boolean {
-        return paths.isNotEmpty() && target.getWorkdir() != null
+        val c = target.getWorkdir() ?: return false
+        if (c.fileSystem.isOpen.not()) return false
+        return paths.isNotEmpty()
     }
 
     override fun addTransfer(
@@ -270,7 +272,8 @@ class DefaultInternalTransferManager(
         val isDirectory = pair.second.isDirectory
         val path = pair.first
         if (isDirectory.not() || mode == TransferMode.Rmrf) {
-            val transfer = createTransfer(path, workdir.resolve(path.name), isDirectory, StringUtils.EMPTY, mode, action)
+            val transfer =
+                createTransfer(path, workdir.resolve(path.name), isDirectory, StringUtils.EMPTY, mode, action)
             return if (transferManager.addTransfer(transfer)) FileVisitResult.CONTINUE else FileVisitResult.TERMINATE
         }
 

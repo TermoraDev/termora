@@ -3,22 +3,19 @@ package app.termora.transfer
 import app.termora.Disposable
 import app.termora.Disposer
 import app.termora.DynamicColor
+import app.termora.Icons
 import app.termora.actions.DataProvider
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import org.slf4j.LoggerFactory
+import kotlinx.coroutines.*
+import kotlinx.coroutines.swing.Swing
 import java.awt.BorderLayout
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
 import java.nio.file.Path
 import javax.swing.*
+import kotlin.time.Duration.Companion.milliseconds
 
 
-class TransportViewer : JPanel(BorderLayout()), DataProvider, Disposable {
-    companion object {
-        private val log = LoggerFactory.getLogger(TransportViewer::class.java)
-    }
+internal class TransportViewer : JPanel(BorderLayout()), DataProvider, Disposable {
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val splitPane = JSplitPane()
@@ -78,8 +75,31 @@ class TransportViewer : JPanel(BorderLayout()), DataProvider, Disposable {
             }
         })
 
+
+        coroutineScope.launch(Dispatchers.Swing) {
+            while (isActive) {
+                delay(250.milliseconds)
+                checkDisconnected(leftTabbed)
+                checkDisconnected(rightTabbed)
+            }
+        }
+
         Disposer.register(this, leftTabbed)
         Disposer.register(this, rightTabbed)
+    }
+
+    private fun checkDisconnected(tabbed: TransportTabbed) {
+        for (i in 0 until tabbed.tabCount) {
+            val tab = tabbed.getTransportPanel(i) ?: continue
+            val icon = tabbed.getIconAt(i)
+            if (tab.loader.isOpened()) {
+                if (icon == null) continue
+                tabbed.setIconAt(i, null)
+            } else {
+                if (icon == Icons.breakpoint) continue
+                tabbed.setIconAt(i, Icons.breakpoint)
+            }
+        }
     }
 
     private fun createInternalTransferManager(
@@ -116,6 +136,10 @@ class TransportViewer : JPanel(BorderLayout()), DataProvider, Disposable {
 
     fun getRightTabbed(): TransportTabbed {
         return rightTabbed
+    }
+
+    override fun dispose() {
+        coroutineScope.cancel()
     }
 
 }

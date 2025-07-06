@@ -3,18 +3,18 @@ package app.termora.transfer
 import app.termora.*
 import app.termora.database.DatabaseManager
 import app.termora.terminal.DataKey
+import app.termora.transfer.TransportPanel.Companion.isLocallyFileSystem
 import java.beans.PropertyChangeListener
-import java.nio.file.FileSystems
 import javax.swing.Icon
 import javax.swing.JComponent
 import javax.swing.JOptionPane
 import javax.swing.SwingUtilities
 
-class TransportTerminalTab : RememberFocusTerminalTab() {
+internal class TransportTerminalTab : RememberFocusTerminalTab() {
     private val transportViewer = TransportViewer()
     private val sftp get() = DatabaseManager.getInstance().sftp
     private val transferManager get() = transportViewer.getTransferManager()
-    val leftTabbed get() = transportViewer.getLeftTabbed()
+    private val leftTabbed get() = transportViewer.getLeftTabbed()
     val rightTabbed get() = transportViewer.getRightTabbed()
 
     init {
@@ -66,8 +66,8 @@ class TransportTerminalTab : RememberFocusTerminalTab() {
     private fun hasActiveTab(tabbed: TransportTabbed): Boolean {
         for (i in 0 until tabbed.tabCount) {
             val c = tabbed.getComponentAt(i) ?: continue
-            if (c is TransportPanel && c.loader.isLoaded) {
-                if (c.getFileSystem() != FileSystems.getDefault()) {
+            if (c is TransportPanel && c.loader.isOpened()) {
+                if (c.loader.getSyncTransportSupport().getFileSystem().isLocallyFileSystem().not()) {
                     return true
                 }
             }
