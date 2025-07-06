@@ -232,7 +232,8 @@ class PluginPanel(val descriptor: PluginPluginDescriptor) : JPanel(), Disposable
 
                     // 当有多个插件正在安装时，那么最后一个安装成功的询问是否重启
                     if (installing.get() <= 1) {
-                        restarter.scheduleRestart(owner)
+                        // 不阻塞按钮状态变更
+                        SwingUtilities.invokeLater { restarter.scheduleRestart(owner) }
                     }
 
                     // 如果是更新，那么也需要刷新 InstalledPanel 下的按钮状态

@@ -22,7 +22,7 @@ open class S3FileSystem(provider: S3FileSystemProvider) : BaseFileSystem<S3Path>
     }
 
     override fun close() {
-        isOpen.compareAndSet(false, true)
+        isOpen.compareAndSet(true, false)
     }
 
     override fun getRootDirectories(): Iterable<Path> {
