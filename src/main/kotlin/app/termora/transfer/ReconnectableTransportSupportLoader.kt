@@ -68,6 +68,11 @@ internal class ReconnectableTransportSupportLoader(private val owner: Window, pr
         }
     }
 
+    override fun isOpening(): Boolean {
+        if (isOpened()) return false
+        return mutex.isLocked
+    }
+
     private fun connect(): MyTransportSupport {
         val provider = TransferProtocolProvider.valueOf(host.protocol)
         if (provider == null) {

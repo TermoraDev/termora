@@ -111,7 +111,7 @@ internal class TransportSelectionPanel(
             })
             swingCoroutineScope.launch {
                 tabbed.remove(that)
-                tabbed.addTab(host.name, panel)
+                tabbed.addTab(host.name, TransportViewer.MyIcon.Success, panel)
                 tabbed.selectedIndex = tabbed.tabCount - 1
             }
         }

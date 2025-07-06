@@ -23,4 +23,9 @@ internal interface TransportSupportLoader : Disposable {
      * 快速检查是否已经成功打开
      */
     fun isOpened(): Boolean = true
+
+    /**
+     * 是否正在打开中，也有可能是加载中
+     */
+    fun isOpening(): Boolean = false
 }
