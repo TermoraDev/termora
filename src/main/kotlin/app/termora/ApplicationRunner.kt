@@ -22,10 +22,7 @@ import org.apache.commons.lang3.LocaleUtils
 import org.apache.commons.lang3.SystemUtils
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
-import java.awt.MenuItem
-import java.awt.PopupMenu
-import java.awt.SystemTray
-import java.awt.TrayIcon
+import java.awt.*
 import java.awt.desktop.AppReopenedEvent
 import java.awt.desktop.AppReopenedListener
 import java.awt.desktop.SystemEventListener
@@ -202,6 +199,7 @@ class ApplicationRunner {
 
         UIManager.put(FlatClientProperties.FULL_WINDOW_CONTENT, true)
         UIManager.put(FlatClientProperties.USE_WINDOW_DECORATIONS, false)
+        UIManager.put(FlatClientProperties.POPUP_FORCE_HEAVY_WEIGHT, true)
 
         UIManager.put("Component.arc", 5)
         UIManager.put("TextComponent.arc", UIManager.getInt("Component.arc"))
@@ -237,12 +235,24 @@ class ApplicationRunner {
 
         // Linux 更多的是尖锐风格
         if (SystemInfo.isMacOS || SystemInfo.isWindows) {
+            val selectionInsets = Insets(0, 2, 0, 2)
             UIManager.put("Tree.selectionArc", UIManager.getInt("Component.arc"))
+            UIManager.put("Tree.selectionInsets", selectionInsets)
+
             UIManager.put("List.selectionArc", UIManager.getInt("Component.arc"))
+            UIManager.put("List.selectionInsets", selectionInsets)
+
             UIManager.put("ComboBox.selectionArc", UIManager.getInt("Component.arc"))
+            UIManager.put("ComboBox.selectionInsets", selectionInsets)
+
             UIManager.put("Table.selectionArc", UIManager.getInt("Component.arc"))
+            UIManager.put("Table.selectionInsets", selectionInsets)
+
             UIManager.put("MenuBar.selectionArc", UIManager.getInt("Component.arc"))
+            UIManager.put("MenuBar.selectionInsets", selectionInsets)
+
             UIManager.put("MenuItem.selectionArc", UIManager.getInt("Component.arc"))
+            UIManager.put("MenuItem.selectionInsets", selectionInsets)
         }
 
     }

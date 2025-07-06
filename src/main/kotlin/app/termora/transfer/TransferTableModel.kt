@@ -398,7 +398,9 @@ class TransferTableModel(private val coroutineScope: CoroutineScope) :
                     if (continueTransfer(node, false)) {
                         doTransfer(node)
                     } else {
-                        changeState(node, State.Failed)
+                        withContext(Dispatchers.Swing) {
+                            changeState(node, State.Failed)
+                        }
                     }
                 }
                 lock.withLock { condition.signalAll() }

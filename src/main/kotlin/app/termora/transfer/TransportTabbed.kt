@@ -19,7 +19,7 @@ import javax.swing.JToolBar
 import javax.swing.SwingUtilities
 
 @Suppress("DuplicatedCode")
-class TransportTabbed(
+internal class TransportTabbed(
     private val transferManager: TransferManager,
 ) : FlatTabbedPane(), Disposable {
     private val addBtn = JButton(Icons.add)
@@ -64,14 +64,16 @@ class TransportTabbed(
         // 右键菜单
         addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
-                if (!SwingUtilities.isRightMouseButton(e)) {
-                    return
-                }
-
                 val index = indexAtLocation(e.x, e.y)
                 if (index < 0) return
-
-                showContextMenu(index, e)
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    showContextMenu(index, e)
+                } else if (SwingUtilities.isLeftMouseButton(e) && e.clickCount % 2 == 0) {
+                    val tab = getTransportPanel(index) ?: return
+                    if (tab.loader.isOpened().not()) {
+                        tab.reload()
+                    }
+                }
             }
         })
 
@@ -105,8 +107,9 @@ class TransportTabbed(
 
     private fun tabClose(c: TransportPanel): Boolean {
         if (transferManager.getTransferCount() < 1) return true
-        if (c.loader.isLoaded.not()) return false
-        val fileSystem = c.getFileSystem()
+        val loader = c.loader
+        if (loader.isLoaded().not()) return false
+        val fileSystem = loader.getSyncTransportSupport()
         val transfers = transferManager.getTransfers()
             .filter { it.source().fileSystem == fileSystem || it.target().fileSystem == fileSystem }
         if (transfers.isEmpty()) return true
@@ -137,8 +140,21 @@ class TransportTabbed(
 
     fun addLocalTab() {
         val host = Host(name = "Local", protocol = LocalProtocolProvider.PROTOCOL)
-        val support = TransportSupport(FileSystems.getDefault(), getDefaultLocalPath())
-        val panel = TransportPanel(internalTransferManager, host, TransportSupportLoader { support })
+        val fs = FileSystems.getDefault()
+        val support = DefaultTransportSupport(fs, fs.getPath(getDefaultLocalPath()))
+        val panel = TransportPanel(internalTransferManager, host, object : TransportSupportLoader {
+            override suspend fun getTransportSupport(): TransportSupport {
+                return support
+            }
+
+            override fun getSyncTransportSupport(): TransportSupport {
+                return support
+            }
+
+            override fun isLoaded(): Boolean {
+                return true
+            }
+        })
         addTab(I18n.getString("termora.transport.local"), panel)
         super.setTabClosable(0, false)
     }
@@ -165,20 +181,30 @@ class TransportTabbed(
         // 编辑
         val edit = popupMenu.add(I18n.getString("termora.keymgr.edit"))
         edit.addActionListener(object : AnAction() {
+            private val hostManager get() = HostManager.getInstance()
             private val accountManager get() = AccountManager.getInstance()
             override fun actionPerformed(evt: AnActionEvent) {
                 val window = evt.window
                 val dialog = NewHostDialogV2(
                     window,
-                    panel.host,
+                    getHost(panel),
                     accountOwner = accountManager.getOwners().first { it.id == panel.host.ownerId })
                 dialog.setLocationRelativeTo(window)
                 dialog.title = panel.host.name
                 dialog.isVisible = true
                 val host = dialog.host ?: return
-                HostManager.getInstance().addHost(host, DatabaseChangedExtension.Source.Sync)
+                hostManager.addHost(host, DatabaseChangedExtension.Source.User)
                 setTitleAt(tabIndex, host.name)
-                panel.host = host
+                setHost(panel, host)
+            }
+
+
+            private fun getHost(panel: TransportPanel): Host {
+                return panel.getClientProperty("EditHost") as Host? ?: panel.host
+            }
+
+            private fun setHost(panel: TransportPanel, host: Host) {
+                panel.putClientProperty("EditHost", host)
             }
         })
 

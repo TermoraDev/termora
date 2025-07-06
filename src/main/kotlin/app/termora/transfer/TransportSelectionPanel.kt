@@ -2,7 +2,6 @@ package app.termora.transfer
 
 import app.termora.*
 import app.termora.database.DatabaseManager
-import app.termora.protocol.PathHandlerRequest
 import app.termora.protocol.TransferProtocolProvider
 import app.termora.tree.*
 import com.formdev.flatlaf.icons.FlatOptionPaneErrorIcon
@@ -24,9 +23,8 @@ import java.util.concurrent.Executors
 import javax.swing.*
 import javax.swing.event.TreeExpansionEvent
 import javax.swing.event.TreeExpansionListener
-import kotlin.io.path.absolutePathString
 
-class TransportSelectionPanel(
+internal class TransportSelectionPanel(
     private val tabbed: TransportTabbed,
     private val transferManager: InternalTransferManager,
 ) : JPanel(BorderLayout()), Disposable {
@@ -99,19 +97,16 @@ class TransportSelectionPanel(
 
     private suspend fun doConnect(host: Host) {
 
-        val provider = TransferProtocolProvider.valueOf(host.protocol)
-        if (provider == null) {
-            throw IllegalStateException(I18n.getString("termora.protocol.not-supported", host.protocol))
-        }
+        val loader = ReconnectableTransportSupportLoader(owner, host)
 
-        val handler = provider.createPathHandler(PathHandlerRequest(host, owner))
-        val support = TransportSupport(handler.fileSystem, handler.path.absolutePathString())
+        // try load
+        loader.getTransportSupport()
 
         withContext(Dispatchers.Swing) {
-            val panel = TransportPanel(transferManager, host, TransportSupportLoader { support })
+            val panel = TransportPanel(transferManager, host, loader)
             Disposer.register(panel, object : Disposable {
                 override fun dispose() {
-                    Disposer.dispose(handler)
+                    Disposer.dispose(loader)
                 }
             })
             swingCoroutineScope.launch {
