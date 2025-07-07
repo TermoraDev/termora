@@ -87,9 +87,13 @@ class TransferTableModel(private val coroutineScope: CoroutineScope) :
         eventListener.add(TransferListener::class.java, listener)
         return object : Disposable {
             override fun dispose() {
-                eventListener.remove(TransferListener::class.java, listener)
+                removeTransferListener(listener)
             }
         }
+    }
+
+    override fun removeTransferListener(listener: TransferListener) {
+        eventListener.remove(TransferListener::class.java, listener)
     }
 
     override fun addTransfer(transfer: Transfer): Boolean {

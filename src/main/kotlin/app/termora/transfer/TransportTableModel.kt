@@ -7,7 +7,7 @@ import java.nio.file.Path
 import java.nio.file.attribute.PosixFilePermission
 import javax.swing.table.DefaultTableModel
 
-class TransportTableModel() : DefaultTableModel() {
+internal class TransportTableModel() : DefaultTableModel() {
     companion object {
         const val COLUMN_NAME = 0
         const val COLUMN_TYPE = 1
@@ -60,7 +60,7 @@ class TransportTableModel() : DefaultTableModel() {
     }
 
 
-    data class Attributes(
+    internal data class Attributes(
         val name: String,
         val type: String,
         val isDirectory: Boolean,

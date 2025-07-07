@@ -4,7 +4,7 @@ import app.termora.Disposable
 import java.nio.file.Path
 import java.util.concurrent.CompletableFuture
 
-interface InternalTransferManager {
+internal interface InternalTransferManager {
     enum class TransferMode {
         Delete,
         Transfer,

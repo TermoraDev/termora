@@ -3,9 +3,11 @@ package app.termora.transfer
 
 import app.termora.*
 import app.termora.actions.DataProvider
+import app.termora.actions.DataProviderSupport
 import app.termora.database.DatabaseManager
 import app.termora.plugin.ExtensionManager
 import app.termora.plugin.internal.wsl.WSLHostTerminalTab
+import app.termora.terminal.DataKey
 import app.termora.transfer.TransportTableModel.Attributes
 import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.extras.components.FlatToolBar
@@ -60,11 +62,13 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 internal class TransportPanel(
-    private val transferManager: InternalTransferManager,
+    private val internalTransferManager: InternalTransferManager,
     val host: Host,
     val loader: TransportSupportLoader,
 ) : JPanel(BorderLayout()), DataProvider, Disposable, TransportNavigator {
     companion object {
+        val MyTransportPanel = DataKey(TransportPanel::class)
+
         private val log = LoggerFactory.getLogger(TransportPanel::class.java)
         private val folderIcon = FlatTreeClosedIcon()
         private val fileIcon = FlatTreeLeafIcon()
@@ -117,7 +121,7 @@ internal class TransportPanel(
 
     private val disposed = AtomicBoolean(false)
     private val futures = Collections.synchronizedSet(mutableSetOf<Future<*>>())
-
+    private val support = DataProviderSupport()
 
     /**
      * 工作目录
@@ -212,6 +216,8 @@ internal class TransportPanel(
 
         add(toolbar, BorderLayout.NORTH)
         add(layeredPane, BorderLayout.CENTER)
+
+        support.addData(MyTransportPanel, this)
     }
 
     private fun compare(o1: Attributes, o2: Attributes): Int? {
@@ -286,7 +292,7 @@ internal class TransportPanel(
         })
 
         // 传输完成之后刷新
-        transferManager.addTransferListener(object : TransferListener {
+        internalTransferManager.addTransferListener(object : TransferListener {
             override fun onTransferChanged(transfer: Transfer, state: TransferTreeTableNode.State) {
                 if (state != TransferTreeTableNode.State.Done && state != TransferTreeTableNode.State.Failed) return
                 val target = transfer.target()
@@ -294,13 +300,17 @@ internal class TransportPanel(
                     if (target.fileSystem != loader.getSyncTransportSupport().getFileSystem()) return
                 }
                 if (target.pathString == workdir?.pathString || target.parent.pathString == workdir?.pathString) {
-                    reload(requestFocus = false)
+                    if (loading) {
+                        nextReloadCallbacks.add { reload(requestFocus = false) }
+                    } else {
+                        reload(requestFocus = false)
+                    }
                 }
             }
         }).let { Disposer.register(this, it) }
 
         // High 专门用于编辑目的，下载完成之后立即去编辑
-        transferManager.addTransferListener(editTransferListener).let { Disposer.register(this, it) }
+        internalTransferManager.addTransferListener(editTransferListener).let { Disposer.register(this, it) }
 
         // parent button
         addPropertyChangeListener("loading") { evt ->
@@ -427,8 +437,8 @@ internal class TransportPanel(
                         enterSelectionFolder()
                     } else {
                         val paths = listOf(model.getPath(row) to attributes)
-                        if (loader.isOpened() && transferManager.canTransfer(paths.map { it.first })) {
-                            transferManager.addTransfer(paths, InternalTransferManager.TransferMode.Transfer)
+                        if (loader.isOpened() && internalTransferManager.canTransfer(paths.map { it.first })) {
+                            internalTransferManager.addTransfer(paths, InternalTransferManager.TransferMode.Transfer)
                         }
                     }
                 } else if (SwingUtilities.isRightMouseButton(e)) {
@@ -517,7 +527,7 @@ internal class TransportPanel(
             override fun importData(support: TransferSupport): Boolean {
                 val data = getTransferData(support, true) ?: return false
 
-                val future = transferManager
+                val future = internalTransferManager
                     .addTransfer(data.files, data.workdir, InternalTransferManager.TransferMode.Transfer)
 
                 mountFuture(future)
@@ -609,7 +619,7 @@ internal class TransportPanel(
         }
     }
 
-    private fun registerSelectRow(name: String) {
+    fun registerSelectRow(name: String) {
         nextReloadCallbacks.add {
             for (i in 0 until model.rowCount) {
                 if (model.getAttributes(i).name == name) {
@@ -796,11 +806,14 @@ internal class TransportPanel(
 
     private fun showContextmenu(rows: Array<Int>, e: MouseEvent) {
         val files = rows.map { model.getPath(it) to model.getAttributes(it) }
-        val popupMenu = TransportPopupMenu(owner, model, transferManager, loader, files)
+        val popupMenu = TransportPopupMenu(owner, model, internalTransferManager, loader, files)
         popupMenu.addActionListener(PopupMenuActionListener(files))
         popupMenu.show(table, e.x, e.y)
     }
 
+    override fun <T : Any> getData(dataKey: DataKey<T>): T? {
+        return support.getData(dataKey)
+    }
 
     override fun navigateTo(destination: String): Boolean {
         assertEventDispatchThread()
@@ -927,7 +940,7 @@ internal class TransportPanel(
                     if (fs.isOpen.not()) continue
 
                     // 发送到服务器
-                    transferManager.addHighTransfer(localPath, fs.getPath(target.absolutePathString()))
+                    internalTransferManager.addHighTransfer(localPath, fs.getPath(target.absolutePathString()))
                     oldMillis = millis
                 }
             }
@@ -1036,7 +1049,7 @@ internal class TransportPanel(
                 val target = source.parent.resolve(e.source.toString())
                 processPath(e.source.toString()) { source.moveTo(target) }
             } else if (actionCommand == TransportPopupMenu.ActionCommand.Rmrf) {
-                transferManager.addTransfer(files, InternalTransferManager.TransferMode.Rmrf)
+                internalTransferManager.addTransfer(files, InternalTransferManager.TransferMode.Rmrf)
             } else if (actionCommand == TransportPopupMenu.ActionCommand.Reconnect) {
                 // reload now
                 reload()
@@ -1046,7 +1059,7 @@ internal class TransportPanel(
                 processPath(path.name) {
                     if (c.includeSubFolder) {
                         val future = withContext(Dispatchers.Swing) {
-                            transferManager.addTransfer(
+                            internalTransferManager.addTransfer(
                                 listOf(path to files.first().second.copy(permissions = c.permissions)),
                                 InternalTransferManager.TransferMode.ChangePermission
                             )
@@ -1061,14 +1074,14 @@ internal class TransportPanel(
         }
 
         private fun transfer(mode: InternalTransferManager.TransferMode) {
-            val future = transferManager.addTransfer(files, mode)
+            val future = internalTransferManager.addTransfer(files, mode)
             mountFuture(future)
         }
 
         private fun edit() {
             for (path in files.map { it.first }) {
                 val target = Application.createSubTemporaryDir().resolve(path.name)
-                val transferId = transferManager.addHighTransfer(path, target)
+                val transferId = internalTransferManager.addHighTransfer(path, target)
                 editTransferListener.addListenTransfer(transferId)
             }
         }

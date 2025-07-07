@@ -30,4 +30,8 @@ interface TransferManager {
      */
     fun addTransferListener(listener: TransferListener): Disposable
 
+    /**
+     * 移除传输监听器
+     */
+    fun removeTransferListener(listener: TransferListener)
 }

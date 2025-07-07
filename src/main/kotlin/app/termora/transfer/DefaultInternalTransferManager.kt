@@ -38,7 +38,7 @@ import kotlin.io.path.name
 import kotlin.io.path.pathString
 import kotlin.math.max
 
-class DefaultInternalTransferManager(
+internal class DefaultInternalTransferManager(
     private val owner: Supplier<Window>,
     private val coroutineScope: CoroutineScope,
     private val transferManager: TransferManager,

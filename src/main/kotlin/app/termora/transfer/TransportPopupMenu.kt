@@ -1,9 +1,10 @@
 package app.termora.transfer
 
 import app.termora.Application
+import app.termora.ApplicationScope
 import app.termora.I18n
-import app.termora.Icons
 import app.termora.OptionPane
+import app.termora.plugin.ExtensionManager
 import app.termora.transfer.TransportPanel.Companion.isLocallyFileSystem
 import com.formdev.flatlaf.extras.components.FlatPopupMenu
 import org.apache.commons.io.IOUtils
@@ -20,7 +21,6 @@ import java.util.*
 import javax.swing.JMenu
 import javax.swing.JMenuItem
 import javax.swing.JOptionPane
-import javax.swing.SwingUtilities
 import javax.swing.event.EventListenerList
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.name
@@ -42,7 +42,6 @@ internal class TransportPopupMenu(
     private val openInFinderMenu = JMenuItem(I18n.getString("termora.transport.table.contextmenu.open-in-folder"))
     private val renameMenu = JMenuItem(I18n.getString("termora.transport.table.contextmenu.rename"))
     private val deleteMenu = JMenuItem(I18n.getString("termora.transport.table.contextmenu.delete"))
-    private val rmrfMenu = JMenuItem("rm -rf", Icons.warningIntroduction)
 
     // @formatter:off
     private val changePermissionsMenu = JMenuItem(I18n.getString("termora.transport.table.contextmenu.change-permissions"))
@@ -52,6 +51,7 @@ internal class TransportPopupMenu(
     private val newFolderMenu = newMenu.add(I18n.getString("termora.transport.table.contextmenu.new.folder"))
     private val newFileMenu = newMenu.add(I18n.getString("termora.transport.table.contextmenu.new.file"))
 
+    private val extensionManager get() = ExtensionManager.getInstance()
     private val eventListeners = EventListenerList()
     private val mnemonics = mapOf(
         refreshMenu to KeyEvent.VK_R,
@@ -89,13 +89,32 @@ internal class TransportPopupMenu(
         addSeparator()
         add(renameMenu)
         add(deleteMenu)
-        if (fileSystem is SftpFileSystem) {
-            add(rmrfMenu)
-        }
         add(changePermissionsMenu)
+
+        val menus = mutableListOf<JMenuItem>()
+        for (extension in extensionManager.getExtensions(TransportContextMenuExtension::class.java)) {
+            try {
+                val menu = extension.createJMenuItem(
+                    ApplicationScope.forWindowScope(owner),
+                    fileSystem,
+                    this,
+                    files
+                )
+                menus.add(menu)
+            } catch (_: UnsupportedOperationException) {
+                continue
+            }
+        }
+
+        if (menus.isNotEmpty()) {
+            addSeparator()
+            menus.forEach { add(it) }
+        }
+
         addSeparator()
         add(refreshMenu)
         addSeparator()
+
         add(newMenu)
 
         // 开发环境提供断线
@@ -113,7 +132,6 @@ internal class TransportPopupMenu(
                 && files.all { it.second.isFile && it.second.isSymbolicLink.not() }
         renameMenu.isEnabled = hasParent.not() && files.size == 1
         deleteMenu.isEnabled = hasParent.not() && files.isNotEmpty()
-        rmrfMenu.isEnabled = hasParent.not() && files.isNotEmpty()
         changePermissionsMenu.isVisible = hasParent.not() && fileSystem is SftpFileSystem && files.size == 1
 
         for ((item, mnemonic) in mnemonics) {
@@ -134,16 +152,7 @@ internal class TransportPopupMenu(
                 fireActionPerformed(it, ActionCommand.Delete)
             }
         }
-        rmrfMenu.addActionListener {
-            if (OptionPane.showConfirmDialog(
-                    SwingUtilities.getWindowAncestor(this),
-                    I18n.getString("termora.transport.table.contextmenu.rm-warning"),
-                    messageType = JOptionPane.ERROR_MESSAGE
-                ) == JOptionPane.YES_OPTION
-            ) {
-                fireActionPerformed(it, ActionCommand.Rmrf)
-            }
-        }
+
         renameMenu.addActionListener { newFolderOrNewFile(it, ActionCommand.Rename) }
         editMenu.addActionListener { fireActionPerformed(it, ActionCommand.Edit) }
         newFolderMenu.addActionListener { newFolderOrNewFile(it, ActionCommand.NewFolder) }
@@ -159,7 +168,7 @@ internal class TransportPopupMenu(
         }
     }
 
-    private fun fireActionPerformed(evt: ActionEvent, command: ActionCommand) {
+    fun fireActionPerformed(evt: ActionEvent, command: ActionCommand) {
         for (listener in eventListeners.getListeners(ActionListener::class.java)) {
             listener.actionPerformed(ActionEvent(evt.source, evt.id, command.name))
         }
