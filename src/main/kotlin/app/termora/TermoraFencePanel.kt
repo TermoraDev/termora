@@ -107,7 +107,7 @@ class TermoraFencePanel(
             label.foreground = UIManager.getColor("textInactiveText")
             label.font = label.font.deriveFont(Font.BOLD)
             // 与最后一个按钮对冲，使其宽度和谐
-            box.add(JButton(Icons.empty))
+            box.add(Box.createHorizontalStrut(24))
             box.add(Box.createHorizontalGlue())
             if (SystemInfo.isMacOS.not()) {
                 box.add(label)
