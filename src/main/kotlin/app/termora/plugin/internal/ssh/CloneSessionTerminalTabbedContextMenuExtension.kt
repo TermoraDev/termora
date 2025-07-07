@@ -40,5 +40,8 @@ class CloneSessionTerminalTabbedContextMenuExtension private constructor() : Ter
         throw UnsupportedOperationException()
     }
 
+    override fun ordered(): Long {
+        return 0
+    }
 
 }
