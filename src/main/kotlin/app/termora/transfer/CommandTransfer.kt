@@ -11,14 +11,14 @@ class CommandTransfer(
     isDirectory: Boolean,
     private val size: Long,
     val command: String,
-) : AbstractTransfer(parentId, path, path, isDirectory) {
+) : AbstractTransfer(parentId, path, path, isDirectory), TransferIndeterminate {
 
     private var executed = false
 
     override suspend fun transfer(bufferSize: Int): Long {
         if (executed) return 0
         val fs = source().fileSystem as SftpFileSystem
-        fs.session.executeRemoteCommand(command)
+        fs.clientSession.executeRemoteCommand(command)
         executed = true
         return this.size()
     }

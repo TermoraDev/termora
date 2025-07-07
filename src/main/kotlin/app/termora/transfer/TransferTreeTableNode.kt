@@ -61,15 +61,18 @@ class TransferTreeTableNode(transfer: Transfer) : DefaultMutableTreeTableNode(tr
                 (transfer is DeleteTransfer && transfer.isDirectory() && (state() == State.Processing || state() == State.Ready))
         val speed = counter.getLastSecondBytes()
         val estimatedTime = max(if (isProcessing && speed > 0) (filesize - totalBytesTransferred) / speed else 0, 0)
+        val indeterminate = transfer is TransferIndeterminate
+        val formatSize = "${formatBytes(totalBytesTransferred)} / ${formatBytes(filesize)}"
+        val formatEstimatedTime = if (indeterminate) "-" else if (isProcessing) formatSeconds(estimatedTime) else "-"
 
         return when (column) {
             TransferTableModel.COLUMN_NAME -> transfer.source().name
             TransferTableModel.COLUMN_STATUS -> formatStatus(state)
             TransferTableModel.COLUMN_SOURCE_PATH -> formatPath(transfer.source(), false)
             TransferTableModel.COLUMN_TARGET_PATH -> formatPath(transfer.target(), true)
-            TransferTableModel.COLUMN_SIZE -> "${formatBytes(totalBytesTransferred)} / ${formatBytes(filesize)}"
-            TransferTableModel.COLUMN_SPEED -> if (isProcessing) "${formatBytes(speed)}/s" else "-"
-            TransferTableModel.COLUMN_ESTIMATED_TIME -> if (isProcessing) formatSeconds(estimatedTime) else "-"
+            TransferTableModel.COLUMN_SIZE -> if (indeterminate) "-" else formatSize
+            TransferTableModel.COLUMN_SPEED -> if (indeterminate) "-" else if (isProcessing) "${formatBytes(speed)}/s" else "-"
+            TransferTableModel.COLUMN_ESTIMATED_TIME -> formatEstimatedTime
             TransferTableModel.COLUMN_PROGRESS -> this
             else -> StringUtils.EMPTY
         }

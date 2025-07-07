@@ -4,6 +4,8 @@ import app.termora.Disposable
 import app.termora.Disposer
 import app.termora.DynamicColor
 import app.termora.actions.DataProvider
+import app.termora.actions.DataProviderSupport
+import app.termora.terminal.DataKey
 import kotlinx.coroutines.*
 import kotlinx.coroutines.swing.Swing
 import java.awt.*
@@ -15,6 +17,9 @@ import kotlin.time.Duration.Companion.milliseconds
 
 
 internal class TransportViewer : JPanel(BorderLayout()), DataProvider, Disposable {
+    companion object {
+        val MyTransferManager = DataKey(TransferManager::class)
+    }
 
     private val coroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val splitPane = JSplitPane()
@@ -26,6 +31,7 @@ internal class TransportViewer : JPanel(BorderLayout()), DataProvider, Disposabl
     private val rightTransferManager = createInternalTransferManager(rightTabbed, leftTabbed)
     private val rootSplitPane = JSplitPane(JSplitPane.VERTICAL_SPLIT)
     private val owner get() = SwingUtilities.getWindowAncestor(this)
+    private val support = DataProviderSupport()
 
     init {
         initView()
@@ -55,6 +61,8 @@ internal class TransportViewer : JPanel(BorderLayout()), DataProvider, Disposabl
         rootSplitPane.resizeWeight = 0.7
         rootSplitPane.topComponent = splitPane
         rootSplitPane.bottomComponent = scrollPane
+
+        support.addData(MyTransferManager, transferManager)
 
         add(rootSplitPane, BorderLayout.CENTER)
     }
@@ -145,6 +153,10 @@ internal class TransportViewer : JPanel(BorderLayout()), DataProvider, Disposabl
 
     override fun dispose() {
         coroutineScope.cancel()
+    }
+
+    override fun <T : Any> getData(dataKey: DataKey<T>): T? {
+        return support.getData(dataKey)
     }
 
     internal class MyIcon(private val color: Color) : Icon {

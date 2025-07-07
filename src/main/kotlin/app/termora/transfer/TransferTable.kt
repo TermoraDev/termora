@@ -1,11 +1,10 @@
 package app.termora.transfer
 
-import app.termora.Disposable
-import app.termora.I18n
-import app.termora.NativeIcons
-import app.termora.OptionPane
+import app.termora.*
+import app.termora.transfer.TransferTreeTableNode.State
 import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.extras.components.FlatPopupMenu
+import com.formdev.flatlaf.util.SoftCache
 import kotlinx.coroutines.*
 import kotlinx.coroutines.swing.Swing
 import org.apache.commons.lang3.StringUtils
@@ -15,6 +14,7 @@ import java.awt.Component
 import java.awt.Graphics
 import java.awt.Insets
 import java.awt.event.ActionEvent
+import java.awt.event.ActionListener
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.util.concurrent.atomic.AtomicBoolean
@@ -23,6 +23,7 @@ import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.tree.DefaultTreeCellRenderer
 import kotlin.io.path.name
 import kotlin.math.floor
+import kotlin.math.min
 import kotlin.time.Duration.Companion.milliseconds
 
 
@@ -85,6 +86,7 @@ class TransferTable(private val coroutineScope: CoroutineScope, private val tabl
         columnModel.getColumn(TransferTableModel.COLUMN_SPEED).cellRenderer = centerTableCellRenderer
         columnModel.getColumn(TransferTableModel.COLUMN_ESTIMATED_TIME).cellRenderer = centerTableCellRenderer
         columnModel.getColumn(TransferTableModel.COLUMN_PROGRESS).cellRenderer = ProgressTableCellRenderer()
+            .apply { Disposer.register(table, this) }
     }
 
     private fun initEvents() {
@@ -169,10 +171,16 @@ class TransferTable(private val coroutineScope: CoroutineScope, private val tabl
         disposed.set(true)
     }
 
-    private inner class ProgressTableCellRenderer : DefaultTableCellRenderer() {
+    data class Indeterminate(val progress: Int = 0)
+
+    private inner class ProgressTableCellRenderer : DefaultTableCellRenderer(), Disposable, ActionListener {
         private var progress = 0.0
         private var progressInt = 0
         private val padding = 4
+        private val map = SoftCache<Any, Indeterminate>()
+        private val timer = Timer(1000 / 40, this).apply { start() }
+        private var value: Any? = null
+        private val block = 36
 
         init {
             horizontalAlignment = CENTER
@@ -189,9 +197,19 @@ class TransferTable(private val coroutineScope: CoroutineScope, private val tabl
 
             this.progress = 0.0
             this.progressInt = 0
+            this.value = value
 
             if (value is TransferTreeTableNode) {
-                if (value.state() == TransferTreeTableNode.State.Processing || value.waitingChildrenCompleted() || value.transfer is DeleteTransfer) {
+
+                if (value.transfer is TransferIndeterminate) {
+                    if (map.containsKey(value).not()) {
+                        map[value] = Indeterminate()
+                    }
+                } else if (map.containsKey(value)) {
+                    map.remove(value)
+                }
+
+                if (value.state() == State.Processing || value.waitingChildrenCompleted() || value.transfer is DeleteTransfer) {
                     this.progress = value.transferred.get() * 1.0 / value.filesize.get()
                     this.progressInt = floor(progress * 100.0).toInt()
                     // 因为有一些 0B 大小的文件，所以如果在进行中，那么最大就是99
@@ -200,6 +218,7 @@ class TransferTable(private val coroutineScope: CoroutineScope, private val tabl
                         this.progressInt = floor(progress * 100.0).toInt()
                     }
                 }
+
             }
 
             return super.getTableCellRendererComponent(
@@ -213,6 +232,9 @@ class TransferTable(private val coroutineScope: CoroutineScope, private val tabl
         }
 
         override fun paintComponent(g: Graphics) {
+            val width = width
+            val height = height
+
             // 原始背景
             g.color = background
             g.fillRect(0, 0, width, height)
@@ -220,6 +242,25 @@ class TransferTable(private val coroutineScope: CoroutineScope, private val tabl
             // 进度条背景
             g.color = UIManager.getColor("Table.selectionInactiveBackground")
             g.fillRect(0, padding, width, height - padding * 2)
+
+            if (map.containsKey(value)) {
+                val state = getState(value)
+                if (state == State.Processing || state == State.Failed) {
+                    val indeterminate = map.getValue(value)
+
+                    g.color = if (state == State.Processing) UIManager.getColor("ProgressBar.foreground")
+                    else UIManager.getColor("Component.error.focusedBorderColor")
+
+                    g.fillRect(indeterminate.progress, padding, block, height - padding * 2)
+                    if (indeterminate.progress + block > width) {
+                        val c = width - indeterminate.progress - block
+                        val x = -block - c
+                        g.fillRect(x, padding, block, height - padding * 2)
+                    }
+                    return
+                }
+
+            }
 
             // 进度条颜色
             g.color = UIManager.getColor("ProgressBar.foreground")
@@ -232,6 +273,31 @@ class TransferTable(private val coroutineScope: CoroutineScope, private val tabl
 
             // 绘制文字
             ui.paint(g, this)
+        }
+
+        override fun dispose() {
+            timer.stop()
+        }
+
+        override fun actionPerformed(e: ActionEvent) {
+            for (i in 0 until table.rowCount) {
+                val row = table.getPathForRow(i).lastPathComponent ?: continue
+                val node = tableModel.getValueAt(row, TransferTableModel.COLUMN_PROGRESS)
+                if (node !is TransferTreeTableNode) continue
+                if (node.state() != State.Processing) continue
+                val c = map[node] ?: continue
+                val rect = table.getCellRect(i, TransferTableModel.COLUMN_PROGRESS, false)
+                val indeterminate = c.copy(progress = min(c.progress + block / 10, rect.width))
+                map[node] = if (indeterminate.progress == rect.width) Indeterminate() else indeterminate
+                table.repaint(rect)
+            }
+        }
+
+        private fun getState(value: Any?): State? {
+            if (value == null) return null
+            val c = tableModel.getValueAt(value, TransferTableModel.COLUMN_PROGRESS)
+            if (c !is TransferTreeTableNode) return null
+            return c.state()
         }
     }
 }
