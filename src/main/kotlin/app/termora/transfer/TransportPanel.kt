@@ -808,7 +808,7 @@ internal class TransportPanel(
         if (loading) return false
 
         if (loader.isOpened()) {
-            if (workdir?.absolutePathString() == destination) return false
+            if (workdir?.pathString == destination) return false
         }
 
         return reload(newPath = destination)
