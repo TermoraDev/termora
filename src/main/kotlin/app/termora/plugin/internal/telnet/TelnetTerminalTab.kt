@@ -56,7 +56,8 @@ class TelnetTerminalTab(
             }
         }
 
-        return ptyConnectorFactory.decorate(TelnetStreamPtyConnector(telnet, telnet.charset))
+        val characterMode = host.options.extras["character-at-a-time"]?.toBooleanStrictOrNull() ?: false
+        return ptyConnectorFactory.decorate(TelnetStreamPtyConnector(telnet, telnet.charset, characterMode))
     }
 
 
