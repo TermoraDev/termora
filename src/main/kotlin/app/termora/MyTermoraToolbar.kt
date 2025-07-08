@@ -1,6 +1,7 @@
 package app.termora
 
 import app.termora.actions.StateAction
+import app.termora.findeverywhere.FindEverywhereAction
 import app.termora.plugin.internal.badge.Badge
 import com.formdev.flatlaf.extras.components.FlatPopupMenu
 import com.formdev.flatlaf.extras.components.FlatToolBar
@@ -62,6 +63,17 @@ internal class MyTermoraToolbar(private val windowScope: WindowScope) : FlatTool
         disposable = Disposer.newDisposable()
 
         removeAll()
+
+        add(JButton(object : AbstractAction() {
+            init {
+                putValue(SMALL_ICON, Icons.add)
+            }
+
+            override fun actionPerformed(evt: ActionEvent) {
+                actionManager.getAction(FindEverywhereAction.FIND_EVERYWHERE)?.actionPerformed(evt)
+            }
+        }))
+
         add(Box.createHorizontalGlue())
 
         for (action in model.getActions()) {
