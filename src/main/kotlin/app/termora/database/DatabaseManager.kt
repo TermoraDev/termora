@@ -504,6 +504,8 @@ class DatabaseManager private constructor() : Disposable {
 
         protected open fun putString(key: String, value: String) {
             databaseManager.setSetting("${name}.$key", value)
+            // 触发变动
+            DatabasePropertiesChangedExtension.onPropertyChanged(name, key, value)
         }
 
 

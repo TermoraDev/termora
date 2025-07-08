@@ -1,13 +1,14 @@
 package app.termora
 
 
-import app.termora.actions.DataProvider
-import app.termora.actions.DataProviderSupport
-import app.termora.actions.DataProviders
-import app.termora.actions.OpenHostAction
+import app.termora.actions.*
+import app.termora.database.DatabaseChangedExtension
+import app.termora.database.DatabasePropertiesChangedExtension
 import app.termora.findeverywhere.FindEverywhereProvider
 import app.termora.findeverywhere.FindEverywhereProviderExtension
 import app.termora.findeverywhere.FindEverywhereResult
+import app.termora.keymap.KeyShortcut
+import app.termora.keymap.KeymapManager
 import app.termora.plugin.ExtensionManager
 import app.termora.plugin.internal.extension.DynamicExtensionHandler
 import app.termora.plugin.internal.ssh.SSHProtocolProvider
@@ -21,16 +22,12 @@ import com.formdev.flatlaf.util.SystemInfo
 import com.jetbrains.JBR
 import org.apache.commons.lang3.ArrayUtils
 import org.apache.commons.lang3.StringUtils
-import org.jdesktop.swingx.action.ActionManager
 import java.awt.*
 import java.awt.event.*
 import java.util.*
 import javax.imageio.ImageIO
-import javax.swing.Icon
-import javax.swing.JComponent
-import javax.swing.JFrame
+import javax.swing.*
 import javax.swing.SwingUtilities.isEventDispatchThread
-import javax.swing.UIManager
 
 
 fun assertEventDispatchThread() {
@@ -50,11 +47,14 @@ class TermoraFrame : JFrame(), DataProvider {
     private val dataProviderSupport = DataProviderSupport()
     private var notifyListeners = emptyArray<NotifyListener>()
     private val moveMouseAdapter = createMoveMouseAdaptor()
-
+    private val keymapManager get() = KeymapManager.getInstance()
+    private val actionManager get() = ActionManager.getInstance()
+    private val dynamicExtensionHandler get() = DynamicExtensionHandler.getInstance()
 
     init {
         initView()
         initEvents()
+        initKeymap()
     }
 
     private fun initEvents() {
@@ -72,8 +72,16 @@ class TermoraFrame : JFrame(), DataProvider {
             toolbar.getJToolBar().addMouseMotionListener(moveMouseAdapter)
         }
 
+        // 快捷键变动时重新监听
+        val refresher = KeymapRefresher()
+        dynamicExtensionHandler.register(DatabasePropertiesChangedExtension::class.java, refresher)
+            .let { Disposer.register(windowScope, it) }
+        dynamicExtensionHandler.register(DatabaseChangedExtension::class.java, refresher)
+            .let { Disposer.register(windowScope, it) }
+
+
         // FindEverywhere
-        DynamicExtensionHandler.getInstance()
+        dynamicExtensionHandler
             .register(FindEverywhereProviderExtension::class.java, object : FindEverywhereProviderExtension {
                 private val hostTreeModel get() = NewHostTreeModel.getInstance()
 
@@ -115,8 +123,7 @@ class TermoraFrame : JFrame(), DataProvider {
                     private val showMoreInfo get() = EnableManager.getInstance().isShowMoreInfo()
 
                     override fun actionPerformed(e: ActionEvent) {
-                        ActionManager.getInstance()
-                            .getAction(OpenHostAction.OPEN_HOST)
+                        actionManager.getAction(OpenHostAction.OPEN_HOST)
                             ?.actionPerformed(OpenHostActionEvent(e.source, host, e))
                     }
 
@@ -148,7 +155,6 @@ class TermoraFrame : JFrame(), DataProvider {
             }).let { Disposer.register(windowScope, it) }
 
     }
-
 
     private fun initView() {
 
@@ -207,6 +213,46 @@ class TermoraFrame : JFrame(), DataProvider {
         dataProviderSupport.addData(DataProviders.TabbedPane, tabbedPane)
         dataProviderSupport.addData(DataProviders.TermoraFrame, this)
         dataProviderSupport.addData(DataProviders.WindowScope, windowScope)
+    }
+
+    private fun initKeymap() {
+        assertEventDispatchThread()
+
+        val keymap = keymapManager.getActiveKeymap()
+        val inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+        val actionMap = rootPane.actionMap
+
+        // 移除之前所有的快捷键
+        inputMap.clear()
+        actionMap.clear()
+
+        for ((shortcut, actionIds) in keymap.getShortcuts()) {
+            if (shortcut !is KeyShortcut) continue
+            val keyShortcutActionId = "KeyShortcutAction_${randomUUID()}"
+            actionMap.put(keyShortcutActionId, redirectAction(actionIds))
+            inputMap.put(shortcut.keyStroke, keyShortcutActionId)
+        }
+
+    }
+
+    private fun redirectAction(actionIds: List<String>): Action {
+        return object : AbstractAction() {
+            private val keyboardFocusManager get() = KeyboardFocusManager.getCurrentKeyboardFocusManager()
+            override fun actionPerformed(e: ActionEvent) {
+                var source = e.source
+                if (source == rootPane) {
+                    val focusOwner = keyboardFocusManager.focusOwner
+                    if (focusOwner is JComponent) {
+                        source = focusOwner
+                    }
+                }
+
+                for (actionId in actionIds) {
+                    val action = actionManager.getAction(actionId) ?: continue
+                    action.actionPerformed(RedirectAnActionEvent(source, e.actionCommand, e))
+                }
+            }
+        }
     }
 
     override fun <T : Any> getData(dataKey: DataKey<T>): T? {
@@ -355,6 +401,35 @@ class TermoraFrame : JFrame(), DataProvider {
         return object : MouseAdapter() {}
     }
 
+    private inner class KeymapRefresher : DatabasePropertiesChangedExtension, DatabaseChangedExtension {
+
+        override fun onDataChanged(
+            id: String,
+            type: String,
+            action: DatabaseChangedExtension.Action,
+            source: DatabaseChangedExtension.Source
+        ) {
+            if (type != "Keymap") return
+            refresh()
+        }
+
+        override fun onPropertyChanged(name: String, key: String, value: String) {
+            if (name != "Setting.Properties") return
+            if (key != "Keymap.Active") return
+            refresh()
+        }
+
+        private fun refresh() {
+            initKeymap()
+        }
+
+    }
+
+    private inner class RedirectAnActionEvent(
+        source: Any,
+        command: String,
+        event: EventObject
+    ) : AnActionEvent(source, command, event)
 
     private inner class GlassPane : JComponent() {
 
