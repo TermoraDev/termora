@@ -114,6 +114,10 @@ class QuickConnectAction private constructor() : AnAction(I18n.getString("termor
 
         }
 
+        override fun createOkAction(): AbstractAction {
+            return OkAction(I18n.getString("termora.welcome.contextmenu.connect"))
+        }
+
         private fun getHistoryHost(host: String): HistoryHost {
 
 
