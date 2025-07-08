@@ -3,7 +3,6 @@ package app.termora.tree
 import app.termora.*
 import app.termora.plugin.internal.extension.DynamicExtensionHandler
 import app.termora.plugin.internal.rdp.RDPProtocolProvider
-import app.termora.plugin.internal.serial.SerialProtocolProvider
 import app.termora.plugin.internal.ssh.SSHProtocolProvider
 import app.termora.plugin.internal.wsl.WSLProtocolProvider
 import org.apache.commons.lang3.StringUtils
@@ -63,8 +62,6 @@ class ShowMoreInfoSimpleTreeCellRendererExtension private constructor() : Simple
                 } else {
                     "${host.username}@${host.host}"
                 }
-            } else if (host.protocol == SerialProtocolProvider.PROTOCOL) {
-                text = host.options.serialComm.port
             } else if (host.protocol == WSLProtocolProvider.PROTOCOL) {
                 text = host.host
             }

@@ -10,7 +10,7 @@ import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
 import javax.swing.*
 
-internal class BasicGeneralOption : JPanel(BorderLayout()), OptionsPane.Option {
+class BasicGeneralOption : JPanel(BorderLayout()), OptionsPane.Option {
     val nameTextField = OutlineTextField(128)
     val remarkTextArea = FixedLengthTextArea(512)
     private val formMargin = "7dlu"

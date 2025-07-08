@@ -8,7 +8,6 @@ import app.termora.plugin.internal.extension.DynamicExtensionPlugin
 import app.termora.plugin.internal.local.LocalInternalPlugin
 import app.termora.plugin.internal.plugin.PluginInternalPlugin
 import app.termora.plugin.internal.rdp.RDPInternalPlugin
-import app.termora.plugin.internal.serial.SerialInternalPlugin
 import app.termora.plugin.internal.sftppty.SFTPPtyInternalPlugin
 import app.termora.plugin.internal.ssh.SSHInternalPlugin
 import app.termora.plugin.internal.telnet.TelnetInternalPlugin
@@ -118,8 +117,6 @@ internal class PluginManager private constructor() {
         plugins.add(PluginDescriptor(RDPInternalPlugin(), origin = PluginOrigin.Internal, version = version))
         // telnet plugin
         plugins.add(PluginDescriptor(TelnetInternalPlugin(), origin = PluginOrigin.Internal, version = version))
-        // serial plugin
-        plugins.add(PluginDescriptor(SerialInternalPlugin(), origin = PluginOrigin.Internal, version = version))
         // wsl plugin
         if (SystemUtils.IS_OS_WINDOWS) {
             plugins.add(PluginDescriptor(WSLInternalPlugin(), origin = PluginOrigin.Internal, version = version))

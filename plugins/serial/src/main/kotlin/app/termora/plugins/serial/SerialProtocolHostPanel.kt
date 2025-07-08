@@ -1,4 +1,4 @@
-package app.termora.plugin.internal.serial
+package app.termora.plugins.serial
 
 import app.termora.Disposer
 import app.termora.Host

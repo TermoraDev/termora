@@ -1,6 +1,9 @@
-package app.termora.plugin.internal.serial
+package app.termora.plugins.serial
 
-import app.termora.*
+import app.termora.Host
+import app.termora.Icons
+import app.termora.PtyHostTerminalTab
+import app.termora.WindowScope
 import app.termora.terminal.PtyConnector
 import org.apache.commons.io.Charsets
 import java.nio.charset.StandardCharsets
