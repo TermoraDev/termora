@@ -1,14 +1,11 @@
 package app.termora.actions
 
-import app.termora.I18n
-import app.termora.Icons
-import app.termora.TerminalPanelFactory
-import app.termora.WindowScope
+import app.termora.*
 
 class MultipleAction private constructor() : AnAction(
     I18n.getString("termora.tools.multiple"),
     Icons.vcs
-) {
+), StateAction {
 
     companion object {
 
@@ -17,8 +14,8 @@ class MultipleAction private constructor() : AnAction(
          */
         const val MULTIPLE = "MultipleAction"
 
-        fun getInstance(windowScope: WindowScope): MultipleAction {
-            return windowScope.getOrCreate(MultipleAction::class) { MultipleAction() }
+        fun getInstance(): MultipleAction {
+            return ApplicationScope.forApplicationScope().getOrCreate(MultipleAction::class) { MultipleAction() }
         }
     }
 
@@ -27,6 +24,24 @@ class MultipleAction private constructor() : AnAction(
     }
 
     override fun actionPerformed(evt: AnActionEvent) {
+        super.setSelected(false)
+        val windowScope = evt.getData(DataProviders.WindowScope) ?: return
+        setSelected(windowScope, isSelected(windowScope).not())
         TerminalPanelFactory.getInstance().repaintAll()
     }
+
+    override fun isSelected(): Boolean {
+        throw UnsupportedOperationException()
+    }
+
+    override fun isSelected(windowScope: WindowScope): Boolean {
+        return windowScope.getBoolean("MultipleAction.isSelected", false)
+    }
+
+    override fun setSelected(windowScope: WindowScope, selected: Boolean) {
+        windowScope.putBoolean("MultipleAction.isSelected", selected)
+        putValue("MultipleAction.isSelected", selected)
+    }
+
+
 }

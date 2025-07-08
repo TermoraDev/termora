@@ -27,7 +27,7 @@ class MultipleTerminalListener : TerminalPaintListener {
     ) {
         val windowScope = AnActionEvent(terminalPanel, StringUtils.EMPTY, EventObject(terminalPanel))
             .getData(DataProviders.WindowScope) ?: return
-        if (!MultipleAction.getInstance(windowScope).isSelected) return
+        if (MultipleAction.getInstance().isSelected(windowScope).not()) return
 
         val oldFont = g.font
         val colorPalette = terminal.getTerminalModel().getColorPalette()

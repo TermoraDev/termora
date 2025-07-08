@@ -34,6 +34,7 @@ class ActionManager : org.jdesktop.swingx.action.ActionManager() {
         addAction(Actions.TERMINAL_LOGGER, TerminalLoggerAction())
         addAction(Actions.SFTP, TransferAnAction())
         addAction(SFTPCommandAction.SFTP_COMMAND, SFTPCommandAction())
+        addAction(MultipleAction.MULTIPLE, MultipleAction.getInstance())
         addAction(SnippetAction.SNIPPET, SnippetAction.getInstance())
         addAction(Actions.MACRO, MacroAction())
         addAction(Actions.KEY_MANAGER, KeyManagerAction())

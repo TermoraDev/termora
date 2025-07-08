@@ -1,8 +1,5 @@
 package app.termora
 
-import app.termora.Application.ohMyJson
-import app.termora.actions.MultipleAction
-import app.termora.database.DatabaseManager
 import com.jgoodies.forms.builder.FormBuilder
 import com.jgoodies.forms.layout.FormLayout
 import org.apache.commons.lang3.StringUtils
@@ -18,10 +15,10 @@ import javax.swing.event.ListDataListener
 import kotlin.math.max
 import kotlin.math.min
 
-class CustomizeToolBarDialog(
+internal class CustomizeToolBarDialog(
     owner: Window,
     private val windowScope: WindowScope,
-    private val toolbar: TermoraToolBar
+    private val model: TermoraToolbarModel,
 ) : DialogWrapper(owner) {
 
     private val moveTopBtn = JButton(Icons.moveUp)
@@ -40,6 +37,7 @@ class CustomizeToolBarDialog(
     private val actionManager get() = ActionManager.getInstance()
 
     private var isOk = false
+    private val actions = mutableListOf<ToolBarAction>()
 
     init {
         size = Dimension(UIManager.getInt("Dialog.width") - 150, UIManager.getInt("Dialog.height") - 100)
@@ -147,7 +145,7 @@ class CustomizeToolBarDialog(
         resetBtn.addActionListener {
             leftList.model.removeAllElements()
             rightList.model.removeAllElements()
-            for (action in toolbar.getAllActions()) {
+            for (action in model.getAllActions()) {
                 getActionHolder(action.id)?.let { rightList.model.addElement(it) }
             }
         }
@@ -258,7 +256,7 @@ class CustomizeToolBarDialog(
             override fun windowOpened(e: WindowEvent) {
                 removeWindowListener(this)
 
-                for (action in toolbar.getActions()) {
+                for (action in model.getActions()) {
                     if (action.visible) {
                         getActionHolder(action.id)?.let { rightList.model.addElement(it) }
                     } else {
@@ -271,12 +269,7 @@ class CustomizeToolBarDialog(
     }
 
     private fun getActionHolder(actionId: String): ActionHolder? {
-        var action = actionManager.getAction(actionId)
-        if (action == null) {
-            if (actionId == MultipleAction.MULTIPLE) {
-                action = MultipleAction.getInstance(windowScope)
-            }
-        }
+        val action = actionManager.getAction(actionId)
         if (action == null) return null
         return ActionHolder(actionId, action)
     }
@@ -365,11 +358,13 @@ class CustomizeToolBarDialog(
             actions.add(ToolBarAction(leftList.model.getElementAt(i).id, false))
         }
 
-        DatabaseManager.getInstance()
-            .properties.putString("Termora.ToolBar.Actions", ohMyJson.encodeToString(actions))
+        this.actions.clear()
+        this.actions.addAll(actions)
 
         super.doOKAction()
     }
+
+    fun getActions()=actions
 
     fun open(): Boolean {
         isModal = true

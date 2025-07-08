@@ -42,8 +42,8 @@ class TermoraFrame : JFrame(), DataProvider {
     private val id = UUID.randomUUID().toString()
     private val windowScope = ApplicationScope.forWindowScope(this)
     private val tabbedPane = MyTabbedPane().apply { tabHeight = titleBarHeight }
-    private val toolbar = TermoraToolBar(windowScope, this)
-    private val terminalTabbed = TerminalTabbed(windowScope, toolbar, tabbedPane, layout)
+    private val toolbar = MyTermoraToolbar(windowScope)
+    private val terminalTabbed = TerminalTabbed(windowScope, tabbedPane, layout)
     private val dataProviderSupport = DataProviderSupport()
     private var notifyListeners = emptyArray<NotifyListener>()
     private val moveMouseAdapter = createMoveMouseAdaptor()
@@ -59,8 +59,8 @@ class TermoraFrame : JFrame(), DataProvider {
 
     private fun initEvents() {
         if (SystemInfo.isLinux) {
-            toolbar.getJToolBar().addMouseListener(moveMouseAdapter)
-            toolbar.getJToolBar().addMouseMotionListener(moveMouseAdapter)
+            toolbar.addMouseListener(moveMouseAdapter)
+            toolbar.addMouseMotionListener(moveMouseAdapter)
         } else if (SystemInfo.isMacOS) {
             terminalTabbed.addMouseListener(moveMouseAdapter)
             terminalTabbed.addMouseMotionListener(moveMouseAdapter)
@@ -68,8 +68,8 @@ class TermoraFrame : JFrame(), DataProvider {
             tabbedPane.addMouseListener(moveMouseAdapter)
             tabbedPane.addMouseMotionListener(moveMouseAdapter)
 
-            toolbar.getJToolBar().addMouseListener(moveMouseAdapter)
-            toolbar.getJToolBar().addMouseMotionListener(moveMouseAdapter)
+            toolbar.addMouseListener(moveMouseAdapter)
+            toolbar.addMouseMotionListener(moveMouseAdapter)
         }
 
         // 快捷键变动时重新监听
@@ -168,6 +168,8 @@ class TermoraFrame : JFrame(), DataProvider {
             tabbedPane.tabAreaInsets = Insets(1, 2, 0, 0)
         }
 
+        tabbedPane.trailingComponent = toolbar
+
         val height = UIManager.getInt("TabbedPane.tabHeight") + tabbedPane.tabAreaInsets.top
 
         if (SystemInfo.isWindows || SystemInfo.isLinux) {
@@ -228,11 +230,26 @@ class TermoraFrame : JFrame(), DataProvider {
 
         for ((shortcut, actionIds) in keymap.getShortcuts()) {
             if (shortcut !is KeyShortcut) continue
-            val keyShortcutActionId = "KeyShortcutAction_${randomUUID()}"
-            actionMap.put(keyShortcutActionId, redirectAction(actionIds))
-            inputMap.put(shortcut.keyStroke, keyShortcutActionId)
+            if (actionIds.contains(SwitchTabAction.SWITCH_TAB)) continue
+            registerKeyStroke(actionMap, inputMap, shortcut.keyStroke, actionIds)
         }
 
+        for (shortcut in keymap.getShortcut(SwitchTabAction.SWITCH_TAB)) {
+            if (shortcut !is KeyShortcut) continue
+            registerKeyStroke(actionMap, inputMap, shortcut.keyStroke, listOf(SwitchTabAction.SWITCH_TAB))
+        }
+
+    }
+
+    private fun registerKeyStroke(
+        actionMap: ActionMap,
+        inputMap: InputMap,
+        keyStroke: KeyStroke,
+        actionIds: List<String>
+    ) {
+        val keyShortcutActionId = "KeyShortcutAction_${randomUUID()}"
+        actionMap.put(keyShortcutActionId, redirectAction(actionIds))
+        inputMap.put(keyStroke, keyShortcutActionId)
     }
 
     private fun redirectAction(actionIds: List<String>): Action {
@@ -249,7 +266,7 @@ class TermoraFrame : JFrame(), DataProvider {
 
                 for (actionId in actionIds) {
                     val action = actionManager.getAction(actionId) ?: continue
-                    action.actionPerformed(RedirectAnActionEvent(source, e.actionCommand, e))
+                    action.actionPerformed(RedirectAnActionEvent(source, e.actionCommand, EventQueue.getCurrentEvent()))
                 }
             }
         }

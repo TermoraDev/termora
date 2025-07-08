@@ -1,8 +1,6 @@
 package app.termora
 
-import app.termora.actions.ActionManager
 import app.termora.database.DatabaseManager
-import app.termora.keymap.KeymapManager
 import app.termora.plugin.ExtensionManager
 import app.termora.plugin.PluginManager
 import com.formdev.flatlaf.FlatClientProperties
@@ -53,12 +51,6 @@ class ApplicationRunner {
 
         // 统计
         enableAnalytics()
-
-        // init ActionManager、KeymapManager、VFS
-        swingCoroutineScope.launch(Dispatchers.IO) {
-            ActionManager.getInstance()
-            KeymapManager.getInstance()
-        }
 
         // 设置 LAF
         setupLaf()
