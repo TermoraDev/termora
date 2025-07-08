@@ -1,7 +1,6 @@
 package app.termora.plugins.bg
 
 import app.termora.*
-import app.termora.database.DatabaseManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
@@ -96,9 +95,7 @@ internal class BackgroundManager private constructor() : Disposable, GlassPaneAw
                     return
                 }
                 val body = response.body
-                if (body != null) {
-                    tempFile.outputStream().use { IOUtils.copy(body.byteStream(), it) }
-                }
+                tempFile.outputStream().use { IOUtils.copy(body.byteStream(), it) }
                 IOUtils.closeQuietly(body)
                 return@use tempFile
             }

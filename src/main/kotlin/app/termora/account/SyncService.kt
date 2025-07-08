@@ -3,7 +3,6 @@ package app.termora.account
 import app.termora.AES
 import app.termora.database.*
 import app.termora.database.Data.Companion.toData
-import okhttp3.internal.EMPTY_BYTE_ARRAY
 import org.apache.commons.codec.binary.Base64
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.ObjectUtils
@@ -88,7 +87,7 @@ abstract class SyncService {
             return accountManager.getSecretKey()
         }
         val team = accountManager.getTeams().firstOrNull { it.id == ownerId }
-        return team?.secretKey ?: EMPTY_BYTE_ARRAY
+        return team?.secretKey ?: byteArrayOf()
     }
 
     protected fun decryptData(id: String, data: String, ownerId: String): String {
