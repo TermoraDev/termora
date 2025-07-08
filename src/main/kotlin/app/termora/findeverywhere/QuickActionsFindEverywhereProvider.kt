@@ -22,9 +22,7 @@ class QuickActionsFindEverywhereProvider(private val windowScope: WindowScope) :
         for (action in actions) {
             val ac = actionManager.getAction(action)
             if (ac == null) {
-                if (action == MultipleAction.MULTIPLE) {
-                    results.add(ActionFindEverywhereResult(MultipleAction.getInstance(windowScope)))
-                }
+                continue
             } else {
                 results.add(ActionFindEverywhereResult(ac))
             }

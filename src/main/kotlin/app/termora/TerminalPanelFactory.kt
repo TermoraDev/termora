@@ -133,8 +133,8 @@ class TerminalPanelFactory : Disposable {
                 return
             }
 
-            val multipleAction = MultipleAction.getInstance(windowScope)
-            if (!multipleAction.isSelected) {
+            val multipleAction = MultipleAction.getInstance()
+            if (multipleAction.isSelected(windowScope).not()) {
                 ptyConnector.write(request.buffer)
                 return
             }

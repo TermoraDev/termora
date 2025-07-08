@@ -28,13 +28,15 @@ import kotlin.math.min
 
 class TerminalTabbed(
     private val windowScope: WindowScope,
-    private val termoraToolBar: TermoraToolBar,
     private val tabbedPane: FlatTabbedPane,
     private val layout: TermoraLayout,
 ) : JPanel(BorderLayout()), Disposable, TerminalTabbedManager, DataProvider {
     private val tabs = mutableListOf<TerminalTab>()
-    private val customizeToolBarAWTEventListener = CustomizeToolBarAWTEventListener()
-    private val toolbar = termoraToolBar.getJToolBar()
+    private val customizeToolBarAWTEventListener = object : AWTEventListener, Disposable {
+        override fun eventDispatched(event: AWTEvent?) {
+
+        }
+    }
     private val actionManager = ActionManager.getInstance()
     private val dataProviderSupport = DataProviderSupport()
     private val appearance get() = DatabaseManager.getInstance().appearance
@@ -59,8 +61,6 @@ class TerminalTabbed(
         tabbedPane.tabLayoutPolicy = SCROLL_TAB_LAYOUT
         tabbedPane.isTabsClosable = true
         tabbedPane.tabType = FlatTabbedPane.TabType.card
-
-        tabbedPane.trailingComponent = toolbar
 
         add(tabbedPane, BorderLayout.CENTER)
 
@@ -388,7 +388,7 @@ class TerminalTabbed(
     /**
      * 对着 ToolBar 右键
      */
-    private inner class CustomizeToolBarAWTEventListener : AWTEventListener, Disposable {
+    /*private inner class CustomizeToolBarAWTEventListener : AWTEventListener, Disposable {
         override fun eventDispatched(event: AWTEvent) {
             if (event !is MouseEvent || event.id != MouseEvent.MOUSE_CLICKED || !SwingUtilities.isRightMouseButton(event)) return
             // 如果 ToolBar 没有显示
@@ -416,7 +416,7 @@ class TerminalTabbed(
         override fun dispose() {
             toolkit.removeAWTEventListener(this)
         }
-    }
+    }*/
 
     /*private inner class CustomizeToolBarDialog(owner: Window) : DialogWrapper(owner) {
         init {
