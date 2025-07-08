@@ -6,6 +6,7 @@ import app.termora.Icons
 import app.termora.Scope
 import app.termora.actions.NewHostAction
 import app.termora.actions.OpenLocalTerminalAction
+import app.termora.actions.QuickConnectAction
 import app.termora.snippet.SnippetAction
 import com.formdev.flatlaf.FlatLaf
 import org.jdesktop.swingx.action.ActionManager
@@ -19,19 +20,13 @@ class QuickCommandFindEverywhereProvider : FindEverywhereProvider {
         actionManager.let { list.add(CreateHostFindEverywhereResult()) }
 
         // Local terminal
-        actionManager.getAction(OpenLocalTerminalAction.LOCAL_TERMINAL)?.let {
-            list.add(ActionFindEverywhereResult(it))
-        }
-
+        actionManager.getAction(OpenLocalTerminalAction.LOCAL_TERMINAL)?.let { list.add(ActionFindEverywhereResult(it)) }
         // Snippet
-        actionManager.getAction(SnippetAction.SNIPPET)?.let {
-            list.add(ActionFindEverywhereResult(it))
-        }
-
+        actionManager.getAction(SnippetAction.SNIPPET)?.let { list.add(ActionFindEverywhereResult(it)) }
         // SFTP
-        actionManager.getAction(Actions.SFTP)?.let {
-            list.add(ActionFindEverywhereResult(it))
-        }
+        actionManager.getAction(Actions.SFTP)?.let { list.add(ActionFindEverywhereResult(it)) }
+        // quick connect
+        actionManager.getAction(QuickConnectAction.QUICK_CONNECT)?.let { list.add(ActionFindEverywhereResult(it)) }
 
         return list
     }

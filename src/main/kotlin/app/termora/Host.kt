@@ -344,6 +344,11 @@ data class Host(
 
     val isFolder get() = StringUtils.equalsIgnoreCase(protocol, "Folder")
 
+    /**
+     * 临时的 SSH 不可以保存
+     */
+    val isTemporary get() = options.extras["Temporary"] != null
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false

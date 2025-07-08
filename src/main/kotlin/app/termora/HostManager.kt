@@ -21,9 +21,13 @@ class HostManager private constructor() : Disposable {
      */
     fun addHost(host: Host, source: DatabaseChangedExtension.Source = DatabaseChangedExtension.Source.User) {
         assertEventDispatchThread()
-        if (host.ownerType.isBlank()) {
+
+        if (host.isTemporary)
+            throw IllegalArgumentException("Temporary host")
+
+        if (host.ownerType.isBlank())
             throw IllegalArgumentException("Owner type cannot be null")
-        }
+
         databaseManager.saveAndIncrementVersion(
             Data(
                 id = host.id,

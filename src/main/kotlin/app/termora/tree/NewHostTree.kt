@@ -481,12 +481,12 @@ class NewHostTree : SimpleTree(), Disposable {
     }
 
     private fun openWithSFTP(evt: EventObject) {
-        val nodes = getSelectionSimpleTreeNodes(true)
+        val hosts = getSelectionSimpleTreeNodes(true)
             .map { it.host }.filter { TransferProtocolProvider.valueOf(it.protocol) != null }
-        if (nodes.isEmpty()) return
+        if (hosts.isEmpty()) return
 
-        for (node in nodes) {
-            sftpAction.actionPerformed(TransferActionEvent(this, node.id, evt))
+        for (host in hosts) {
+            sftpAction.actionPerformed(TransferActionEvent(this, host, evt))
         }
     }
 

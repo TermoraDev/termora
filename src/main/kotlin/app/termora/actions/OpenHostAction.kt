@@ -38,7 +38,7 @@ class OpenHostAction : AnAction() {
         if (providers.first { StringUtils.equalsIgnoreCase(it.getProtocol(), host.protocol) }
                 .isTransfer()) {
             ActionManager.getInstance().getAction(Actions.SFTP)
-                .actionPerformed(TransferActionEvent(evt.source, evt.host.id, evt.event))
+                .actionPerformed(TransferActionEvent(evt.source, host, evt.event))
             return
         }
 

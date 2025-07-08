@@ -17,7 +17,6 @@ import com.formdev.flatlaf.extras.components.FlatPopupMenu
 import com.formdev.flatlaf.extras.components.FlatTabbedPane
 import org.apache.commons.lang3.StringUtils
 import java.awt.*
-import java.awt.event.AWTEventListener
 import java.awt.event.ActionEvent
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -32,11 +31,6 @@ class TerminalTabbed(
     private val layout: TermoraLayout,
 ) : JPanel(BorderLayout()), Disposable, TerminalTabbedManager, DataProvider {
     private val tabs = mutableListOf<TerminalTab>()
-    private val customizeToolBarAWTEventListener = object : AWTEventListener, Disposable {
-        override fun eventDispatched(event: AWTEvent?) {
-
-        }
-    }
     private val actionManager = ActionManager.getInstance()
     private val dataProviderSupport = DataProviderSupport()
     private val appearance get() = DatabaseManager.getInstance().appearance
@@ -72,7 +66,6 @@ class TerminalTabbed(
 
 
     private fun initEvents() {
-        Disposer.register(this, customizeToolBarAWTEventListener)
 
         // 关闭 tab
         tabbedPane.setTabCloseCallback { _, i -> removeTabAt(i, true) }
@@ -145,9 +138,6 @@ class TerminalTabbed(
                     return provider
                 }
             }).let { Disposer.register(this, it) }
-
-        // 监听全局事件
-        toolkit.addAWTEventListener(customizeToolBarAWTEventListener, AWTEvent.MOUSE_EVENT_MASK)
 
     }
 
@@ -301,9 +291,7 @@ class TerminalTabbed(
 
         // 关闭
         val close = popupMenu.add(I18n.getString("termora.tabbed.contextmenu.close"))
-        close.addActionListener {
-            tabbedPane.tabCloseCallback?.accept(tabbedPane, tabIndex)
-        }
+        close.addActionListener { tabbedPane.tabCloseCallback?.accept(tabbedPane, tabIndex) }
 
         // 关闭其他标签页
         popupMenu.add(I18n.getString("termora.tabbed.contextmenu.close-other-tabs")).addActionListener {
@@ -326,7 +314,7 @@ class TerminalTabbed(
         close.isEnabled = tab.canClose()
         rename.isEnabled = close.isEnabled
         clone.isEnabled = close.isEnabled
-        edit.isEnabled = tab is HostTerminalTab && tab.host.id != "local"
+        edit.isEnabled = tab is HostTerminalTab && tab.host.id != "local" && tab.host.isTemporary.not()
         openInNewWindow.isEnabled = close.isEnabled
 
         // 如果不允许克隆
@@ -337,12 +325,7 @@ class TerminalTabbed(
         if (close.isEnabled) {
             popupMenu.addSeparator()
             val reconnect = popupMenu.add(I18n.getString("termora.tabbed.contextmenu.reconnect"))
-            reconnect.addActionListener {
-                if (tabIndex > 0) {
-                    tabs[tabIndex].reconnect()
-                }
-            }
-
+            reconnect.addActionListener { tabs[tabIndex].reconnect() }
             reconnect.isEnabled = tabs[tabIndex].canReconnect()
         }
 
@@ -383,60 +366,6 @@ class TerminalTabbed(
             tabbedPane.setTabClosable(i, tabs[i].canClose())
         }
     }
-
-
-    /**
-     * 对着 ToolBar 右键
-     */
-    /*private inner class CustomizeToolBarAWTEventListener : AWTEventListener, Disposable {
-        override fun eventDispatched(event: AWTEvent) {
-            if (event !is MouseEvent || event.id != MouseEvent.MOUSE_CLICKED || !SwingUtilities.isRightMouseButton(event)) return
-            // 如果 ToolBar 没有显示
-            if (!toolbar.isShowing) return
-            // 如果不是作用于在 ToolBar 上面
-            if (!Rectangle(toolbar.locationOnScreen, toolbar.size).contains(event.locationOnScreen)) return
-
-            // 显示右键菜单
-            showContextMenu(event)
-        }
-
-        private fun showContextMenu(event: MouseEvent) {
-            val popupMenu = FlatPopupMenu()
-            popupMenu.add(I18n.getString("termora.toolbar.customize-toolbar")).addActionListener {
-                val owner = SwingUtilities.getWindowAncestor(this@TerminalTabbed)
-                val dialog = CustomizeToolBarDialog(owner, windowScope, termoraToolBar)
-                dialog.setLocationRelativeTo(owner)
-                if (dialog.open()) {
-                    TermoraToolBar.rebuild()
-                }
-            }
-            popupMenu.show(event.component, event.x, event.y)
-        }
-
-        override fun dispose() {
-            toolkit.removeAWTEventListener(this)
-        }
-    }*/
-
-    /*private inner class CustomizeToolBarDialog(owner: Window) : DialogWrapper(owner) {
-        init {
-            size = Dimension(UIManager.getInt("Dialog.width"), UIManager.getInt("Dialog.height"))
-            isModal = true
-            title = I18n.getString("termora.setting")
-            setLocationRelativeTo(null)
-
-            init()
-        }
-
-        override fun createCenterPanel(): JComponent {
-            val model = DefaultListModel<String>()
-            val checkBoxList = CheckBoxList(model)
-            checkBoxList.fixedCellHeight = UIManager.getInt("Tree.rowHeight")
-            model.addElement("Test")
-            return checkBoxList
-        }
-
-    }*/
 
     private inner class SwitchFindEverywhereResult(
         private val title: String,
