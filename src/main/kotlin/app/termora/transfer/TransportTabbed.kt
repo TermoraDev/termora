@@ -208,7 +208,7 @@ internal class TransportTabbed(
             }
         })
 
-        edit.isEnabled = clone.isEnabled
+        edit.isEnabled = clone.isEnabled && panel.host.isTemporary.not()
 
         popupMenu.show(this, e.x, e.y)
     }
