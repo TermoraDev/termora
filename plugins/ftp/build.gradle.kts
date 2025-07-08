@@ -2,13 +2,13 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
 }
 
-
 project.version = "0.0.1"
-
 
 dependencies {
     testImplementation(kotlin("test"))
     compileOnly(project(":"))
+    implementation("org.apache.commons:commons-pool2:2.12.1")
+    testImplementation(project(":"))
 }
 
 

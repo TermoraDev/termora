@@ -8,6 +8,7 @@ import com.formdev.flatlaf.FlatLaf
 import com.formdev.flatlaf.util.UIScale
 import com.github.weisj.jsvg.SVGDocument
 import com.github.weisj.jsvg.parser.SVGLoader
+import com.github.weisj.jsvg.parser.impl.MutableLoaderContext
 import java.awt.Component
 import java.awt.Graphics
 import java.awt.Graphics2D
@@ -21,8 +22,8 @@ class PluginSVGIcon(input: InputStream, dark: InputStream? = null) : Icon {
 
     }
 
-    private val document = svgLoader.load(input)
-    private val darkDocument = dark?.let { svgLoader.load(it) }
+    private val document = svgLoader.load(input, null, MutableLoaderContext.createDefault())
+    private val darkDocument = dark?.let { svgLoader.load(it, null, MutableLoaderContext.createDefault()) }
 
     override fun getIconHeight(): Int {
         return 32

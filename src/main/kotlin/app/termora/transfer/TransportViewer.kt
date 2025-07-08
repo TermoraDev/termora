@@ -68,6 +68,7 @@ internal class TransportViewer : JPanel(BorderLayout()), DataProvider, Disposabl
     }
 
     private fun initEvents() {
+
         splitPane.addComponentListener(object : ComponentAdapter() {
             override fun componentResized(e: ComponentEvent) {
                 removeComponentListener(this)
@@ -91,6 +92,8 @@ internal class TransportViewer : JPanel(BorderLayout()), DataProvider, Disposabl
             }
         }
 
+        Disposer.register(this, transferManager)
+        Disposer.register(this, transferTable)
         Disposer.register(this, leftTabbed)
         Disposer.register(this, rightTabbed)
     }
