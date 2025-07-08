@@ -1,5 +1,8 @@
-package app.termora
+package app.termora.plugins.serial
 
+import app.termora.Host
+import app.termora.SerialCommFlowControl
+import app.termora.SerialCommParity
 import com.fazecast.jSerialComm.SerialPort
 
 object Serials {

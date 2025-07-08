@@ -1,11 +1,18 @@
-package app.termora.plugin.internal.serial
+package app.termora.plugins.serial
 
 import app.termora.plugin.Extension
-import app.termora.plugin.InternalPlugin
+import app.termora.plugin.ExtensionSupport
+import app.termora.plugin.Plugin
 import app.termora.protocol.ProtocolHostPanelExtension
 import app.termora.protocol.ProtocolProviderExtension
 
-internal class SerialInternalPlugin : InternalPlugin() {
+internal class SerialPlugin : Plugin {
+    private val support = ExtensionSupport()
+
+    override fun getAuthor(): String {
+        return "TermoraDev"
+    }
+
     init {
         support.addExtension(ProtocolProviderExtension::class.java) { SerialProtocolProviderExtension.instance }
         support.addExtension(ProtocolHostPanelExtension::class.java) { SerialProtocolHostPanelExtension.instance }
@@ -13,7 +20,7 @@ internal class SerialInternalPlugin : InternalPlugin() {
 
 
     override fun getName(): String {
-        return "Serial Protocol"
+        return "Serial Comm"
     }
 
 

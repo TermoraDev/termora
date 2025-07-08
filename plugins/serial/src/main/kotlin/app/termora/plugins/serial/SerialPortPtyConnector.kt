@@ -1,4 +1,4 @@
-package app.termora
+package app.termora.plugins.serial
 
 import app.termora.terminal.PtyConnector
 import com.fazecast.jSerialComm.SerialPort

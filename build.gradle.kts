@@ -105,7 +105,6 @@ dependencies {
 
     api(libs.colorpicker)
     api(libs.mixpanel)
-    api(libs.jSerialComm)
     api(libs.ini4j)
     api(libs.restart4j)
     api(libs.exposed.core)
