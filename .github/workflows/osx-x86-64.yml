@@ -11,7 +11,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install the Apple certificate
-        if: github.event_name == 'push' && github.repository == 'TermoraDev/termora' && secrets.BUILD_CERTIFICATE_BASE64 != ''
+        if: github.event_name == 'push' && github.repository == 'TermoraDev/termora' && env.BUILD_CERTIFICATE_BASE64 != ''
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
@@ -34,7 +34,7 @@ jobs:
           security list-keychain -d user -s $KEYCHAIN_PATH
 
       - name: Setup the Notary information
-        if: "startsWith(github.event.head_commit.message, 'release: ') && github.repository == 'TermoraDev/termora' && secrets.APPLE_ID != ''"
+        if: "startsWith(github.event.head_commit.message, 'release: ') && github.repository == 'TermoraDev/termora' && env.APPLE_ID != ''"
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
