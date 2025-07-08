@@ -37,6 +37,8 @@ class RequestAuthenticationDialog(owner: Window, host: Host) : DialogWrapper(own
         preferredSize = size
         minimumSize = size
 
+        rememberCheckBox.isVisible = host.isTemporary.not()
+
         publicKeyComboBox.renderer = object : DefaultListCellRenderer() {
             override fun getListCellRendererComponent(
                 list: JList<*>?,
@@ -84,7 +86,7 @@ class RequestAuthenticationDialog(owner: Window, host: Host) : DialogWrapper(own
 
         switchPasswordComponent()
 
-        return FormBuilder.create().padding("$formMargin, $formMargin, $formMargin, $formMargin")
+        return FormBuilder.create().padding("1dlu, $formMargin, $formMargin, $formMargin")
             .layout(layout)
             .add("${I18n.getString("termora.new-host.general.authentication")}:").xy(1, 1)
             .add(authenticationTypeComboBox).xy(3, 1)

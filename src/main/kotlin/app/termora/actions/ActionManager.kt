@@ -28,6 +28,7 @@ class ActionManager : org.jdesktop.swingx.action.ActionManager() {
     private fun registerActions() {
         addAction(NewWindowAction.NEW_WINDOW, NewWindowAction())
         addAction(FindEverywhereAction.FIND_EVERYWHERE, FindEverywhereAction())
+        addAction(QuickConnectAction.QUICK_CONNECT, QuickConnectAction.instance)
 
         addAction(Actions.APP_UPDATE, AppUpdateAction.getInstance())
         addAction(Actions.KEYWORD_HIGHLIGHT, KeywordHighlightAction())

@@ -250,7 +250,8 @@ object SshClients {
 
         val session = client.connect(entry).verify(timeout).session
         if (host.authentication.type == AuthenticationType.Password) {
-            session.addPasswordIdentity(host.authentication.password)
+            if (StringUtils.isNotBlank(host.authentication.password))
+                session.addPasswordIdentity(host.authentication.password)
         } else if (host.authentication.type == AuthenticationType.PublicKey) {
             session.keyIdentityProvider = OhKeyPairKeyPairProvider(host.authentication.password)
         }

@@ -1,6 +1,5 @@
 package app.termora.transfer
 
-import app.termora.HostManager
 import app.termora.HostTerminalTab
 import app.termora.I18n
 import app.termora.Icons
@@ -8,10 +7,8 @@ import app.termora.actions.AnAction
 import app.termora.actions.AnActionEvent
 import app.termora.actions.DataProviders
 import app.termora.protocol.TransferProtocolProvider
-import org.apache.commons.lang3.StringUtils
 
 class TransferAnAction : AnAction(I18n.getString("termora.transport.sftp"), Icons.folder) {
-    private val hostManager get() = HostManager.getInstance()
     override fun actionPerformed(evt: AnActionEvent) {
         val terminalTabbedManager = evt.getData(DataProviders.TerminalTabbedManager) ?: return
 
@@ -29,35 +26,32 @@ class TransferAnAction : AnAction(I18n.getString("termora.transport.sftp"), Icon
             terminalTabbedManager.addTerminalTab(sftpTab, false)
         }
 
-        var hostId = if (evt is TransferActionEvent) evt.hostId else StringUtils.EMPTY
+        var host = if (evt is TransferActionEvent) evt.host else null
 
-        // 如果不是特定事件，那么尝试获取选中的Tab，如果是一个 Host 并且是 SSH 协议那么直接打开
-        if (hostId.isBlank()) {
+        if (host == null) {
             val tab = terminalTabbedManager.getSelectedTerminalTab()
+            // 如果当前选中的是 Host 主机
             if (tab is HostTerminalTab) {
                 if (TransferProtocolProvider.valueOf(tab.host.protocol) != null) {
-                    hostId = tab.host.id
+                    host = tab.host
                 }
             }
         }
 
-        terminalTabbedManager.setSelectedTerminalTab(sftpTab)
-
-        if (hostId.isBlank()) return
-
         val tabbed = sftpTab.rightTabbed
+
         // 如果已经打开了 那么直接选中
-        for (i in 0 until tabbed.tabCount) {
-            val panel = tabbed.getTransportPanel(i) ?: continue
-            if (panel.host.id == hostId) {
-                tabbed.selectedIndex = i
-                return
+        if (host != null) {
+            for (i in 0 until tabbed.tabCount) {
+                val panel = tabbed.getTransportPanel(i) ?: continue
+                if (panel.host.id == host.id) {
+                    tabbed.selectedIndex = i
+                    return
+                }
             }
         }
 
-        val host = hostManager.getHost(hostId) ?: return
         var selectionPane: TransportSelectionPanel? = null
-
         for (i in 0 until tabbed.tabCount) {
             val c = tabbed.getComponentAt(i)
             if (c is TransportSelectionPanel) {
@@ -72,8 +66,10 @@ class TransferAnAction : AnAction(I18n.getString("termora.transport.sftp"), Icon
             selectionPane = tabbed.addSelectionTab()
         }
 
-        selectionPane.connect(host)
+        if (host != null) {
+            selectionPane.connect(host)
+        }
 
-
+        terminalTabbedManager.setSelectedTerminalTab(sftpTab)
     }
 }
