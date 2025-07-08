@@ -8,6 +8,7 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.swing.Swing
 import okio.withLock
 import org.apache.commons.io.IOUtils
+import org.apache.commons.lang3.StringUtils
 import org.jdesktop.swingx.treetable.DefaultMutableTreeTableNode
 import org.jdesktop.swingx.treetable.DefaultTreeTableModel
 import org.slf4j.LoggerFactory
@@ -498,6 +499,10 @@ class TransferTableModel(private val coroutineScope: CoroutineScope) :
 
         removeTransfer(node.transfer.id())
 
+    }
+
+    override fun dispose() {
+        removeTransfer(StringUtils.EMPTY)
     }
 
     private class UserCanceledException : RuntimeException()

@@ -2,7 +2,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
 }
 
-project.version = "0.0.2"
+project.version = "0.0.3"
 
 dependencies {
     testImplementation(kotlin("test"))

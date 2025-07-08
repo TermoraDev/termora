@@ -5,10 +5,10 @@ import app.termora.protocol.ProtocolProviderExtension
 
 class FTPProtocolProviderExtension private constructor() : ProtocolProviderExtension {
     companion object {
-        val instance by lazy { FTPProtocolProviderExtension() }
+        val instance = FTPProtocolProviderExtension()
     }
 
     override fun getProtocolProvider(): ProtocolProvider {
-        return FTPProtocolProvider.Companion.instance
+        return FTPProtocolProvider.instance
     }
 }

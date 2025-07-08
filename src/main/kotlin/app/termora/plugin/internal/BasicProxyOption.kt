@@ -78,8 +78,6 @@ class BasicProxyOption(
             proxyAuthenticationTypeComboBox.addItem(type)
         }
 
-        proxyUsernameTextField.text = "root"
-
         refreshStates()
     }
 

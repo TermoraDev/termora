@@ -153,7 +153,8 @@ class TermoraFencePanel(
 
 
     override fun dispose() {
-        enableManager.setFlag("Termora.Fence.dividerLocation", max(splitPane.dividerLocation, 10))
+        if (leftTreePanel.isVisible)
+            enableManager.setFlag("Termora.Fence.dividerLocation", max(splitPane.dividerLocation, 10))
     }
 
     fun getHostTree(): NewHostTree {

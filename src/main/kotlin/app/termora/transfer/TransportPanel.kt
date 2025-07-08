@@ -9,6 +9,7 @@ import app.termora.plugin.ExtensionManager
 import app.termora.plugin.internal.wsl.WSLHostTerminalTab
 import app.termora.terminal.DataKey
 import app.termora.transfer.TransportTableModel.Attributes
+import app.termora.transfer.s3.S3FileAttributes
 import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.extras.components.FlatToolBar
 import com.formdev.flatlaf.icons.FlatTreeClosedIcon
@@ -48,6 +49,7 @@ import java.util.*
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Future
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicLong
 import java.util.stream.Stream
 import javax.swing.*
 import javax.swing.TransferHandler
@@ -83,6 +85,7 @@ internal class TransportPanel(
 
     }
 
+    private val mod = AtomicLong(0)
     private val owner get() = SwingUtilities.getWindowAncestor(this)
     private val lru = object : LinkedHashMap<String, Icon?>() {
         override fun removeEldestEntry(eldest: Map.Entry<String?, Icon?>?): Boolean {
@@ -113,7 +116,7 @@ internal class TransportPanel(
         get() = enableManager.getFlag(showHiddenFilesKey, true)
         set(value) = enableManager.setFlag(showHiddenFilesKey, value)
     private val navigator get() = this
-    private val nextReloadCallbacks = mutableListOf<() -> Unit>()
+    private val nextReloadCallbacks = Collections.synchronizedMap(mutableMapOf<Long, MutableList<() -> Unit>>())
     private val history = linkedSetOf<Path>()
     private val undoManager = MyUndoManager()
     private val editTransferListener = EditTransferListener()
@@ -301,7 +304,7 @@ internal class TransportPanel(
                 }
                 if (target.pathString == workdir?.pathString || target.parent.pathString == workdir?.pathString) {
                     if (loading) {
-                        nextReloadCallbacks.add { reload(requestFocus = false) }
+                        registerNextReloadCallback { reload(requestFocus = false) }
                     } else {
                         reload(requestFocus = false)
                     }
@@ -620,7 +623,7 @@ internal class TransportPanel(
     }
 
     fun registerSelectRow(name: String) {
-        nextReloadCallbacks.add {
+        registerNextReloadCallback {
             for (i in 0 until model.rowCount) {
                 if (model.getAttributes(i).name == name) {
                     val c = sorter.convertRowIndexToView(i)
@@ -633,6 +636,11 @@ internal class TransportPanel(
         }
     }
 
+    private fun registerNextReloadCallback(block: () -> Unit) {
+        nextReloadCallbacks.computeIfAbsent(mod.get()) { mutableListOf() }
+            .add(block)
+    }
+
     fun reload(
         oldPath: String? = workdir?.absolutePathString(),
         newPath: String? = workdir?.absolutePathString(),
@@ -643,6 +651,8 @@ internal class TransportPanel(
         if (loading) return false
         loading = true
 
+        val mod = mod.getAndAdd(1)
+
         coroutineScope.launch {
             try {
 
@@ -650,7 +660,7 @@ internal class TransportPanel(
 
                 withContext(Dispatchers.Swing) {
                     setNewWorkdir(workdir)
-                    nextReloadCallbacks.forEach { runCatching { it.invoke() } }
+                    nextReloadCallbacks[mod]?.forEach { runCatching { it.invoke() } }
                 }
 
             } catch (e: Exception) {
@@ -665,7 +675,7 @@ internal class TransportPanel(
             } finally {
                 withContext(Dispatchers.Swing) {
                     loading = false
-                    nextReloadCallbacks.clear()
+                    nextReloadCallbacks.entries.removeIf { it.key <= mod }
                 }
             }
         }
@@ -730,6 +740,13 @@ internal class TransportPanel(
         if (files.isNotEmpty())
             consume.invoke()
 
+        if (first.compareAndSet(false, true)) {
+            withContext(Dispatchers.Swing) {
+                model.clear()
+                table.scrollRectToVisible(Rectangle())
+            }
+        }
+
         if (requestFocus)
             coroutineScope.launch(Dispatchers.Swing) { table.requestFocusInWindow() }
 
@@ -776,7 +793,9 @@ internal class TransportPanel(
             .getOrNull()
 
         val fileSize = basicAttributes?.size() ?: 0
-        val permissions = posixFileAttribute?.permissions() ?: emptySet()
+        val permissions = posixFileAttribute?.permissions()
+            ?: if (basicAttributes is S3FileAttributes) basicAttributes.permissions
+            else emptySet()
         val owner = fileOwnerAttribute?.name ?: StringUtils.EMPTY
         val lastModifiedTime = basicAttributes?.lastModifiedTime()?.toMillis() ?: 0
         val isDirectory = basicAttributes?.isDirectory ?: false

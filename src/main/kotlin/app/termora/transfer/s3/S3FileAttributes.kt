@@ -2,6 +2,7 @@ package app.termora.transfer.s3
 
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.attribute.FileTime
+import java.nio.file.attribute.PosixFilePermission
 
 data class S3FileAttributes(
     private val lastModifiedTime: Long = 0,
@@ -13,7 +14,12 @@ data class S3FileAttributes(
     private val symbolicLink: Boolean = false,
     private val other: Boolean = false,
     private val size: Long = 0,
-) : BasicFileAttributes {
+
+    ) : BasicFileAttributes {
+
+    var permissions: Set<PosixFilePermission> = emptySet()
+
+
     override fun lastModifiedTime(): FileTime {
         return FileTime.fromMillis(lastModifiedTime)
     }
@@ -49,4 +55,6 @@ data class S3FileAttributes(
     override fun fileKey(): Any? {
         return null
     }
+
+
 }

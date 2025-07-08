@@ -1,8 +1,5 @@
 package app.termora.plugins.ftp
 
-import app.termora.DynamicIcon
-import app.termora.I18n
-import app.termora.Icons
 import app.termora.plugin.Extension
 import app.termora.plugin.ExtensionSupport
 import app.termora.plugin.PaidPlugin
@@ -25,6 +22,7 @@ class FTPPlugin : PaidPlugin {
     override fun getName(): String {
         return "FTP"
     }
+
 
 
     override fun <T : Extension> getExtensions(clazz: Class<T>): List<T> {
