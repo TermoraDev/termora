@@ -11,6 +11,7 @@ import java.net.InetSocketAddress
 import java.net.Proxy
 import java.nio.charset.Charset
 
+
 class TelnetTerminalTab(
     windowScope: WindowScope, host: Host,
 ) : PtyHostTerminalTab(windowScope, host) {
@@ -32,11 +33,19 @@ class TelnetTerminalTab(
             )
         }
 
+        val characterMode = host.options.extras["character-at-a-time"]?.toBooleanStrictOrNull() ?: false
+
         val termtype = host.options.envs()["TERM"] ?: "xterm-256color"
         val ttopt = TerminalTypeOptionHandler(termtype, false, false, true, false)
         val echoopt = EchoOptionHandler(false, true, false, true)
         val gaopt = SuppressGAOptionHandler(true, true, true, true)
         val wsopt = WindowSizeOptionHandler(winSize.cols, winSize.rows, true, false, true, false)
+
+        // 如果是单字符模式，显示禁用行模式
+        if (characterMode) {
+            val linemodeOption = SimpleOptionHandler(TelnetOption.LINEMODE, false, false, false, false)
+            telnet.addOptionHandler(linemodeOption)
+        }
 
         telnet.addOptionHandler(ttopt)
         telnet.addOptionHandler(echoopt)
@@ -56,7 +65,6 @@ class TelnetTerminalTab(
             }
         }
 
-        val characterMode = host.options.extras["character-at-a-time"]?.toBooleanStrictOrNull() ?: false
         return ptyConnectorFactory.decorate(TelnetStreamPtyConnector(telnet, telnet.charset, characterMode))
     }
 
