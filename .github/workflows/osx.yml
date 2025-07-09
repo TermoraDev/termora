@@ -3,7 +3,7 @@ name: macOS
 on: [ push, pull_request ]
 
 env:
-  TERMORA_MAC_SIGN: ${{ github.event_name == 'push' && github.repository == 'TermoraDev/termora' }}
+  TERMORA_MAC_SIGN: "${{ startsWith(github.event.head_commit.message, 'release: ') && github.repository == 'TermoraDev/termora' }}"
   TERMORA_MAC_SIGN_USER_NAME: ${{ secrets.TERMORA_MAC_SIGN_USER_NAME }}
   # 只有发布版本时才需要公证
   TERMORA_MAC_NOTARY: "${{ startsWith(github.event.head_commit.message, 'release: ') && github.repository == 'TermoraDev/termora' }}"
