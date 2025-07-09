@@ -46,7 +46,7 @@ class DoormanDialog(owner: Window?) : DialogWrapper(owner) {
         controlsVisible = false
 
         if (SystemInfo.isWindows || SystemInfo.isLinux) {
-            title = I18n.getString("termora.doorman.safe")
+            title = MigrationI18n.getString("termora.doorman.safe")
             rootPane.putClientProperty(FlatClientProperties.TITLE_BAR_SHOW_TITLE, false)
         }
 
@@ -65,8 +65,8 @@ class DoormanDialog(owner: Window?) : DialogWrapper(owner) {
     }
 
     override fun createCenterPanel(): JComponent {
-        label.text = I18n.getString("termora.doorman.safe")
-        tip.text = I18n.getString("termora.doorman.unlock-data")
+        label.text = MigrationI18n.getString("termora.doorman.safe")
+        tip.text = MigrationI18n.getString("termora.doorman.unlock-data")
         icon.icon = FlatSVGIcon(Icons.role.name, 80, 80)
         safeBtn.icon = Icons.unlocked
 
@@ -95,24 +95,24 @@ class DoormanDialog(owner: Window?) : DialogWrapper(owner) {
             .add(passwordTextField).xy(2, rows)
             .add(safeBtn).xy(4, rows).apply { rows += step }
             .add(tip).xyw(2, rows, 4, "center, fill").apply { rows += step }
-            .add(JXHyperlink(object : AnAction(I18n.getString("termora.doorman.forget-password")) {
+            .add(JXHyperlink(object : AnAction(MigrationI18n.getString("termora.doorman.forget-password")) {
                 override fun actionPerformed(evt: AnActionEvent) {
                     val option = OptionPane.showConfirmDialog(
-                        this@DoormanDialog, I18n.getString("termora.doorman.forget-password-message"),
+                        this@DoormanDialog, MigrationI18n.getString("termora.doorman.forget-password-message"),
                         options = arrayOf(
-                            I18n.getString("termora.doorman.have-a-mnemonic"),
-                            I18n.getString("termora.doorman.dont-have-a-mnemonic"),
+                            MigrationI18n.getString("termora.doorman.have-a-mnemonic"),
+                            MigrationI18n.getString("termora.doorman.dont-have-a-mnemonic"),
                         ),
                         optionType = JOptionPane.YES_NO_OPTION,
                         messageType = JOptionPane.INFORMATION_MESSAGE,
-                        initialValue = I18n.getString("termora.doorman.have-a-mnemonic")
+                        initialValue = MigrationI18n.getString("termora.doorman.have-a-mnemonic")
                     )
                     if (option == JOptionPane.YES_OPTION) {
                         showMnemonicsDialog()
                     } else if (option == JOptionPane.NO_OPTION) {
                         OptionPane.showMessageDialog(
                             this@DoormanDialog,
-                            I18n.getString("termora.doorman.delete-data"),
+                            MigrationI18n.getString("termora.doorman.delete-data"),
                             messageType = JOptionPane.WARNING_MESSAGE
                         )
                         Application.browse(MigrationApplicationRunnerExtension.instance.getDatabaseFile().toURI())
@@ -141,7 +141,7 @@ class DoormanDialog(owner: Window?) : DialogWrapper(owner) {
                 log.error(e.message, e)
             }
             OptionPane.showMessageDialog(
-                this, I18n.getString("termora.doorman.mnemonic-data-corrupted"),
+                this, MigrationI18n.getString("termora.doorman.mnemonic-data-corrupted"),
                 messageType = JOptionPane.ERROR_MESSAGE
             )
             passwordTextField.outline = "error"
@@ -166,7 +166,7 @@ class DoormanDialog(owner: Window?) : DialogWrapper(owner) {
         } catch (e: Exception) {
             if (e is PasswordWrongException) {
                 OptionPane.showMessageDialog(
-                    this, I18n.getString("termora.doorman.password-wrong"),
+                    this, MigrationI18n.getString("termora.doorman.password-wrong"),
                     messageType = JOptionPane.ERROR_MESSAGE
                 )
             }
@@ -197,7 +197,7 @@ class DoormanDialog(owner: Window?) : DialogWrapper(owner) {
             isModal = true
             isResizable = true
             controlsVisible = false
-            title = I18n.getString("termora.doorman.mnemonic.title")
+            title = MigrationI18n.getString("termora.doorman.mnemonic.title")
             init()
             pack()
             size = Dimension(max(size.width, UIManager.getInt("Dialog.width") - 250), size.height)
@@ -251,7 +251,7 @@ class DoormanDialog(owner: Window?) : DialogWrapper(owner) {
             } catch (e: Exception) {
                 OptionPane.showMessageDialog(
                     this,
-                    I18n.getString("termora.doorman.mnemonic.incorrect"),
+                    MigrationI18n.getString("termora.doorman.mnemonic.incorrect"),
                     messageType = JOptionPane.ERROR_MESSAGE
                 )
                 return
