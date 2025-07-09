@@ -62,9 +62,6 @@ dependencies {
     testImplementation(libs.h2)
     testImplementation(libs.exposed.migration)
 
-//    implementation(platform(libs.koin.bom))
-//    implementation(libs.koin.core)
-
     api(kotlin("reflect"))
     api(libs.slf4j.api)
     api(libs.pty4j)
