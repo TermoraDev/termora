@@ -2,18 +2,15 @@ package app.termora.plugin.internal.telnet
 
 import app.termora.*
 import app.termora.account.AccountOwner
-import app.termora.keymgr.KeyManager
 import app.termora.plugin.internal.BasicProxyOption
 import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.extras.components.FlatComboBox
 import com.formdev.flatlaf.ui.FlatTextBorder
 import com.jgoodies.forms.builder.FormBuilder
 import com.jgoodies.forms.layout.FormLayout
-import org.apache.commons.lang3.StringUtils
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.KeyboardFocusManager
-import java.awt.Window
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
 import java.nio.charset.Charset
@@ -25,7 +22,6 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
     // telnet 不支持代理密码
     private val proxyOption = BasicProxyOption(authenticationTypes = listOf())
     private val terminalOption = TerminalOption()
-    private val owner: Window get() = SwingUtilities.getWindowAncestor(this)
 
     init {
         addOption(generalOption)
@@ -69,7 +65,10 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
             env = terminalOption.environmentTextArea.text,
             startupCommand = terminalOption.startupCommandTextField.text,
             serialComm = serialComm,
-            extras = mutableMapOf("backspace" to (terminalOption.backspaceComboBox.selectedItem as Backspace).name)
+            extras = mutableMapOf(
+                "backspace" to (terminalOption.backspaceComboBox.selectedItem as Backspace).name,
+                "character-at-a-time" to (terminalOption.characterAtATimeTextField.selectedItem?.toString() ?: "false")
+            )
         )
 
         return Host(
@@ -108,6 +107,8 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
         terminalOption.startupCommandTextField.text = host.options.startupCommand
         terminalOption.backspaceComboBox.selectedItem =
             Backspace.valueOf(host.options.extras["backspace"] ?: Backspace.Delete.name)
+        terminalOption.characterAtATimeTextField.selectedItem =
+            host.options.extras["character-at-a-time"]?.toBooleanStrictOrNull() ?: false
 
     }
 
@@ -186,7 +187,6 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
         val usernameTextField = OutlineTextField(128)
         val hostTextField = OutlineTextField(255)
         val passwordTextField = OutlinePasswordField(255)
-        val publicKeyComboBox = OutlineComboBox<String>()
         val remarkTextArea = FixedLengthTextArea(512)
         val authenticationTypeComboBox = FlatComboBox<AuthenticationType>()
 
@@ -197,30 +197,6 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
 
         private fun initView() {
             add(getCenterComponent(), BorderLayout.CENTER)
-
-            publicKeyComboBox.isEditable = false
-
-            publicKeyComboBox.renderer = object : DefaultListCellRenderer() {
-                override fun getListCellRendererComponent(
-                    list: JList<*>?,
-                    value: Any?,
-                    index: Int,
-                    isSelected: Boolean,
-                    cellHasFocus: Boolean
-                ): Component {
-                    var text = StringUtils.EMPTY
-                    if (value is String) {
-                        text = KeyManager.getInstance().getOhKeyPair(value)?.name ?: text
-                    }
-                    return super.getListCellRendererComponent(
-                        list,
-                        text,
-                        index,
-                        isSelected,
-                        cellHasFocus
-                    )
-                }
-            }
 
             authenticationTypeComboBox.renderer = object : DefaultListCellRenderer() {
                 override fun getListCellRendererComponent(
@@ -340,6 +316,7 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
         val charsetComboBox = JComboBox<String>()
         val backspaceComboBox = JComboBox<Backspace>()
         val startupCommandTextField = OutlineTextField()
+        val characterAtATimeTextField = YesOrNoComboBox()
         val environmentTextArea = FixedLengthTextArea(2048)
 
 
@@ -355,6 +332,7 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
             backspaceComboBox.addItem(Backspace.Backspace)
             backspaceComboBox.addItem(Backspace.VT220)
 
+            characterAtATimeTextField.selectedItem = false
 
             environmentTextArea.setFocusTraversalKeys(
                 KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,
@@ -409,6 +387,8 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
                 .add(charsetComboBox).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.new-host.terminal.backspace")}:").xy(1, rows)
                 .add(backspaceComboBox).xy(3, rows).apply { rows += step }
+                .add("${I18n.getString("termora.new-host.terminal.character-mode")}:").xy(1, rows)
+                .add(characterAtATimeTextField).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.new-host.terminal.startup-commands")}:").xy(1, rows)
                 .add(startupCommandTextField).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.new-host.terminal.env")}:").xy(1, rows)
