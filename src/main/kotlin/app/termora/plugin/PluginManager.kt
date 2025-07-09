@@ -11,6 +11,7 @@ import app.termora.plugin.internal.rdp.RDPInternalPlugin
 import app.termora.plugin.internal.sftppty.SFTPPtyInternalPlugin
 import app.termora.plugin.internal.ssh.SSHInternalPlugin
 import app.termora.plugin.internal.telnet.TelnetInternalPlugin
+import app.termora.plugin.internal.update.UpdatePlugin
 import app.termora.plugin.internal.wsl.WSLInternalPlugin
 import app.termora.swingCoroutineScope
 import app.termora.terminal.panel.vw.FloatingToolbarPlugin
@@ -108,6 +109,8 @@ internal class PluginManager private constructor() {
         plugins.add(PluginDescriptor(AccountPlugin(), origin = PluginOrigin.Internal, version = version))
         // badge plugin
         plugins.add(PluginDescriptor(BadgePlugin(), origin = PluginOrigin.Internal, version = version))
+        // update plugin
+        plugins.add(PluginDescriptor(UpdatePlugin(), origin = PluginOrigin.Internal, version = version))
 
         // ssh plugin
         plugins.add(PluginDescriptor(SSHInternalPlugin(), origin = PluginOrigin.Internal, version = version))

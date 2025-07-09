@@ -13,12 +13,6 @@ object Actions {
     const val KEY_MANAGER = "KeyManagerAction"
 
     /**
-     * 更新
-     */
-    const val APP_UPDATE = "AppUpdateAction"
-
-
-    /**
      * 宏
      */
     const val MACRO = "MacroAction"
