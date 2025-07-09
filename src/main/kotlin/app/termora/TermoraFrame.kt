@@ -42,7 +42,7 @@ class TermoraFrame : JFrame(), DataProvider {
     private val id = UUID.randomUUID().toString()
     private val windowScope = ApplicationScope.forWindowScope(this)
     private val tabbedPane = MyTabbedPane().apply { tabHeight = titleBarHeight }
-    private val toolbar = MyTermoraToolbar(windowScope)
+    private val toolbar = MyTermoraToolbar(windowScope, this)
     private val terminalTabbed = TerminalTabbed(windowScope, tabbedPane, layout)
     private val dataProviderSupport = DataProviderSupport()
     private var notifyListeners = emptyArray<NotifyListener>()

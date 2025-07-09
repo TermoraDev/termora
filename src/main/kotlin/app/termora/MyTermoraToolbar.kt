@@ -2,19 +2,19 @@ package app.termora
 
 import app.termora.actions.StateAction
 import app.termora.findeverywhere.FindEverywhereAction
-import app.termora.plugin.internal.badge.Badge
+import app.termora.plugin.internal.update.AppUpdateAction
+import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.extras.components.FlatPopupMenu
 import com.formdev.flatlaf.extras.components.FlatToolBar
+import com.formdev.flatlaf.util.SystemInfo
 import java.awt.AWTEvent
 import java.awt.Rectangle
-import java.awt.event.AWTEventListener
-import java.awt.event.ActionEvent
-import java.awt.event.MouseEvent
+import java.awt.event.*
 import java.beans.PropertyChangeEvent
 import java.beans.PropertyChangeListener
 import javax.swing.*
 
-internal class MyTermoraToolbar(private val windowScope: WindowScope) : FlatToolBar() {
+internal class MyTermoraToolbar(private val windowScope: WindowScope, private val frame: TermoraFrame) : FlatToolBar() {
 
 
     private val customizeToolBarAWTEventListener = CustomizeToolBarAWTEventListener()
@@ -56,6 +56,14 @@ internal class MyTermoraToolbar(private val windowScope: WindowScope) : FlatTool
             }
         }).let { Disposer.register(windowScope, it) }
 
+        // 监听窗口大小变动，然后修改边距避开控制按钮
+        if (SystemInfo.isWindows || SystemInfo.isLinux) {
+            addComponentListener(object : ComponentAdapter() {
+                override fun componentResized(e: ComponentEvent) {
+                    adjust()
+                }
+            })
+        }
     }
 
     private fun refreshActions() {
@@ -76,14 +84,68 @@ internal class MyTermoraToolbar(private val windowScope: WindowScope) : FlatTool
 
         add(Box.createHorizontalGlue())
 
+        // update
+        add(redirectUpdateAction(disposable))
+
         for (action in model.getActions()) {
             if (action.visible.not()) continue
             val action = actionManager.getAction(action.id) ?: continue
             add(redirectAction(action, disposable))
         }
 
+        if (SystemInfo.isWindows || SystemInfo.isLinux) {
+            adjust()
+        }
+
         revalidate()
         repaint()
+    }
+
+    private fun adjust() {
+        val rectangle = frame.rootPane.getClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT_BUTTONS_BOUNDS)
+                as? Rectangle ?: return
+        val right = rectangle.width
+
+        for (i in 0 until toolbar.componentCount) {
+            val c = toolbar.getComponent(i)
+            if (c.name == "spacing") {
+                if (c.width == right) {
+                    return
+                }
+                toolbar.remove(i)
+                break
+            }
+        }
+
+        val spacing = Box.createHorizontalStrut(right)
+        spacing.name = "spacing"
+        toolbar.add(spacing)
+    }
+
+    private fun redirectUpdateAction(disposable: Disposable): AbstractButton {
+        val action = AppUpdateAction.getInstance()
+        val button = JButton(action.smallIcon)
+        button.isVisible = action.isEnabled
+        button.addActionListener(object : AbstractAction() {
+            override fun actionPerformed(e: ActionEvent) {
+                action.actionPerformed(e)
+            }
+        })
+
+        val listener = object : PropertyChangeListener, Disposable {
+            override fun propertyChange(evt: PropertyChangeEvent) {
+                button.isVisible = action.isEnabled
+            }
+
+            override fun dispose() {
+                action.removePropertyChangeListener(this)
+            }
+        }
+
+        action.addPropertyChangeListener(listener)
+        Disposer.register(disposable, listener)
+
+        return button
     }
 
     private fun redirectAction(action: Action, disposable: Disposable): AbstractButton {
@@ -100,16 +162,7 @@ internal class MyTermoraToolbar(private val windowScope: WindowScope) : FlatTool
         })
 
         val listener = object : PropertyChangeListener, Disposable {
-            private val badge get() = Badge.getInstance(windowScope)
             override fun propertyChange(evt: PropertyChangeEvent) {
-                if (evt.propertyName == "Badge") {
-                    if (action.getValue("Badge") == true) {
-                        badge.addBadge(button)
-                    } else {
-                        badge.removeBadge(button)
-                    }
-                }
-
                 if (action is StateAction) {
                     button.isSelected = action.isSelected(windowScope)
                 }

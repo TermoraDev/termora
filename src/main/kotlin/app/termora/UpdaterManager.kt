@@ -86,8 +86,8 @@ class UpdaterManager private constructor() {
                 return LatestVersion.self
             }
 
-            val text = response.use { resp -> resp.body?.use { it.string() } }
-            if (text.isNullOrBlank()) {
+            val text = response.use { resp -> resp.body.use { it.string() } }
+            if (text.isBlank()) {
                 return LatestVersion.self
             }
 

@@ -30,7 +30,6 @@ class ActionManager : org.jdesktop.swingx.action.ActionManager() {
         addAction(FindEverywhereAction.FIND_EVERYWHERE, FindEverywhereAction())
         addAction(QuickConnectAction.QUICK_CONNECT, QuickConnectAction.instance)
 
-        addAction(Actions.APP_UPDATE, AppUpdateAction.getInstance())
         addAction(Actions.KEYWORD_HIGHLIGHT, KeywordHighlightAction())
         addAction(Actions.TERMINAL_LOGGER, TerminalLoggerAction())
         addAction(Actions.SFTP, TransferAnAction())
@@ -42,7 +41,7 @@ class ActionManager : org.jdesktop.swingx.action.ActionManager() {
 
         addAction(SwitchTabAction.SWITCH_TAB, SwitchTabAction())
         addAction(TabReconnectAction.RECONNECT_TAB, TabReconnectAction())
-        addAction(SettingsAction.SETTING, SettingsAction())
+        addAction(SettingsAction.SETTING, SettingsAction.getInstance())
 
         addAction(NewHostAction.NEW_HOST, NewHostAction())
         addAction(OpenHostAction.OPEN_HOST, OpenHostAction())
