@@ -40,8 +40,11 @@ class TelnetTerminalTab(
         val echoopt = EchoOptionHandler(false, true, false, true)
         val gaopt = SuppressGAOptionHandler(true, true, true, true)
         val wsopt = WindowSizeOptionHandler(winSize.cols, winSize.rows, true, false, true, false)
+        val bopt = SimpleOptionHandler(TelnetOption.BINARY, true, false, true, false)
+        val fcopt = SimpleOptionHandler(TelnetOption.REMOTE_FLOW_CONTROL, true, true, false, false)
 
-
+        telnet.addOptionHandler(bopt)
+        telnet.addOptionHandler(fcopt)
         telnet.addOptionHandler(ttopt)
         telnet.addOptionHandler(echoopt)
         telnet.addOptionHandler(gaopt)

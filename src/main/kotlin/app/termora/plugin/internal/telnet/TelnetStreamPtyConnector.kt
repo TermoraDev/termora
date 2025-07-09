@@ -7,7 +7,6 @@ import org.apache.commons.net.telnet.TelnetOption
 import org.apache.commons.net.telnet.WindowSizeOptionHandler
 import java.io.InputStreamReader
 import java.nio.charset.Charset
-import java.util.concurrent.LinkedBlockingQueue
 
 class TelnetStreamPtyConnector(
     private val telnet: TelnetClient,
@@ -16,14 +15,7 @@ class TelnetStreamPtyConnector(
 ) : StreamPtyConnector(telnet.inputStream, telnet.outputStream) {
 
     private val reader = InputStreamReader(telnet.inputStream, charset)
-    private val thread = if (characterMode) Thread.ofVirtual().unstarted(CharacterModeRunnable()) else null
-    private val queue = LinkedBlockingQueue<ByteArray>()
 
-    init {
-        if (characterMode) {
-            thread?.start()
-        }
-    }
 
     override fun read(buffer: CharArray): Int {
         return reader.read(buffer)
@@ -32,7 +24,8 @@ class TelnetStreamPtyConnector(
     override fun write(buffer: ByteArray, offset: Int, len: Int) {
         if (characterMode) {
             for (i in offset until len + offset) {
-                queue.offer(byteArrayOf(buffer[i]))
+                output.write(byteArrayOf(buffer[i]))
+                output.flush()
             }
         } else {
             output.write(buffer, offset, len)
@@ -52,7 +45,6 @@ class TelnetStreamPtyConnector(
     override fun close() {
         IOUtils.closeQuietly(input)
         IOUtils.closeQuietly(output)
-        thread?.interrupt()
         telnet.disconnect()
     }
 
@@ -60,15 +52,4 @@ class TelnetStreamPtyConnector(
         return charset
     }
 
-    private inner class CharacterModeRunnable : Runnable {
-
-        override fun run() {
-            while (Thread.currentThread().isInterrupted.not()) {
-                val bytes = queue.take()
-                output.write(bytes)
-                output.flush()
-                Thread.sleep(100)
-            }
-        }
-    }
 }
