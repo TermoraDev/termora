@@ -28,7 +28,7 @@ version = rootProject.projectDir.resolve("VERSION").readText().trim()
 val os: OperatingSystem = DefaultNativePlatform.getCurrentOperatingSystem()
 val arch: ArchitectureInternal = DefaultNativePlatform.getCurrentArchitecture()
 val appVersion = project.version.toString().split("-")[0]
-val isDeb = os.isLinux && System.getProperty("type") == "deb"
+val isDeb = os.isLinux && System.getenv("TERMORA_TYPE") == "deb"
 
 // macOS 签名信息
 val macOSSignUsername = System.getenv("TERMORA_MAC_SIGN_USER_NAME") ?: StringUtils.EMPTY
@@ -185,7 +185,7 @@ tasks.register<Copy>("copy-dependencies") {
 
     // 对 JNA 和 PTY4J 的本地库提取
     // 提取出来是为了单独签名，不然无法通过公证
-    if (os.isMacOsX && macOSSign) {
+    if (os.isMacOsX) {
         doLast {
             val archName = if (arch.isArm) "aarch64" else "x86_64"
             val dylib = dir.get().dir("dylib").asFile
@@ -519,31 +519,20 @@ tasks.register<Exec>("jpackage") {
 
 tasks.register("dist") {
     doLast {
+        val osName = if (os.isMacOsX) "osx" else if (os.isWindows) "windows" else "linux"
+        val distributionDir = layout.buildDirectory.dir("distributions").get()
+        val finalFilenameWithoutExtension = "${project.name}-${project.version}-${osName}-${arch.name}"
+        val projectName = project.name.uppercaseFirstChar()
 
-        val gradlew = File(projectDir, if (os.isWindows) "gradlew.bat" else "gradlew").absolutePath
-
-        // 清空目录
-        exec { commandLine(gradlew, "clean") }
-
-        // 构建自带的插件
-        exec { commandLine(gradlew, ":plugins:migration:build") }
-
-        // 打包并复制依赖
-        exec {
-            commandLine(gradlew, ":jar", ":copy-dependencies")
+        if (os.isWindows) {
+            packOnWindows(distributionDir, finalFilenameWithoutExtension, projectName)
+        } else if (os.isLinux) {
+            packOnLinux(distributionDir, finalFilenameWithoutExtension, projectName)
+        } else if (os.isMacOsX) {
+            packOnMac(distributionDir, finalFilenameWithoutExtension, projectName)
+        } else {
+            throw GradleException("${os.name} is not supported")
         }
-
-        // 检查依赖的开源协议
-        exec { commandLine(gradlew, ":check-license") }
-
-        // jlink
-        exec { commandLine(gradlew, ":jlink") }
-
-        // 打包
-        exec { commandLine(gradlew, ":jpackage", "-Dtype=${System.getProperty("type")}") }
-
-        // 根据不同的系统构建不同的二进制包
-        pack()
     }
 }
 
@@ -574,26 +563,6 @@ tasks.register("check-license") {
     }
 }
 
-/**
- * 构建包
- */
-fun pack() {
-    val osName = if (os.isMacOsX) "osx" else if (os.isWindows) "windows" else "linux"
-    val distributionDir = layout.buildDirectory.dir("distributions").get()
-    val finalFilenameWithoutExtension = "${project.name}-${project.version}-${osName}-${arch.name}"
-    val projectName = project.name.uppercaseFirstChar()
-
-    if (os.isWindows) {
-        packOnWindows(distributionDir, finalFilenameWithoutExtension, projectName)
-    } else if (os.isLinux) {
-        packOnLinux(distributionDir, finalFilenameWithoutExtension, projectName)
-    } else if (os.isMacOsX) {
-        packOnMac(distributionDir, finalFilenameWithoutExtension, projectName)
-    } else {
-        throw GradleException("${os.name} is not supported")
-    }
-
-}
 
 /**
  * 创建 zip、msi
@@ -654,7 +623,7 @@ fun packOnMac(distributionDir: Directory, finalFilenameWithoutExtension: String,
     // @formatter:on
 
     // sign dmg
-    if (macOSSign) signMacOSLocalFile(dmgFile)
+    signMacOSLocalFile(dmgFile)
 
     // 找到 .app
     val imageFile = layout.buildDirectory.dir("jpackage/images/").get().asFile
@@ -667,7 +636,7 @@ fun packOnMac(distributionDir: Directory, finalFilenameWithoutExtension: String,
     // @formatter:on
 
     // sign zip
-    if (macOSSign) signMacOSLocalFile(zipFile)
+    signMacOSLocalFile(zipFile)
 
     // 公证
     if (macOSNotary) {
