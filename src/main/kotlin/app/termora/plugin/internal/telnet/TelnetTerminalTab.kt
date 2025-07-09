@@ -41,11 +41,6 @@ class TelnetTerminalTab(
         val gaopt = SuppressGAOptionHandler(true, true, true, true)
         val wsopt = WindowSizeOptionHandler(winSize.cols, winSize.rows, true, false, true, false)
 
-        // 如果是单字符模式，显示禁用行模式
-        if (characterMode) {
-            val linemodeOption = SimpleOptionHandler(TelnetOption.LINEMODE, false, false, false, false)
-            telnet.addOptionHandler(linemodeOption)
-        }
 
         telnet.addOptionHandler(ttopt)
         telnet.addOptionHandler(echoopt)
@@ -54,6 +49,7 @@ class TelnetTerminalTab(
 
         telnet.connect(host.host, host.port)
         telnet.keepAlive = true
+        telnet.tcpNoDelay = characterMode
 
         val encoder = terminal.getKeyEncoder()
         if (encoder is KeyEncoderImpl) {
@@ -64,6 +60,7 @@ class TelnetTerminalTab(
                 encoder.putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_BACK_SPACE), "${ControlCharacters.ESC}[3~")
             }
         }
+
 
         return ptyConnectorFactory.decorate(TelnetStreamPtyConnector(telnet, telnet.charset, characterMode))
     }
