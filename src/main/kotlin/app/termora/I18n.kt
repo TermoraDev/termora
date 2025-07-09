@@ -20,6 +20,7 @@ object I18n : AbstractI18n() {
         "en_US" to "English",
         "zh_CN" to "简体中文",
         "zh_TW" to "繁體中文",
+        "ru_RU" to "Русский",
     )
 
     fun containsLanguage(locale: Locale): String? {
