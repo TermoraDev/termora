@@ -1,0 +1,64 @@
+name: Linux
+
+on: [ push, pull_request ]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-24.04-arm, ubuntu-latest ]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-${{ runner.arch }}-gradlexyz-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-gradlexyz-
+
+      - name: Build Docker image
+        run: docker build -t debianjbr src/test/resources/deb/
+
+      - name: Create docker-run.sh helper script
+        shell: bash
+        run: |
+          cat <<'EOF' > docker-run.sh
+          #!/bin/bash
+          docker run --rm -v $HOME/.gradle:/root/.gradle -v "$(pwd)":/app -w /app "$@"
+          EOF
+          chmod +x docker-run.sh
+
+      - name: Compile
+        shell: bash
+        run: ./docker-run.sh debianjbr bash -c './gradlew :check-license && ./gradlew classes -x test'
+
+      - name: JLink
+        shell: bash
+        run: ./docker-run.sh debianjbr bash -c './gradlew :jar :copy-dependencies :plugins:migration:build :jlink'
+
+      - name: Package Deb
+        shell: bash
+        run: ./docker-run.sh -e TERMORA_TYPE=deb debianjbr bash -c './gradlew :jpackage && ./gradlew :dist'
+
+      - name: Package AppImage
+        shell: bash
+        run: ./docker-run.sh --device /dev/fuse --cap-add SYS_ADMIN --security-opt apparmor:unconfined debianjbr bash -c 'rm -rf build/jpackage && ./gradlew :jpackage && ./gradlew :dist'
+
+      - name: Make ~/.gradle world-writable
+        shell: bash
+        run: sudo chmod -R 777 ~/.gradle
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: termora-linux-${{ runner.arch }}
+          path: |
+            build/distributions/*.tar.gz
+            build/distributions/*.AppImage
+            build/distributions/*.deb

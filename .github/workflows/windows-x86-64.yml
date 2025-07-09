@@ -34,15 +34,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-gradle-
 
-      # test build
-      - run: |
-          .\gradlew classes -x test --no-daemon
-          .\gradlew clean --no-daemon
+      - name: Compile
+        run: .\gradlew :check-license && .\gradlew classes -x test
 
-      # dist
-      - run: |
-          .\gradlew.bat dist --no-daemon
-          .\gradlew.bat --stop
+      - name: JLink
+        run: .\gradlew :jar :copy-dependencies :plugins:migration:build :jlink
+
+      - name: Package
+        run: .\gradlew :jpackage && .\gradlew :dist
+
+      - name: Stop Gradle
+        run: .\gradlew.bat --stop
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
