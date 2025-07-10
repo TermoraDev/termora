@@ -4,12 +4,11 @@ import app.termora.*
 import app.termora.account.AccountOwner
 import app.termora.plugin.internal.BasicProxyOption
 import com.formdev.flatlaf.FlatClientProperties
-import com.formdev.flatlaf.extras.components.FlatComboBox
+import com.formdev.flatlaf.extras.components.FlatTabbedPane
 import com.formdev.flatlaf.ui.FlatTextBorder
 import com.jgoodies.forms.builder.FormBuilder
 import com.jgoodies.forms.layout.FormLayout
 import java.awt.BorderLayout
-import java.awt.Component
 import java.awt.KeyboardFocusManager
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
@@ -35,16 +34,7 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
         val protocol = TelnetProtocolProvider.PROTOCOL
         val host = generalOption.hostTextField.text
         val port = (generalOption.portTextField.value ?: 23) as Int
-        var authentication = Authentication.No
         var proxy = Proxy.Companion.No
-        val authenticationType = generalOption.authenticationTypeComboBox.selectedItem as AuthenticationType
-
-        if (authenticationType == AuthenticationType.Password) {
-            authentication = authentication.copy(
-                type = authenticationType,
-                password = String(generalOption.passwordTextField.password)
-            )
-        }
 
         if (proxyOption.proxyTypeComboBox.selectedItem != ProxyType.No) {
             proxy = proxy.copy(
@@ -64,6 +54,7 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
             encoding = terminalOption.charsetComboBox.selectedItem as String,
             env = terminalOption.environmentTextArea.text,
             startupCommand = terminalOption.startupCommandTextField.text,
+            loginScripts = terminalOption.loginScripts,
             serialComm = serialComm,
             extras = mutableMapOf(
                 "backspace" to (terminalOption.backspaceComboBox.selectedItem as Backspace).name,
@@ -76,8 +67,6 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
             protocol = protocol,
             host = host,
             port = port,
-            username = generalOption.usernameTextField.text,
-            authentication = authentication,
             proxy = proxy,
             sort = System.currentTimeMillis(),
             remark = generalOption.remarkTextArea.text,
@@ -88,13 +77,9 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
     fun setHost(host: Host) {
         generalOption.portTextField.value = host.port
         generalOption.nameTextField.text = host.name
-        generalOption.usernameTextField.text = host.username
         generalOption.hostTextField.text = host.host
         generalOption.remarkTextArea.text = host.remark
-        generalOption.authenticationTypeComboBox.selectedItem = host.authentication.type
-        if (host.authentication.type == AuthenticationType.Password) {
-            generalOption.passwordTextField.text = host.authentication.password
-        }
+
         proxyOption.proxyTypeComboBox.selectedItem = host.proxy.type
         proxyOption.proxyHostTextField.text = host.proxy.host
         proxyOption.proxyPasswordTextField.text = host.proxy.password
@@ -110,6 +95,8 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
         terminalOption.characterAtATimeTextField.selectedItem =
             host.options.extras["character-at-a-time"]?.toBooleanStrictOrNull() ?: false
 
+        terminalOption.loginScripts.clear()
+        terminalOption.loginScripts.addAll(host.options.loginScripts)
     }
 
     fun validateFields(): Boolean {
@@ -120,15 +107,6 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
             || validateField(generalOption.hostTextField)
         ) {
             return false
-        }
-
-        if (host.authentication.type == AuthenticationType.Password) {
-            if (validateField(generalOption.usernameTextField)) {
-                return false
-            }
-            if (validateField(generalOption.passwordTextField)) {
-                return false
-            }
         }
 
         // proxy
@@ -167,28 +145,11 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
         textField.requestFocusInWindow()
     }
 
-    /**
-     * 返回 true 表示有错误
-     */
-    private fun validateField(comboBox: JComboBox<*>): Boolean {
-        val selectedItem = comboBox.selectedItem
-        if (comboBox.isEnabled && (selectedItem == null || (selectedItem is String && selectedItem.isBlank()))) {
-            selectOptionJComponent(comboBox)
-            comboBox.putClientProperty(FlatClientProperties.OUTLINE, FlatClientProperties.OUTLINE_ERROR)
-            comboBox.requestFocusInWindow()
-            return true
-        }
-        return false
-    }
-
-    protected inner class GeneralOption : JPanel(BorderLayout()), Option {
+    inner class GeneralOption : JPanel(BorderLayout()), Option {
         val portTextField = PortSpinner(23)
         val nameTextField = OutlineTextField(128)
-        val usernameTextField = OutlineTextField(128)
         val hostTextField = OutlineTextField(255)
-        val passwordTextField = OutlinePasswordField(255)
         val remarkTextArea = FixedLengthTextArea(512)
-        val authenticationTypeComboBox = FlatComboBox<AuthenticationType>()
 
         init {
             initView()
@@ -197,44 +158,6 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
 
         private fun initView() {
             add(getCenterComponent(), BorderLayout.CENTER)
-
-            authenticationTypeComboBox.renderer = object : DefaultListCellRenderer() {
-                override fun getListCellRendererComponent(
-                    list: JList<*>?,
-                    value: Any?,
-                    index: Int,
-                    isSelected: Boolean,
-                    cellHasFocus: Boolean
-                ): Component {
-                    var text = value?.toString() ?: ""
-                    when (value) {
-                        AuthenticationType.Password -> {
-                            text = "Password"
-                        }
-
-                        AuthenticationType.PublicKey -> {
-                            text = "Public Key"
-                        }
-
-                        AuthenticationType.KeyboardInteractive -> {
-                            text = "Keyboard Interactive"
-                        }
-                    }
-                    return super.getListCellRendererComponent(
-                        list,
-                        text,
-                        index,
-                        isSelected,
-                        cellHasFocus
-                    )
-                }
-            }
-
-            authenticationTypeComboBox.addItem(AuthenticationType.No)
-            authenticationTypeComboBox.addItem(AuthenticationType.Password)
-
-            authenticationTypeComboBox.selectedItem = AuthenticationType.Password
-
         }
 
         private fun initEvents() {
@@ -261,7 +184,7 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
         private fun getCenterComponent(): JComponent {
             val layout = FormLayout(
                 "left:pref, $FORM_MARGIN, default:grow, $FORM_MARGIN, pref, $FORM_MARGIN, default",
-                "pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref"
+                "pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref"
             )
             remarkTextArea.setFocusTraversalKeys(
                 KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,
@@ -290,15 +213,6 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
                 .add("${I18n.getString("termora.new-host.general.port")}:").xy(5, rows)
                 .add(portTextField).xy(7, rows).apply { rows += step }
 
-                .add("${I18n.getString("termora.new-host.general.username")}:").xy(1, rows)
-                .add(usernameTextField).xyw(3, rows, 5).apply { rows += step }
-
-                .add("${I18n.getString("termora.new-host.general.authentication")}:").xy(1, rows)
-                .add(authenticationTypeComboBox).xyw(3, rows, 5).apply { rows += step }
-
-                .add("${I18n.getString("termora.new-host.general.password")}:").xy(1, rows)
-                .add(passwordTextField).xyw(3, rows, 5).apply { rows += step }
-
                 .add("${I18n.getString("termora.new-host.general.remark")}:").xy(1, rows)
                 .add(JScrollPane(remarkTextArea).apply { border = FlatTextBorder() })
                 .xyw(3, rows, 5).apply { rows += step }
@@ -318,7 +232,9 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
         val startupCommandTextField = OutlineTextField()
         val characterAtATimeTextField = YesOrNoComboBox()
         val environmentTextArea = FixedLengthTextArea(2048)
+        val loginScripts = mutableListOf<LoginScript>()
 
+        private val loginScriptPanel = LoginScriptPanel(loginScripts)
 
         init {
             initView()
@@ -326,7 +242,6 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
         }
 
         private fun initView() {
-            add(getCenterComponent(), BorderLayout.CENTER)
 
             backspaceComboBox.addItem(Backspace.Delete)
             backspaceComboBox.addItem(Backspace.Backspace)
@@ -354,6 +269,17 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
             }
 
             charsetComboBox.selectedItem = "UTF-8"
+
+            val tabbed = FlatTabbedPane()
+            tabbed.styleMap = mapOf(
+                "focusColor" to DynamicColor("TabbedPane.background"),
+                "hoverColor" to DynamicColor("TabbedPane.background"),
+            )
+            tabbed.tabHeight = UIManager.getInt("TabbedPane.tabHeight") - 4
+            putClientProperty("ContentPanelBorder", BorderFactory.createEmptyBorder())
+            tabbed.addTab(I18n.getString("termora.new-host.general"), getCenterComponent())
+            tabbed.addTab(I18n.getString("termora.new-host.terminal.login-scripts"), loginScriptPanel)
+            add(tabbed, BorderLayout.CENTER)
 
         }
 
@@ -383,6 +309,7 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
             var rows = 1
             val step = 2
             val panel = FormBuilder.create().layout(layout)
+                .border(BorderFactory.createEmptyBorder(6, 8, 6, 8))
                 .add("${I18n.getString("termora.new-host.terminal.encoding")}:").xy(1, rows)
                 .add(charsetComboBox).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.new-host.terminal.backspace")}:").xy(1, rows)
