@@ -24,12 +24,13 @@ import java.awt.*
 import java.awt.desktop.AppReopenedEvent
 import java.awt.desktop.AppReopenedListener
 import java.awt.desktop.SystemEventListener
-import java.awt.event.ActionEvent
-import java.awt.event.WindowEvent
+import java.awt.event.*
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import javax.imageio.ImageIO
 import javax.swing.*
+import javax.swing.event.PopupMenuEvent
+import javax.swing.event.PopupMenuListener
 import kotlin.system.exitProcess
 
 class ApplicationRunner {
@@ -114,15 +115,61 @@ class ApplicationRunner {
         val tray = SystemTray.getSystemTray()
         val image = ImageIO.read(TermoraFrame::class.java.getResourceAsStream("/icons/termora_32x32.png"))
         val trayIcon = TrayIcon(image)
-        val popupMenu = PopupMenu()
+        val dialog = JDialog()
+        val trayPopup = JPopupMenu()
+
+        dialog.isUndecorated = true
+        dialog.isModal = false
+        dialog.size = Dimension(0, 0)
+
         trayIcon.isImageAutoSize = true
-        trayIcon.popupMenu = popupMenu
         trayIcon.toolTip = Application.getName()
 
-        // PopupMenu 不支持中文
-        val exitMenu = MenuItem("Exit")
-        exitMenu.addActionListener { SwingUtilities.invokeLater { quitHandler() } }
-        popupMenu.add(exitMenu)
+        trayPopup.add(I18n.getString("termora.exit")).addActionListener { quitHandler() }
+        trayPopup.addPopupMenuListener(object : PopupMenuListener {
+            override fun popupMenuWillBecomeVisible(e: PopupMenuEvent?) {
+
+            }
+
+            override fun popupMenuWillBecomeInvisible(e: PopupMenuEvent?) {
+                SwingUtilities.invokeLater {
+                    if (dialog.isVisible) {
+                        dialog.isVisible = false
+                    }
+                }
+            }
+
+            override fun popupMenuCanceled(e: PopupMenuEvent?) {
+                popupMenuWillBecomeInvisible(e)
+            }
+
+        })
+
+        trayIcon.addMouseListener(object : MouseAdapter() {
+            override fun mouseReleased(e: MouseEvent) {
+                maybeShowPopup(e)
+            }
+
+            override fun mousePressed(e: MouseEvent) {
+                maybeShowPopup(e)
+            }
+
+            private fun maybeShowPopup(e: MouseEvent) {
+                if (e.isPopupTrigger) {
+                    val mouseLocation = MouseInfo.getPointerInfo().location
+                    trayPopup.setLocation(mouseLocation.x, mouseLocation.y)
+                    trayPopup.setInvoker(dialog)
+                    dialog.isVisible = true
+                    trayPopup.isVisible = true
+                }
+            }
+        })
+
+        dialog.addWindowFocusListener(object : WindowAdapter() {
+            override fun windowLostFocus(e: WindowEvent) {
+                dialog.isVisible = false
+            }
+        })
 
         // double click
         trayIcon.addActionListener(object : AbstractAction() {
