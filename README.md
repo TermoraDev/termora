@@ -90,8 +90,6 @@ Termora is developed using [**Kotlin/JVM**](https://kotlinlang.org/) and partial
 We recommend using the [JetBrainsRuntime](https://github.com/JetBrains/JetBrainsRuntime) JDK for development.
 
 - Run locally: `./gradlew :run`
-- Build for current OS: `./gradlew :dist`
-
 
 
 ## 📄 License

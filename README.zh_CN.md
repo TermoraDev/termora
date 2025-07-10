@@ -88,8 +88,6 @@ Termora 使用 [**Kotlin/JVM**](https://kotlinlang.org/) 开发，支持（正�
 建议使用 [JetBrainsRuntime](https://github.com/JetBrains/JetBrainsRuntime) JDK 运行环境。
 
 - 本地运行：`./gradlew :run`
-- 构建当前系统安装包：`./gradlew :dist`
-
 
 
 ## 📄 授权协议
