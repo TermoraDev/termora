@@ -112,9 +112,10 @@ class ApplicationRunner {
         if (!SystemInfo.isWindows || !SystemTray.isSupported()) return
 
         val tray = SystemTray.getSystemTray()
-        val image = ImageIO.read(TermoraFrame::class.java.getResourceAsStream("/icons/termora_16x16.png"))
+        val image = ImageIO.read(TermoraFrame::class.java.getResourceAsStream("/icons/termora_32x32.png"))
         val trayIcon = TrayIcon(image)
         val popupMenu = PopupMenu()
+        trayIcon.isImageAutoSize = true
         trayIcon.popupMenu = popupMenu
         trayIcon.toolTip = Application.getName()
 
