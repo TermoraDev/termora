@@ -1,16 +1,21 @@
 package app.termora.highlight
 
 import app.termora.*
+import app.termora.Application.ohMyJson
 import app.termora.account.AccountOwner
 import app.termora.terminal.TerminalColor
 import com.formdev.flatlaf.extras.components.FlatTable
 import com.jgoodies.forms.builder.FormBuilder
 import com.jgoodies.forms.layout.FormLayout
+import org.apache.commons.io.IOUtils
+import org.apache.commons.lang3.exception.ExceptionUtils
 import java.awt.BorderLayout
 import java.awt.Color
 import java.awt.Component
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
+import java.io.File
+import java.nio.charset.StandardCharsets
 import javax.swing.*
 import javax.swing.border.EmptyBorder
 import javax.swing.table.DefaultTableCellRenderer
@@ -29,7 +34,8 @@ class KeywordHighlightPanel(private val accountOwner: AccountOwner) : JPanel(Bor
     private val addBtn = JButton(I18n.getString("termora.new-host.tunneling.add"))
     private val editBtn = JButton(I18n.getString("termora.keymgr.edit"))
     private val deleteBtn = JButton(I18n.getString("termora.remove"))
-
+    private val importBtn = JButton(I18n.getString("termora.keymgr.import"))
+    private val exportBtn = JButton(I18n.getString("termora.keymgr.export"))
 
     init {
         initView()
@@ -213,11 +219,51 @@ class KeywordHighlightPanel(private val accountOwner: AccountOwner) : JPanel(Bor
             deleteBtn.isEnabled = editBtn.isEnabled
         }
 
+        exportBtn.addActionListener {
+            val fileChooser = FileChooser()
+            fileChooser.fileSelectionMode = JFileChooser.FILES_ONLY
+            fileChooser.win32Filters.add(Pair("All files", listOf("*")))
+            fileChooser.showSaveDialog(owner, "highlights.json").thenAccept { file ->
+                file?.outputStream()?.use {
+                    val highlights = keywordHighlightManager.getKeywordHighlights(accountOwner.id)
+                        .map { e -> e.copy(id = randomUUID()) }
+                    IOUtils.write(ohMyJson.encodeToString(highlights), it, StandardCharsets.UTF_8)
+                }
+            }
+        }
+
+        importBtn.addActionListener {
+            val chooser = FileChooser()
+            chooser.osxAllowedFileTypes = listOf("json")
+            chooser.allowsMultiSelection = false
+            chooser.win32Filters.add(Pair("JSON files", listOf("json")))
+            chooser.fileSelectionMode = JFileChooser.FILES_ONLY
+            chooser.showOpenDialog(owner)
+                .thenAccept { if (it.isNotEmpty()) SwingUtilities.invokeLater { importKeywordHighlights(it.first()) } }
+        }
+
         Disposer.register(this, object : Disposable {
             override fun dispose() {
                 terminal.close()
             }
         })
+    }
+
+    private fun importKeywordHighlights(file: File) {
+        try {
+            val highlights = ohMyJson.decodeFromString<List<KeywordHighlight>>(file.readText())
+                .map { it.copy(id = randomUUID()) }
+            for (highlight in highlights) {
+                keywordHighlightManager.addKeywordHighlight(highlight, accountOwner)
+                model.fireTableRowsInserted(model.rowCount - 1, model.rowCount)
+            }
+        } catch (e: Exception) {
+            OptionPane.showMessageDialog(
+                owner,
+                message = e.message ?: ExceptionUtils.getRootCauseMessage(e),
+                messageType = JOptionPane.ERROR_MESSAGE,
+            )
+        }
     }
 
     private fun createCenterPanel(): JComponent {
@@ -232,13 +278,15 @@ class KeywordHighlightPanel(private val accountOwner: AccountOwner) : JPanel(Bor
         val formMargin = "4dlu"
         val layout = FormLayout(
             "default:grow",
-            "pref, $formMargin, pref, $formMargin, pref"
+            "pref, $formMargin, pref, $formMargin, pref, $formMargin, pref, $formMargin, pref"
         )
         panel.add(
             FormBuilder.create().layout(layout).padding(EmptyBorder(0, 12, 0, 0))
                 .add(addBtn).xy(1, rows).apply { rows += step }
                 .add(editBtn).xy(1, rows).apply { rows += step }
                 .add(deleteBtn).xy(1, rows).apply { rows += step }
+                .add(importBtn).xy(1, rows).apply { rows += step }
+                .add(exportBtn).xy(1, rows).apply { rows += step }
                 .build(),
             BorderLayout.EAST)
 
