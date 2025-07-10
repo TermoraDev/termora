@@ -1,6 +1,9 @@
 package app.termora.plugin.internal.telnet
 
-import app.termora.*
+import app.termora.Host
+import app.termora.ProxyType
+import app.termora.PtyHostTerminalTab
+import app.termora.WindowScope
 import app.termora.terminal.ControlCharacters
 import app.termora.terminal.KeyEncoderImpl
 import app.termora.terminal.PtyConnector
@@ -68,35 +71,5 @@ class TelnetTerminalTab(
         return ptyConnectorFactory.decorate(TelnetStreamPtyConnector(telnet, telnet.charset, characterMode))
     }
 
-
-    override fun loginScriptsPtyConnector(host: Host, ptyConnector: PtyConnector): PtyConnector {
-        if (host.authentication.type != AuthenticationType.Password) {
-            return ptyConnector
-        }
-
-        val scripts = mutableListOf<LoginScript>()
-        scripts.add(
-            LoginScript(
-                expect = "login:",
-                send = host.username,
-                regex = false,
-                matchCase = false
-            )
-        )
-
-        scripts.add(
-            LoginScript(
-                expect = "password:",
-                send = host.authentication.password,
-                regex = false,
-                matchCase = false
-            )
-        )
-
-        return super.loginScriptsPtyConnector(
-            host.copy(options = host.options.copy(loginScripts = scripts)),
-            ptyConnector
-        )
-    }
 
 }
