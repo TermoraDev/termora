@@ -2,6 +2,9 @@ name: Linux
 
 on: [ push, pull_request ]
 
+env:
+  DOCKER_NAME: hstyi/jbr:21.0.7b1038.58
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -22,9 +25,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-gradlexyz-
 
-      - name: Build Docker image
-        run: docker build -t debianjbr src/test/resources/deb/
-
       - name: Create docker-run.sh helper script
         shell: bash
         run: |
@@ -36,19 +36,19 @@ jobs:
 
       - name: Compile
         shell: bash
-        run: ./docker-run.sh debianjbr bash -c './gradlew :check-license && ./gradlew classes -x test'
+        run: ./docker-run.sh $DOCKER_NAME bash -c './gradlew :check-license && ./gradlew classes -x test'
 
       - name: JLink
         shell: bash
-        run: ./docker-run.sh debianjbr bash -c './gradlew :jar :copy-dependencies :plugins:migration:build :jlink'
+        run: ./docker-run.sh $DOCKER_NAME bash -c './gradlew :jar :copy-dependencies :plugins:migration:build :jlink'
 
       - name: Package Deb
         shell: bash
-        run: ./docker-run.sh -e TERMORA_TYPE=deb debianjbr bash -c './gradlew :jpackage && ./gradlew :dist'
+        run: ./docker-run.sh -e TERMORA_TYPE=deb $DOCKER_NAME bash -c './gradlew :jpackage && ./gradlew :dist'
 
       - name: Package AppImage
         shell: bash
-        run: ./docker-run.sh --device /dev/fuse --cap-add SYS_ADMIN --security-opt apparmor:unconfined debianjbr bash -c 'rm -rf build/jpackage && ./gradlew :jpackage && ./gradlew :dist'
+        run: ./docker-run.sh --device /dev/fuse --cap-add SYS_ADMIN --security-opt apparmor:unconfined $DOCKER_NAME bash -c 'rm -rf build/jpackage && ./gradlew :jpackage && ./gradlew :dist'
 
       - name: Make ~/.gradle world-writable
         shell: bash
