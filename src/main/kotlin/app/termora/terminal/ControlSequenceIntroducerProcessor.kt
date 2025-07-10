@@ -342,7 +342,10 @@ class ControlSequenceIntroducerProcessor(terminal: Terminal, reader: TerminalRea
                 }
 
                 // 设置滚动区域
-                terminal.getTerminalModel().setData(DataKey.ScrollingRegion, ScrollingRegion(top, bottom))
+                terminal.getTerminalModel().setData(
+                    DataKey.ScrollingRegion,
+                    ScrollingRegion(top, min(bottom, terminalModel.getRows()))
+                )
 
                 if (log.isDebugEnabled) {
                     log.debug("Set Scrolling Region [${top}; ${bottom}]")
@@ -713,6 +716,13 @@ class ControlSequenceIntroducerProcessor(terminal: Terminal, reader: TerminalRea
                     if (log.isDebugEnabled) {
                         log.debug("Eight Bit Input $enable")
                     }
+                }
+
+                // Alternate Screen Buffer
+                47, 1047 -> {
+                    // clear selection
+                    terminal.getSelectionModel().clearSelection()
+                    terminalModel.setData(DataKey.AlternateScreenBuffer, enable)
                 }
 
                 // Alternate Screen Buffer
