@@ -8,6 +8,8 @@ env:
   # 只有发布版本时才需要公证
   TERMORA_MAC_NOTARY: "${{ startsWith(github.event.head_commit.message, 'release: ') && github.repository == 'TermoraDev/termora' }}"
   TERMORA_MAC_NOTARY_KEYCHAIN_PROFILE: ${{ secrets.TERMORA_MAC_NOTARY_KEYCHAIN_PROFILE }}
+  JBR_MAJOR: 21.0.7
+  JBR_PATCH: b1038.58
 
 jobs:
   build:
@@ -60,7 +62,7 @@ jobs:
           else
             ARCH="x64"
           fi
-          wget -q -O $RUNNER_TEMP/java_package.tar.gz https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk-21.0.7-osx-$ARCH-b1034.51.tar.gz
+          wget -q -O $RUNNER_TEMP/java_package.tar.gz https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk-${{ env.JBR_MAJOR }}-osx-$ARCH-${{ env.JBR_PATCH }}.tar.gz
 
       # install jdk
       - name: Installing Java
