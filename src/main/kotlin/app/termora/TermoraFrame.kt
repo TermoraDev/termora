@@ -72,6 +72,7 @@ class TermoraFrame : JFrame(), DataProvider {
 
         // 快捷键变动时重新监听
         KeymapRefresher.getInstance().addRefreshListener { initKeymap() }
+            .let { Disposer.register(windowScope, it) }
 
         // FindEverywhere
         dynamicExtensionHandler
