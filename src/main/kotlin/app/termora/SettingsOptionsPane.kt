@@ -839,7 +839,7 @@ class SettingsOptionsPane : OptionsPane() {
         private fun p(): JPanel {
             val layout = FormLayout(
                 "left:pref, $FORM_MARGIN, default:grow",
-                "pref, 20dlu, pref, 4dlu, pref, 4dlu, pref, 4dlu, pref"
+                "pref, 20dlu, pref, 4dlu, pref, 4dlu, pref, 4dlu, pref, 4dlu, pref"
             )
 
 
@@ -848,7 +848,7 @@ class SettingsOptionsPane : OptionsPane() {
 
             val branch = if (Application.isUnknownVersion()) "main" else Application.getVersion()
 
-            return FormBuilder.create().padding("$FORM_MARGIN, $FORM_MARGIN, $FORM_MARGIN, $FORM_MARGIN")
+            val builder = FormBuilder.create().padding("$FORM_MARGIN, $FORM_MARGIN, $FORM_MARGIN, $FORM_MARGIN")
                 .layout(layout).debug(false)
                 .add(I18n.getString("termora.settings.about.termora", Application.getVersion()))
                 .xyw(1, rows, 3, "center, fill").apply { rows += step }
@@ -870,8 +870,14 @@ class SettingsOptionsPane : OptionsPane() {
                         "Open-source software"
                     )
                 ).xy(3, rows).apply { rows += step }
-                .build()
 
+            if (I18n.isChinaMainland()) {
+                builder.add("交流群:").xy(1, rows)
+                    .add(createHyperlink("https://www.termora.cn/muted/discussion-group", "Discussion Group"))
+                    .xy(3, rows).apply { rows += step }
+            }
+
+            return builder.build()
 
         }
 
