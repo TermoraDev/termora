@@ -2,6 +2,7 @@ package app.termora.plugin
 
 import app.termora.Application
 import app.termora.ApplicationScope
+import app.termora.FramePlugin
 import app.termora.account.AccountPlugin
 import app.termora.plugin.internal.badge.BadgePlugin
 import app.termora.plugin.internal.extension.DynamicExtensionPlugin
@@ -111,6 +112,8 @@ internal class PluginManager private constructor() {
         plugins.add(PluginDescriptor(BadgePlugin(), origin = PluginOrigin.Internal, version = version))
         // update plugin
         plugins.add(PluginDescriptor(UpdatePlugin(), origin = PluginOrigin.Internal, version = version))
+        // frame plugin
+        plugins.add(PluginDescriptor(FramePlugin(), origin = PluginOrigin.Internal, version = version))
 
         // ssh plugin
         plugins.add(PluginDescriptor(SSHInternalPlugin(), origin = PluginOrigin.Internal, version = version))

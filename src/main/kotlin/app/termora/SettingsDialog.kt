@@ -9,7 +9,7 @@ import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.UIManager
 
-class SettingsDialog(owner: Window) : DialogWrapper(owner) {
+internal class SettingsDialog(owner: Window) : DialogWrapper(owner) {
     private val optionsPane = SettingsOptionsPane()
     private val properties get() = DatabaseManager.getInstance().properties
 

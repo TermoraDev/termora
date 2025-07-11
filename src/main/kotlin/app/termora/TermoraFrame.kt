@@ -2,8 +2,6 @@ package app.termora
 
 
 import app.termora.actions.*
-import app.termora.database.DatabaseChangedExtension
-import app.termora.database.DatabasePropertiesChangedExtension
 import app.termora.findeverywhere.FindEverywhereProvider
 import app.termora.findeverywhere.FindEverywhereProviderExtension
 import app.termora.findeverywhere.FindEverywhereResult
@@ -73,12 +71,8 @@ class TermoraFrame : JFrame(), DataProvider {
         }
 
         // 快捷键变动时重新监听
-        val refresher = KeymapRefresher()
-        dynamicExtensionHandler.register(DatabasePropertiesChangedExtension::class.java, refresher)
+        KeymapRefresher.getInstance().addRefreshListener { initKeymap() }
             .let { Disposer.register(windowScope, it) }
-        dynamicExtensionHandler.register(DatabaseChangedExtension::class.java, refresher)
-            .let { Disposer.register(windowScope, it) }
-
 
         // FindEverywhere
         dynamicExtensionHandler
@@ -418,29 +412,6 @@ class TermoraFrame : JFrame(), DataProvider {
         return object : MouseAdapter() {}
     }
 
-    private inner class KeymapRefresher : DatabasePropertiesChangedExtension, DatabaseChangedExtension {
-
-        override fun onDataChanged(
-            id: String,
-            type: String,
-            action: DatabaseChangedExtension.Action,
-            source: DatabaseChangedExtension.Source
-        ) {
-            if (type != "Keymap") return
-            refresh()
-        }
-
-        override fun onPropertyChanged(name: String, key: String, value: String) {
-            if (name != "Setting.Properties") return
-            if (key != "Keymap.Active") return
-            refresh()
-        }
-
-        private fun refresh() {
-            initKeymap()
-        }
-
-    }
 
     private inner class RedirectAnActionEvent(
         source: Any,
