@@ -480,10 +480,6 @@ tasks.register<Exec>("jpackage") {
     }
 
     if (os.isWindows) {
-        arguments.add("--win-dir-chooser")
-        arguments.add("--win-shortcut")
-        arguments.add("--win-shortcut-prompt")
-        arguments.addAll(listOf("--win-upgrade-uuid", "E1D93CAD-5BF8-442E-93BA-6E90DE601E4C"))
         arguments.addAll(listOf("--icon", "${projectDir.absolutePath}/src/main/resources/icons/termora.ico"))
     }
 
@@ -496,7 +492,7 @@ tasks.register<Exec>("jpackage") {
     if (os.isMacOsX) {
         arguments.add("dmg")
     } else if (os.isWindows) {
-        arguments.add("msi")
+        arguments.add("app-image")
     } else if (os.isLinux) {
         arguments.add(if (isDeb) "deb" else "app-image")
         if (isDeb) {
@@ -568,7 +564,7 @@ tasks.register("check-license") {
  * 创建 zip、msi
  */
 fun packOnWindows(distributionDir: Directory, finalFilenameWithoutExtension: String, projectName: String) {
-    val dir = layout.buildDirectory.dir("jpackage/images/win-msi.image/").get().asFile
+    val dir = layout.buildDirectory.dir("distributions").get().asFile
     val cfg = FileUtils.getFile(dir, projectName, "app", "${projectName}.cfg")
     val configText = cfg.readText()
 
@@ -593,21 +589,12 @@ fun packOnWindows(distributionDir: Directory, finalFilenameWithoutExtension: Str
             "/DMyAppVersion=${appVersion}",
             "/DMyOutputDir=${distributionDir.asFile.absolutePath}",
             "/DMySetupIconFile=${FileUtils.getFile(projectDir, "src", "main", "resources", "icons", "termora.ico")}",
-            "/DMySourceDir=${layout.buildDirectory.dir("jpackage/images/win-msi.image/${projectName}").get().asFile}",
+            "/DMySourceDir=${FileUtils.getFile(dir, projectName).absolutePath}",
             "/F${finalFilenameWithoutExtension}",
             FileUtils.getFile(projectDir, "src", "main", "resources", "termora.iss")
         )
     }
 
-    // msi
-    exec {
-        commandLine(
-            "cmd", "/c", "move",
-            "${projectName}-${appVersion}.msi",
-            "${finalFilenameWithoutExtension}.msi"
-        )
-        workingDir = distributionDir.asFile
-    }
 }
 
 /**

@@ -3,7 +3,8 @@ name: Linux
 on: [ push, pull_request ]
 
 env:
-  DOCKER_NAME: hstyi/jbr:21.0.7b1038.58
+  JBR_MAJOR: 21.0.7
+  JBR_PATCH: b1038.58
 
 jobs:
   build:
@@ -24,6 +25,10 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-gradlexyz-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             ${{ runner.os }}-${{ runner.arch }}-gradlexyz-
+
+      - name: Set dynamic DOCKER_NAME
+        run: |
+          echo "DOCKER_NAME=hstyi/jbr:${{ env.JBR_MAJOR }}${{ env.JBR_PATCH }}" >> $GITHUB_ENV
 
       - name: Create docker-run.sh helper script
         shell: bash

@@ -1,14 +1,30 @@
-name: Windows x86-64
+name: Windows
 
 on: [ push, pull_request ]
 
+env:
+  JBR_MAJOR: 21.0.7
+  JBR_PATCH: b1038.58
+
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ windows-11-arm, windows-latest ]
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Set architecture
+        id: set-arch
+        run: |
+          if ($env:PROCESSOR_ARCHITECTURE -eq "ARM64") {
+            echo "ARCH=aarch64" >> $env:GITHUB_ENV
+          } else {
+            echo "ARCH=x64" >> $env:GITHUB_ENV
+          }
 
       - name: Install zip
         run: |
@@ -21,9 +37,13 @@ jobs:
 
       - name: Installing Java
         run: |
-          curl -s --output ${{ runner.temp }}\java_package.zip -L https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk-21.0.7-windows-x64-b1034.51.zip
-          unzip -q ${{ runner.temp }}\java_package.zip -d ${{ runner.temp }}\jbr
-          echo "JAVA_HOME=${{ runner.temp }}\jbr\jbrsdk-21.0.7-windows-x64-b1034.51" >> $env:GITHUB_ENV
+          $zipPath = "${{ runner.temp }}\java_package.zip"
+          $extractDir = "${{ runner.temp }}\jbr"
+          $url = "https://cache-redirector.jetbrains.com/intellij-jbr/jbrsdk-${{ env.JBR_MAJOR }}-windows-${{ env.ARCH }}-${{ env.JBR_PATCH }}.zip"
+          curl -s --output $zipPath -L $url
+          unzip -q $zipPath -d $extractDir
+          $jbrDir = Get-ChildItem $extractDir | Select-Object -First 1
+          echo "JAVA_HOME=$($jbrDir.FullName)" >> $env:GITHUB_ENV
 
       - uses: actions/cache@v4
         with:
@@ -49,7 +69,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: termora-windows-x86-64
+          name: termora-windows-${{ runner.arch }}
           path: |
             build/distributions/*.zip
             build/distributions/*.exe
