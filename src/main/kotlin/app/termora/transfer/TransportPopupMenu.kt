@@ -22,6 +22,8 @@ import javax.swing.JMenu
 import javax.swing.JMenuItem
 import javax.swing.JOptionPane
 import javax.swing.event.EventListenerList
+import javax.swing.event.PopupMenuEvent
+import javax.swing.event.PopupMenuListener
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.name
 
@@ -39,6 +41,8 @@ internal class TransportPopupMenu(
     private val transferMenu = JMenuItem(I18n.getString("termora.transport.table.contextmenu.transfer"))
     private val editMenu = JMenuItem(I18n.getString("termora.transport.table.contextmenu.edit"))
     private val copyPathMenu = JMenuItem(I18n.getString("termora.transport.table.contextmenu.copy-path"))
+    private val copyMenu = JMenuItem(I18n.getString("termora.copy"))
+    private val pasteMenu = JMenuItem(I18n.getString("termora.paste"))
     private val openInFinderMenu = JMenuItem(I18n.getString("termora.transport.table.contextmenu.open-in-folder"))
     private val renameMenu = JMenuItem(I18n.getString("termora.transport.table.contextmenu.rename"))
     private val deleteMenu = JMenuItem(I18n.getString("termora.transport.table.contextmenu.delete"))
@@ -81,6 +85,9 @@ internal class TransportPopupMenu(
 
         add(transferMenu)
         add(editMenu)
+        addSeparator()
+        add(copyMenu)
+        add(pasteMenu)
         addSeparator()
         add(copyPathMenu)
         if (fileSystem?.isLocallyFileSystem() == true) {
@@ -133,6 +140,7 @@ internal class TransportPopupMenu(
         renameMenu.isEnabled = hasParent.not() && files.size == 1
         deleteMenu.isEnabled = hasParent.not() && files.isNotEmpty()
         changePermissionsMenu.isVisible = hasParent.not() && fileSystem is SftpFileSystem && files.size == 1
+        copyMenu.isEnabled = hasParent.not() && files.isNotEmpty()
 
         for ((item, mnemonic) in mnemonics) {
             item.text = "${item.text}(${KeyEvent.getKeyText(mnemonic)})"
@@ -166,6 +174,22 @@ internal class TransportPopupMenu(
             sb.deleteCharAt(sb.length - 1)
             toolkit.systemClipboard.setContents(StringSelection(sb.toString()), null)
         }
+        copyMenu.addActionListener { fireActionPerformed(it, ActionCommand.Copy) }
+        pasteMenu.addActionListener { fireActionPerformed(it, ActionCommand.Paste) }
+
+        addPopupMenuListener(object : PopupMenuListener {
+            override fun popupMenuWillBecomeVisible(e: PopupMenuEvent?) {
+                pasteMenu.isEnabled = toolkit.systemClipboard
+                    .isDataFlavorAvailable(TransportPanel.TransferTransferable.FLAVOR)
+            }
+
+            override fun popupMenuWillBecomeInvisible(e: PopupMenuEvent?) {
+            }
+
+            override fun popupMenuCanceled(e: PopupMenuEvent?) {
+            }
+
+        })
     }
 
     fun fireActionPerformed(evt: ActionEvent, command: ActionCommand) {
@@ -241,6 +265,8 @@ internal class TransportPopupMenu(
         ChangePermissions,
         Rmrf,
         Reconnect,
+        Paste,
+        Copy,
     }
 
     data class ChangePermission(val permissions: Set<PosixFilePermission>, val includeSubFolder: Boolean)

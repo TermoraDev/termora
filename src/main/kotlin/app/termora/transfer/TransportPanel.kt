@@ -467,6 +467,15 @@ internal class TransportPanel(
             }
         })
 
+        table.actionMap.put("copy", object : AbstractAction() {
+            override fun actionPerformed(e: ActionEvent) {
+                val rows = table.selectedRows.map { sorter.convertRowIndexToModel(it) }.toTypedArray()
+                val files = rows.map { model.getPath(it) to model.getAttributes(it) }
+                if (files.any { it.second.isParent }) return
+                toolkit.systemClipboard.setContents(TransferTransferable(panel, files), null)
+            }
+        })
+
         table.actionMap.put("Reload", object : AbstractAction() {
             override fun actionPerformed(e: ActionEvent) {
                 reload()
@@ -514,7 +523,6 @@ internal class TransportPanel(
         data class TransferData(
             // true 就是本地拖拽上传
             val locally: Boolean,
-            val row: Int,
             val insertRow: Boolean,
             val workdir: Path,
             val files: List<Pair<Path, Attributes>>
@@ -540,18 +548,22 @@ internal class TransportPanel(
 
             private fun getTransferData(support: TransferSupport, load: Boolean): TransferData? {
                 val workdir = workdir ?: return null
-                val dropLocation = support.dropLocation as? JTable.DropLocation ?: return null
-                val row = if (dropLocation.isInsertRow) 0 else sorter.convertRowIndexToModel(dropLocation.row)
-                if (dropLocation.isInsertRow.not() && dropLocation.column != TransportTableModel.COLUMN_NAME) return null
-                if (dropLocation.isInsertRow.not() && model.getAttributes(row).isDirectory.not()) return null
-                if (hasParent && dropLocation.row == 0) return null
                 val paths = mutableListOf<Pair<Path, Attributes>>()
                 var locally = false
 
                 if (support.isDataFlavorSupported(TransferTransferable.FLAVOR)) {
                     val transferTransferable = support.transferable.getTransferData(TransferTransferable.FLAVOR)
                             as? TransferTransferable ?: return null
-                    if (transferTransferable.component == panel) return null
+                    if (support.isDrop) {
+                        if (transferTransferable.component == panel) return null
+                    } else {
+                        // 如果在一个目录，那么是不允许粘贴的
+                        for (pair in transferTransferable.files) {
+                            if (pair.first.parent?.pathString == workdir.pathString) {
+                                return null
+                            }
+                        }
+                    }
                     paths.addAll(transferTransferable.files)
                 } else if (support.isDataFlavorSupported(DataFlavor.javaFileListFlavor)) {
                     if (loader.isLoaded() && loader.getSyncTransportSupport().getFileSystem().isLocallyFileSystem())
@@ -569,13 +581,27 @@ internal class TransportPanel(
                     return null
                 }
 
+                if (support.isDrop) {
+                    val dropLocation = support.dropLocation as? JTable.DropLocation ?: return null
+                    val row = if (dropLocation.isInsertRow) 0 else sorter.convertRowIndexToModel(dropLocation.row)
+                    if (dropLocation.isInsertRow.not() && dropLocation.column != TransportTableModel.COLUMN_NAME) return null
+                    if (dropLocation.isInsertRow.not() && model.getAttributes(row).isDirectory.not()) return null
+                    if (hasParent && dropLocation.row == 0) return null
+                    return TransferData(
+                        locally = locally,
+                        insertRow = dropLocation.isInsertRow,
+                        workdir = if (dropLocation.isInsertRow) workdir else model.getPath(row),
+                        files = paths
+                    )
+                }
+
                 return TransferData(
                     locally = locally,
-                    row = row,
-                    insertRow = dropLocation.isInsertRow,
-                    workdir = if (dropLocation.isInsertRow) workdir else model.getPath(row),
+                    insertRow = false,
+                    workdir = workdir,
                     files = paths
                 )
+
             }
 
             override fun getSourceActions(c: JComponent?): Int {
@@ -899,7 +925,7 @@ internal class TransportPanel(
         }
     }
 
-    private class TransferTransferable(val component: TransportPanel, val files: List<Pair<Path, Attributes>>) :
+    class TransferTransferable(val component: TransportPanel, val files: List<Pair<Path, Attributes>>) :
         Transferable {
         companion object {
             val FLAVOR = DataFlavor("termora/transfers", "Termora transfers")
@@ -1041,7 +1067,6 @@ internal class TransportPanel(
     }
 
     private inner class PopupMenuActionListener(private val files: List<Pair<Path, Attributes>>) : ActionListener {
-        @Suppress("CascadeIf")
         override fun actionPerformed(e: ActionEvent) {
             val actionCommand = TransportPopupMenu.ActionCommand.valueOf(e.actionCommand)
             if (actionCommand == TransportPopupMenu.ActionCommand.Transfer) {
@@ -1089,6 +1114,12 @@ internal class TransportPanel(
                         Files.setPosixFilePermissions(path, c.permissions)
                     }
                 }
+            } else if (actionCommand == TransportPopupMenu.ActionCommand.Copy) {
+                val transferable = TransferTransferable(panel, files)
+                toolkit.systemClipboard.setContents(transferable, null)
+            } else if (actionCommand == TransportPopupMenu.ActionCommand.Paste) {
+                val transferable = toolkit.systemClipboard.getContents(null) ?: return
+                table.transferHandler.importData(TransferHandler.TransferSupport(table, transferable))
             }
         }
 
