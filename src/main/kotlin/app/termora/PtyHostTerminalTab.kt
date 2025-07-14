@@ -1,6 +1,7 @@
 package app.termora
 
 import app.termora.actions.DataProviders
+import app.termora.plugin.internal.AltKeyModifier
 import app.termora.terminal.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.swing.Swing
@@ -45,6 +46,9 @@ abstract class PtyHostTerminalTab(
 
                 // 开启 reader
                 startPtyConnectorReader()
+
+                // 修饰
+                terminalKeyModifiers()
 
                 // 启动命令
                 if (host.options.startupCommand.isNotBlank()) {
@@ -153,6 +157,15 @@ abstract class PtyHostTerminalTab(
 
     open fun sendStartupCommand(ptyConnector: PtyConnector, bytes: ByteArray) {
         ptyConnector.write(bytes)
+    }
+
+    open fun terminalKeyModifiers() {
+        val altModifier = host.options.extras["altModifier"]
+        if (altModifier == AltKeyModifier.CharactersPrecededByESC.name) {
+            terminalModel.setData(DataKey.AltModifier, AltKeyModifier.CharactersPrecededByESC)
+        } else {
+            terminalModel.setData(DataKey.AltModifier, AltKeyModifier.EightBit)
+        }
     }
 
     override fun canReconnect(): Boolean {

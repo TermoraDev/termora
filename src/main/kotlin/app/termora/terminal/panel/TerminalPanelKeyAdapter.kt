@@ -2,7 +2,9 @@ package app.termora.terminal.panel
 
 import app.termora.keymap.KeyShortcut
 import app.termora.keymap.KeymapManager
+import app.termora.plugin.internal.AltKeyModifier
 import app.termora.terminal.ControlCharacters
+import app.termora.terminal.DataKey
 import app.termora.terminal.Terminal
 import com.formdev.flatlaf.util.SystemInfo
 import org.slf4j.LoggerFactory
@@ -89,8 +91,10 @@ class TerminalPanelKeyAdapter(
             return
         }
 
+        // https://github.com/TermoraDev/termora/issues/865
+        val modifier = terminal.getTerminalModel().getData(DataKey.AltModifier, AltKeyModifier.EightBit)
         // https://github.com/TermoraDev/termora/issues/331
-        if (isAltPressedOnly(e) && Character.isDefined(e.keyChar)) {
+        if (isAltPressedOnly(e) && Character.isDefined(e.keyChar) && modifier == AltKeyModifier.CharactersPrecededByESC) {
             val c = String(charArrayOf(ASCII_ESC, simpleMapKeyCodeToChar(e)))
             writer.write(TerminalWriter.WriteRequest.fromBytes(c.toByteArray(writer.getCharset())))
             // scroll to bottom

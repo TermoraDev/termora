@@ -2,9 +2,10 @@ package app.termora.plugin.internal.telnet
 
 import app.termora.*
 import app.termora.account.AccountOwner
+import app.termora.plugin.internal.AltKeyModifier
 import app.termora.plugin.internal.BasicProxyOption
+import app.termora.plugin.internal.BasicTerminalOption
 import com.formdev.flatlaf.FlatClientProperties
-import com.formdev.flatlaf.extras.components.FlatTabbedPane
 import com.formdev.flatlaf.ui.FlatTextBorder
 import com.jgoodies.forms.builder.FormBuilder
 import com.jgoodies.forms.layout.FormLayout
@@ -12,7 +13,6 @@ import java.awt.BorderLayout
 import java.awt.KeyboardFocusManager
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
-import java.nio.charset.Charset
 import javax.swing.*
 
 class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPane() {
@@ -20,7 +20,16 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
 
     // telnet 不支持代理密码
     private val proxyOption = BasicProxyOption(authenticationTypes = listOf())
-    private val terminalOption = TerminalOption()
+    private val terminalOption = BasicTerminalOption().apply {
+        showCharsetComboBox = true
+        showBackspaceComboBox = true
+        showStartupCommandTextField = true
+        showCharacterAtATimeTextField = true
+        showEnvironmentTextArea = true
+        showLoginScripts = true
+        init()
+    }
+
 
     init {
         addOption(generalOption)
@@ -58,7 +67,9 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
             serialComm = serialComm,
             extras = mutableMapOf(
                 "backspace" to (terminalOption.backspaceComboBox.selectedItem as Backspace).name,
-                "character-at-a-time" to (terminalOption.characterAtATimeTextField.selectedItem?.toString() ?: "false")
+                "character-at-a-time" to (terminalOption.characterAtATimeTextField.selectedItem?.toString() ?: "false"),
+                "altModifier" to (terminalOption.altModifierComboBox.selectedItem?.toString()
+                    ?: AltKeyModifier.EightBit.name),
             )
         )
 
@@ -225,108 +236,6 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
 
     }
 
-
-    private inner class TerminalOption : JPanel(BorderLayout()), Option {
-        val charsetComboBox = JComboBox<String>()
-        val backspaceComboBox = JComboBox<Backspace>()
-        val startupCommandTextField = OutlineTextField()
-        val characterAtATimeTextField = YesOrNoComboBox()
-        val environmentTextArea = FixedLengthTextArea(2048)
-        val loginScripts = mutableListOf<LoginScript>()
-
-        private val loginScriptPanel = LoginScriptPanel(loginScripts)
-
-        init {
-            initView()
-            initEvents()
-        }
-
-        private fun initView() {
-
-            backspaceComboBox.addItem(Backspace.Delete)
-            backspaceComboBox.addItem(Backspace.Backspace)
-            backspaceComboBox.addItem(Backspace.VT220)
-
-            characterAtATimeTextField.selectedItem = false
-
-            environmentTextArea.setFocusTraversalKeys(
-                KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,
-                KeyboardFocusManager.getCurrentKeyboardFocusManager()
-                    .getDefaultFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS)
-            )
-            environmentTextArea.setFocusTraversalKeys(
-                KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS,
-                KeyboardFocusManager.getCurrentKeyboardFocusManager()
-                    .getDefaultFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS)
-            )
-
-            environmentTextArea.rows = 8
-            environmentTextArea.lineWrap = true
-            environmentTextArea.border = BorderFactory.createEmptyBorder(4, 4, 4, 4)
-
-            for (e in Charset.availableCharsets()) {
-                charsetComboBox.addItem(e.key)
-            }
-
-            charsetComboBox.selectedItem = "UTF-8"
-
-            val tabbed = FlatTabbedPane()
-            tabbed.styleMap = mapOf(
-                "focusColor" to DynamicColor("TabbedPane.background"),
-                "hoverColor" to DynamicColor("TabbedPane.background"),
-            )
-            tabbed.tabHeight = UIManager.getInt("TabbedPane.tabHeight") - 4
-            putClientProperty("ContentPanelBorder", BorderFactory.createEmptyBorder())
-            tabbed.addTab(I18n.getString("termora.new-host.general"), getCenterComponent())
-            tabbed.addTab(I18n.getString("termora.new-host.terminal.login-scripts"), loginScriptPanel)
-            add(tabbed, BorderLayout.CENTER)
-
-        }
-
-        private fun initEvents() {
-
-        }
-
-
-        override fun getIcon(isSelected: Boolean): Icon {
-            return Icons.terminal
-        }
-
-        override fun getTitle(): String {
-            return I18n.getString("termora.new-host.terminal")
-        }
-
-        override fun getJComponent(): JComponent {
-            return this
-        }
-
-        private fun getCenterComponent(): JComponent {
-            val layout = FormLayout(
-                "left:pref, $FORM_MARGIN, default:grow",
-                "pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref"
-            )
-
-            var rows = 1
-            val step = 2
-            val panel = FormBuilder.create().layout(layout)
-                .border(BorderFactory.createEmptyBorder(6, 8, 6, 8))
-                .add("${I18n.getString("termora.new-host.terminal.encoding")}:").xy(1, rows)
-                .add(charsetComboBox).xy(3, rows).apply { rows += step }
-                .add("${I18n.getString("termora.new-host.terminal.backspace")}:").xy(1, rows)
-                .add(backspaceComboBox).xy(3, rows).apply { rows += step }
-                .add("${I18n.getString("termora.new-host.terminal.character-mode")}:").xy(1, rows)
-                .add(characterAtATimeTextField).xy(3, rows).apply { rows += step }
-                .add("${I18n.getString("termora.new-host.terminal.startup-commands")}:").xy(1, rows)
-                .add(startupCommandTextField).xy(3, rows).apply { rows += step }
-                .add("${I18n.getString("termora.new-host.terminal.env")}:").xy(1, rows)
-                .add(JScrollPane(environmentTextArea).apply { border = FlatTextBorder() }).xy(3, rows)
-                .apply { rows += step }
-                .build()
-
-
-            return panel
-        }
-    }
 
     enum class Backspace {
         /**
