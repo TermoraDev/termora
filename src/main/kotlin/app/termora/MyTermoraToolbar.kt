@@ -166,6 +166,7 @@ internal class MyTermoraToolbar(private val windowScope: WindowScope, private va
                 if (action is StateAction) {
                     button.isSelected = action.isSelected(windowScope)
                 }
+                button.icon = action.getValue(Action.SMALL_ICON) as? Icon
             }
 
             override fun dispose() {

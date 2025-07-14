@@ -1,6 +1,10 @@
 package app.termora.terminal
 
-class TextProcessor(private val terminal: Terminal, private val reader: TerminalReader) : Processor {
+internal class TextProcessor(private val terminal: Terminal, private val reader: TerminalReader) : Processor {
+    companion object {
+        val Written = DataKey(String::class)
+    }
+
     private val sb = StringBuilder()
     private val terminals = setOf(
         ControlCharacters.ESC, ControlCharacters.BEL, ControlCharacters.CR, ControlCharacters.LF,
@@ -31,7 +35,9 @@ class TextProcessor(private val terminal: Terminal, private val reader: Terminal
     }
 
     private fun process() {
-        terminal.getDocument().write(sb.toString())
+        val text = sb.toString()
+        terminal.getDocument().write(text)
+        terminal.getTerminalModel().setData(Written, text)
         sb.clear()
     }
 }

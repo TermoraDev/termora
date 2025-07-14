@@ -7,14 +7,24 @@ import app.termora.database.DatabaseManager
 import com.formdev.flatlaf.extras.components.FlatPopupMenu
 import com.formdev.flatlaf.util.SystemInfo
 import org.apache.commons.io.FileUtils
+import org.slf4j.LoggerFactory
 import java.awt.Window
 import java.io.File
 import java.time.LocalDate
-import javax.swing.JComponent
-import javax.swing.JFileChooser
-import javax.swing.SwingUtilities
+import javax.swing.*
 
-class TerminalLoggerAction : AnAction(I18n.getString("termora.terminal-logger"), Icons.listFiles) {
+class TerminalLoggerAction private constructor() :
+    AnAction(I18n.getString("termora.terminal-logger"), Icons.listFiles) {
+
+    companion object {
+        fun getInstance(): TerminalLoggerAction {
+            return ApplicationScope.forApplicationScope()
+                .getOrCreate(TerminalLoggerAction::class) { TerminalLoggerAction() }
+        }
+
+        private val log = LoggerFactory.getLogger(TerminalLoggerAction::class.java)
+    }
+
     private val properties get() = DatabaseManager.getInstance().properties
 
     /**
@@ -26,6 +36,12 @@ class TerminalLoggerAction : AnAction(I18n.getString("termora.terminal-logger"),
             // firePropertyChange
             putValue("Recording", value)
             properties.putString("terminal.logger.isRecording", value.toString())
+        }
+
+    var isPlainText = properties.getString("terminal.logger.isPlainText")?.toBoolean() ?: false
+        private set(value) {
+            field = value
+            properties.putString("terminal.logger.isPlainText", value.toString())
         }
 
     init {
@@ -50,6 +66,19 @@ class TerminalLoggerAction : AnAction(I18n.getString("termora.terminal-logger"),
                 smallIcon = Icons.dotListFiles
             }
         }
+
+        val settingMenu = JMenu(I18n.getString("termora.setting"))
+        val plainText = settingMenu.add(JCheckBoxMenuItem(I18n.getString("termora.terminal-logger.plain-text")))
+        val styledText = settingMenu.add(JCheckBoxMenuItem(I18n.getString("termora.terminal-logger.styled-text")))
+        plainText.isSelected = isPlainText
+        styledText.isSelected = plainText.isSelected.not()
+        plainText.isEnabled = isRecording.not()
+        styledText.isEnabled = plainText.isEnabled
+
+        plainText.addActionListener { isPlainText = plainText.isSelected }
+        styledText.addActionListener { isPlainText = styledText.isSelected.not() }
+
+        popupMenu.add(settingMenu)
 
         popupMenu.addSeparator()
 
