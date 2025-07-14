@@ -118,9 +118,11 @@ class TermoraRestarter {
             Restarter.restart(commands.toTypedArray())
         }
 
-        for (window in TermoraFrameManager.getInstance().getWindows()) {
+        val instance = TermoraFrameManager.getInstance()
+        for (window in instance.getWindows()) {
             window.dispose()
         }
+        Disposer.dispose(instance)
     }
 
 
