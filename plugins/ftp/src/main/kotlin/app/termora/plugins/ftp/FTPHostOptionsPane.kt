@@ -14,6 +14,7 @@ import java.awt.Component
 import java.awt.KeyboardFocusManager
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
+import java.awt.event.ItemEvent
 import java.nio.charset.Charset
 import javax.swing.*
 
@@ -246,6 +247,12 @@ class FTPHostOptionsPane : OptionsPane() {
                     removeComponentListener(this)
                 }
             })
+
+            authenticationTypeComboBox.addItemListener {
+                if (it.stateChange == ItemEvent.SELECTED) {
+                    passwordTextField.isEnabled = authenticationTypeComboBox.selectedItem == AuthenticationType.Password
+                }
+            }
         }
 
         override fun getIcon(isSelected: Boolean): Icon {
@@ -378,7 +385,7 @@ class FTPHostOptionsPane : OptionsPane() {
         }
     }
 
-     enum class PassiveMode {
+    enum class PassiveMode {
         Local,
         Remote,
     }
