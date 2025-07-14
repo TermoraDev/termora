@@ -14,6 +14,7 @@ import java.awt.KeyboardFocusManager
 import java.awt.Window
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
+import java.awt.event.ItemEvent
 import javax.swing.*
 
 internal open class RDPHostOptionsPane : OptionsPane() {
@@ -223,6 +224,12 @@ internal open class RDPHostOptionsPane : OptionsPane() {
                     removeComponentListener(this)
                 }
             })
+
+            authenticationTypeComboBox.addItemListener {
+                if (it.stateChange == ItemEvent.SELECTED) {
+                    passwordTextField.isEnabled = authenticationTypeComboBox.selectedItem == AuthenticationType.Password
+                }
+            }
         }
 
 
