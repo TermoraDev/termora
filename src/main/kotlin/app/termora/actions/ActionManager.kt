@@ -53,6 +53,7 @@ class ActionManager : org.jdesktop.swingx.action.ActionManager() {
         addAction(TerminalClearScreenAction.CLEAR_SCREEN, TerminalClearScreenAction())
         addAction(OpenLocalTerminalAction.LOCAL_TERMINAL, OpenLocalTerminalAction())
         addAction(TerminalSelectAllAction.SELECT_ALL, TerminalSelectAllAction())
+        addAction(TerminalFocusModeAction.FocusMode, TerminalFocusModeAction.getInstance())
 
         addAction(TerminalZoomInAction.ZOOM_IN, TerminalZoomInAction())
         addAction(TerminalZoomOutAction.ZOOM_OUT, TerminalZoomOutAction())
