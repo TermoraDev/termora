@@ -4,13 +4,14 @@ import app.termora.*
 import app.termora.account.AccountOwner
 import app.termora.keymgr.KeyManager
 import app.termora.keymgr.KeyManagerDialog
+import app.termora.plugin.internal.AltKeyModifier
 import app.termora.plugin.internal.BasicProxyOption
+import app.termora.plugin.internal.BasicTerminalOption
 import app.termora.tree.Filter
 import app.termora.tree.HostTreeNode
 import app.termora.tree.NewHostTreeDialog
 import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.extras.components.FlatComboBox
-import com.formdev.flatlaf.extras.components.FlatTabbedPane
 import com.formdev.flatlaf.ui.FlatTextBorder
 import com.formdev.flatlaf.util.SystemInfo
 import com.jgoodies.forms.builder.FormBuilder
@@ -21,20 +22,26 @@ import org.eclipse.jgit.internal.transport.sshd.agent.connector.UnixDomainSocket
 import org.eclipse.jgit.internal.transport.sshd.agent.connector.WinPipeConnector
 import java.awt.*
 import java.awt.event.*
-import java.nio.charset.Charset
 import javax.swing.*
 import javax.swing.table.DefaultTableCellRenderer
 import javax.swing.table.DefaultTableModel
 
 @Suppress("CascadeIf")
-open class SSHHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPane() {
-    protected val tunnelingOption = TunnelingOption()
-    protected val generalOption = GeneralOption()
-    protected val proxyOption = BasicProxyOption()
-    protected val terminalOption = TerminalOption()
-    protected val jumpHostsOption = JumpHostsOption()
-    protected val sftpOption = SFTPOption()
-    protected val owner: Window get() = SwingUtilities.getWindowAncestor(this)
+internal class SSHHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPane() {
+    private val tunnelingOption = TunnelingOption()
+    private val generalOption = GeneralOption()
+    private val proxyOption = BasicProxyOption()
+    private val terminalOption = BasicTerminalOption().apply {
+        showCharsetComboBox = true
+        showLoginScripts = true
+        showEnvironmentTextArea = true
+        showStartupCommandTextField = true
+        showHeartbeatIntervalTextField = true
+        init()
+    }
+    private val jumpHostsOption = JumpHostsOption()
+    private val sftpOption = SFTPOption()
+    private val owner: Window get() = SwingUtilities.getWindowAncestor(this)
 
     init {
         addOption(generalOption)
@@ -47,7 +54,7 @@ open class SSHHostOptionsPane(private val accountOwner: AccountOwner) : OptionsP
     }
 
 
-    open fun getHost(): Host {
+    fun getHost(): Host {
         val name = generalOption.nameTextField.text
         val protocol = SSHProtocolProvider.PROTOCOL
         val host = generalOption.hostTextField.text
@@ -98,6 +105,10 @@ open class SSHHostOptionsPane(private val accountOwner: AccountOwner) : OptionsP
             enableX11Forwarding = tunnelingOption.x11ForwardingCheckBox.isSelected,
             x11Forwarding = tunnelingOption.x11ServerTextField.text,
             loginScripts = terminalOption.loginScripts,
+            extras = mutableMapOf(
+                "altModifier" to (terminalOption.altModifierComboBox.selectedItem?.toString()
+                    ?: AltKeyModifier.EightBit.name),
+            )
         )
 
         return Host(
@@ -485,102 +496,6 @@ open class SSHHostOptionsPane(private val accountOwner: AccountOwner) : OptionsP
         }
     }
 
-
-    protected inner class TerminalOption : JPanel(BorderLayout()), Option {
-        val charsetComboBox = JComboBox<String>()
-        val startupCommandTextField = OutlineTextField()
-        val heartbeatIntervalTextField = IntSpinner(30, minimum = 3, maximum = Int.MAX_VALUE)
-        val environmentTextArea = FixedLengthTextArea(2048)
-        val loginScripts = mutableListOf<LoginScript>()
-
-        private val loginScriptPanel = LoginScriptPanel(loginScripts)
-        private val tabbed = FlatTabbedPane()
-
-        init {
-            initView()
-            initEvents()
-        }
-
-        private fun initView() {
-
-
-            tabbed.styleMap = mapOf(
-                "focusColor" to DynamicColor("TabbedPane.background"),
-                "hoverColor" to DynamicColor("TabbedPane.background"),
-            )
-            tabbed.tabHeight = UIManager.getInt("TabbedPane.tabHeight") - 4
-            putClientProperty("ContentPanelBorder", BorderFactory.createEmptyBorder())
-            tabbed.addTab(I18n.getString("termora.new-host.general"), getCenterComponent())
-            tabbed.addTab(I18n.getString("termora.new-host.terminal.login-scripts"), loginScriptPanel)
-            add(tabbed, BorderLayout.CENTER)
-
-
-            environmentTextArea.setFocusTraversalKeys(
-                KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,
-                KeyboardFocusManager.getCurrentKeyboardFocusManager()
-                    .getDefaultFocusTraversalKeys(KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS)
-            )
-            environmentTextArea.setFocusTraversalKeys(
-                KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS,
-                KeyboardFocusManager.getCurrentKeyboardFocusManager()
-                    .getDefaultFocusTraversalKeys(KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS)
-            )
-
-            environmentTextArea.rows = 8
-            environmentTextArea.lineWrap = true
-            environmentTextArea.border = BorderFactory.createEmptyBorder(4, 4, 4, 4)
-
-            for (e in Charset.availableCharsets()) {
-                charsetComboBox.addItem(e.key)
-            }
-
-            charsetComboBox.selectedItem = "UTF-8"
-
-        }
-
-        private fun initEvents() {
-
-        }
-
-
-        override fun getIcon(isSelected: Boolean): Icon {
-            return Icons.terminal
-        }
-
-        override fun getTitle(): String {
-            return I18n.getString("termora.new-host.terminal")
-        }
-
-        override fun getJComponent(): JComponent {
-            return this
-        }
-
-        private fun getCenterComponent(): JComponent {
-            val layout = FormLayout(
-                "left:pref, $FORM_MARGIN, default:grow",
-                "pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref"
-            )
-
-            var rows = 1
-            val step = 2
-            val panel = FormBuilder.create().layout(layout)
-                .border(BorderFactory.createEmptyBorder(6, 8, 6, 8))
-                .add("${I18n.getString("termora.new-host.terminal.encoding")}:").xy(1, rows)
-                .add(charsetComboBox).xy(3, rows).apply { rows += step }
-                .add("${I18n.getString("termora.new-host.terminal.heartbeat-interval")}:").xy(1, rows)
-                .add(heartbeatIntervalTextField).xy(3, rows).apply { rows += step }
-                .add("${I18n.getString("termora.new-host.terminal.startup-commands")}:").xy(1, rows)
-                .add(startupCommandTextField).xy(3, rows).apply { rows += step }
-                .add("${I18n.getString("termora.new-host.terminal.env")}:").xy(1, rows)
-                .add(JScrollPane(environmentTextArea).apply { border = FlatTextBorder() }).xy(3, rows)
-                .apply { rows += step }
-                .build()
-
-
-            return panel
-        }
-
-    }
 
     protected inner class SFTPOption : JPanel(BorderLayout()), Option {
         val defaultDirectoryField = OutlineTextField(255)

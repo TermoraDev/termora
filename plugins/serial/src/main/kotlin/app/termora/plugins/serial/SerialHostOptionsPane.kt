@@ -1,7 +1,9 @@
 package app.termora.plugins.serial
 
 import app.termora.*
+import app.termora.plugin.internal.AltKeyModifier
 import app.termora.plugin.internal.BasicGeneralOption
+import app.termora.plugin.internal.BasicTerminalOption
 import com.fazecast.jSerialComm.SerialPort
 import com.formdev.flatlaf.FlatClientProperties
 import com.jgoodies.forms.builder.FormBuilder
@@ -15,12 +17,15 @@ import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
-import java.nio.charset.Charset
 import javax.swing.*
 
 class SerialHostOptionsPane : OptionsPane() {
     private val generalOption = BasicGeneralOption()
-    private val terminalOption = TerminalOption()
+    private val terminalOption = BasicTerminalOption().apply {
+        showCharsetComboBox = true
+        showStartupCommandTextField = true
+        init()
+    }
     private val serialCommOption = SerialCommOption()
 
     init {
@@ -48,6 +53,10 @@ class SerialHostOptionsPane : OptionsPane() {
             encoding = terminalOption.charsetComboBox.selectedItem as String,
             startupCommand = terminalOption.startupCommandTextField.text,
             serialComm = serialComm,
+            extras = mutableMapOf(
+                "altModifier" to (terminalOption.altModifierComboBox.selectedItem?.toString()
+                    ?: AltKeyModifier.EightBit.name),
+            )
         )
 
         return Host(
@@ -125,67 +134,6 @@ class SerialHostOptionsPane : OptionsPane() {
             return true
         }
         return false
-    }
-
-
-    protected inner class TerminalOption : JPanel(BorderLayout()), Option {
-        val charsetComboBox = JComboBox<String>()
-        val startupCommandTextField = OutlineTextField()
-
-
-        init {
-            initView()
-            initEvents()
-        }
-
-        private fun initView() {
-            add(getCenterComponent(), BorderLayout.CENTER)
-
-
-            for (e in Charset.availableCharsets()) {
-                charsetComboBox.addItem(e.key)
-            }
-
-            charsetComboBox.selectedItem = "UTF-8"
-
-        }
-
-        private fun initEvents() {
-
-        }
-
-
-        override fun getIcon(isSelected: Boolean): Icon {
-            return Icons.terminal
-        }
-
-        override fun getTitle(): String {
-            return I18n.getString("termora.new-host.terminal")
-        }
-
-        override fun getJComponent(): JComponent {
-            return this
-        }
-
-        private fun getCenterComponent(): JComponent {
-            val layout = FormLayout(
-                "left:pref, $FORM_MARGIN, default:grow",
-                "pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref"
-            )
-
-            var rows = 1
-            val step = 2
-            val panel = FormBuilder.create().layout(layout)
-                .add("${I18n.getString("termora.new-host.terminal.encoding")}:").xy(1, rows)
-                .add(charsetComboBox).xy(3, rows).apply { rows += step }
-                .add("${I18n.getString("termora.new-host.terminal.startup-commands")}:").xy(1, rows)
-                .add(startupCommandTextField).xy(3, rows).apply { rows += step }
-                .apply { rows += step }
-                .build()
-
-
-            return panel
-        }
     }
 
 

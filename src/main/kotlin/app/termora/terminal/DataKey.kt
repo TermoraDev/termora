@@ -1,5 +1,6 @@
 package app.termora.terminal
 
+import app.termora.plugin.internal.AltKeyModifier
 import kotlin.reflect.KClass
 
 
@@ -192,6 +193,11 @@ class DataKey<T : Any>(val clazz: KClass<T>) {
          * TerminalWriter
          */
         val TerminalWriter = DataKey(app.termora.terminal.panel.TerminalWriter::class)
+
+        /**
+         * [app.termora.plugin.internal.AltKeyModifier]
+         */
+        val AltModifier = DataKey(AltKeyModifier::class)
     }
 }
 
