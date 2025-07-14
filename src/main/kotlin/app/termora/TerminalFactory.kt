@@ -1,11 +1,13 @@
 package app.termora
 
+import app.termora.actions.TerminalFocusModeAction
 import app.termora.database.DatabaseManager
 import app.termora.terminal.*
 import app.termora.terminal.panel.TerminalPanel
 import app.termora.tlog.TerminalLoggerDataListener
 import java.awt.Color
 import javax.swing.UIManager
+import kotlin.reflect.cast
 
 class TerminalFactory private constructor() : Disposable {
     private val terminals = mutableListOf<Terminal>()
@@ -75,6 +77,8 @@ class TerminalFactory private constructor() : Disposable {
         override fun <T : Any> getData(key: DataKey<T>, defaultValue: T): T {
             if (key == TerminalPanel.SelectCopy) {
                 return config.selectCopy as T
+            } else if (key == TerminalPanel.FocusMode) {
+                return key.clazz.cast(TerminalFocusModeAction.getInstance().isSelected)
             }
             return super.getData(key, defaultValue)
         }

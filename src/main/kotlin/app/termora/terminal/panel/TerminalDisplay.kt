@@ -12,6 +12,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.swing.Swing
 import java.awt.*
 import javax.swing.JComponent
+import javax.swing.UIManager
 import kotlin.math.ceil
 import kotlin.math.max
 import kotlin.math.min
@@ -263,9 +264,8 @@ class TerminalDisplay(
             var j = 1
             while (j <= cols) {
                 val position = Position(row + 1, j)
-                val caret = showCursor && j == cursorPosition.x + inputMethodData.offset
-                        && i == cursorPosition.y + (maxVerticalScrollOffset - verticalScrollOffset)
-
+                val isCursorLine = i == cursorPosition.y + (maxVerticalScrollOffset - verticalScrollOffset)
+                val caret = showCursor && j == cursorPosition.x + inputMethodData.offset && isCursorLine
                 val (text, style, length) = if (characters.hasNext()) characters.next() else triple
                 var textStyle = style
                 val hasSelection = selectionModel.hasSelection(y = i + verticalScrollOffset, x = j)
@@ -306,6 +306,16 @@ class TerminalDisplay(
                     max(g.fontMetrics.stringWidth(text), length * averageCharWidth),
                     length * averageCharWidth
                 )
+
+                // Focus Mode
+                if (terminalModel.getData(TerminalPanel.FocusMode, false)) {
+                    if (terminalModel.isAlternateScreenBuffer().not()) {
+                        if (isCursorLine.not()) {
+                            background = colorPalette.getColor(TerminalColor.Basic.BACKGROUND)
+                            foreground = UIManager.getColor("textInactiveText").rgb
+                        }
+                    }
+                }
 
                 // 如果没有颜色反转并且与渲染的背景色一致，那么无需渲染背景
                 if (textStyle.inverse || background != colorPalette.getColor(TerminalColor.Basic.BACKGROUND)) {

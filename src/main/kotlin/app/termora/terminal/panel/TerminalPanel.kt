@@ -44,6 +44,7 @@ class TerminalPanel(val tab: TerminalTab?, val terminal: Terminal, private val w
         val Finding = DataKey(Boolean::class)
         val Focused = DataKey(Boolean::class)
         val SelectCopy = DataKey(Boolean::class)
+        val FocusMode = DataKey(Boolean::class)
     }
 
     private val properties get() = DatabaseManager.getInstance().properties

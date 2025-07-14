@@ -5,6 +5,7 @@ import app.termora.I18n
 import app.termora.Scope
 import app.termora.WindowScope
 import app.termora.actions.MultipleAction
+import app.termora.actions.TerminalFocusModeAction
 
 import org.jdesktop.swingx.action.ActionManager
 
@@ -13,6 +14,7 @@ class QuickActionsFindEverywhereProvider(private val windowScope: WindowScope) :
         Actions.KEY_MANAGER,
         Actions.KEYWORD_HIGHLIGHT,
         MultipleAction.MULTIPLE,
+        TerminalFocusModeAction.FocusMode,
     )
 
     override fun find(pattern: String, scope: Scope): List<FindEverywhereResult> {
