@@ -6,6 +6,7 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.awt.Component
+import java.awt.event.WindowEvent
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.swing.JOptionPane
@@ -120,7 +121,7 @@ class TermoraRestarter {
 
         val instance = TermoraFrameManager.getInstance()
         for (window in instance.getWindows()) {
-            window.dispose()
+            window.dispatchEvent(WindowEvent(window, WindowEvent.WINDOW_CLOSED))
         }
         Disposer.dispose(instance)
     }
