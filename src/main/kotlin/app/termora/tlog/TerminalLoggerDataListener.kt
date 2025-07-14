@@ -1,7 +1,9 @@
 package app.termora.tlog
 
-import app.termora.*
-
+import app.termora.Host
+import app.termora.HostTerminalTab
+import app.termora.I18n
+import app.termora.randomUUID
 import app.termora.terminal.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -9,7 +11,6 @@ import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.channels.onSuccess
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.time.DateFormatUtils
-import org.jdesktop.swingx.action.ActionManager
 import org.slf4j.LoggerFactory
 import java.beans.PropertyChangeListener
 import java.io.BufferedWriter
@@ -73,7 +74,7 @@ class TerminalLoggerDataListener(private val terminal: Terminal) : DataListener 
     }
 
     override fun onChanged(key: DataKey<*>, data: Any) {
-        if (key != VisualTerminal.Written || isClosed.get()) {
+        if (isClosed.get()) {
             return
         }
 
@@ -82,14 +83,24 @@ class TerminalLoggerDataListener(private val terminal: Terminal) : DataListener 
             return
         }
 
-        val host = this.host ?: return
-        val action = ActionManager.getInstance().getAction(Actions.TERMINAL_LOGGER)
-        if (action !is TerminalLoggerAction || !action.isRecording) {
+        if (key != VisualTerminal.Written && key != TextProcessor.Written) {
             return
         }
 
-        try {// 尝试记录
-            tryRecord(data as String, host, action)
+        val host = this.host ?: return
+        val action = TerminalLoggerAction.getInstance()
+        if (action.isRecording.not()) {
+            return
+        }
+
+        try {
+            if (action.isPlainText) {
+                if (key == TextProcessor.Written) {
+                    tryRecord(data as String, host, action)
+                }
+            } else if (key == VisualTerminal.Written) {
+                tryRecord(data as String, host, action)
+            }
         } catch (e: Exception) {
             if (log.isErrorEnabled) {
                 log.error(e.message, e)
@@ -160,8 +171,8 @@ class TerminalLoggerDataListener(private val terminal: Terminal) : DataListener 
         }
 
         // 移除监听
-        ActionManager.getInstance().getAction(Actions.TERMINAL_LOGGER)
-            ?.removePropertyChangeListener(terminalLoggerActionPropertyChangeListener)
+        TerminalLoggerAction.getInstance()
+            .removePropertyChangeListener(terminalLoggerActionPropertyChangeListener)
 
 
         this.channel?.close()

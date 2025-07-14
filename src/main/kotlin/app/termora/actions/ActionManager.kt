@@ -31,7 +31,7 @@ class ActionManager : org.jdesktop.swingx.action.ActionManager() {
         addAction(QuickConnectAction.QUICK_CONNECT, QuickConnectAction.instance)
 
         addAction(Actions.KEYWORD_HIGHLIGHT, KeywordHighlightAction())
-        addAction(Actions.TERMINAL_LOGGER, TerminalLoggerAction())
+        addAction(Actions.TERMINAL_LOGGER, TerminalLoggerAction.getInstance())
         addAction(Actions.SFTP, TransferAnAction())
         addAction(SFTPCommandAction.SFTP_COMMAND, SFTPCommandAction())
         addAction(MultipleAction.MULTIPLE, MultipleAction.getInstance())

@@ -2,6 +2,7 @@ package app.termora.tlog
 
 import app.termora.TerminalFactory
 import app.termora.terminal.*
+import app.termora.terminal.panel.TerminalPanel
 import org.slf4j.LoggerFactory
 
 class LogViewerTerminal : TerminalFactory.MyVisualTerminal() {
@@ -49,6 +50,8 @@ class LogViewerTerminal : TerminalFactory.MyVisualTerminal() {
 
         override fun <T : Any> getData(key: DataKey<T>, defaultValue: T): T {
             if (key == DataKey.ShowCursor) {
+                return false as T
+            } else if (key == TerminalPanel.FocusMode) {
                 return false as T
             }
             return super.getData(key, defaultValue)
