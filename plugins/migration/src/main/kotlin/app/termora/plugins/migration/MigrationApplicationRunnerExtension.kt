@@ -187,8 +187,6 @@ class MigrationApplicationRunnerExtension private constructor() : ApplicationRun
         // 重启
         TermoraRestarter.getInstance().scheduleRestart(null, ask = false)
 
-        // 退出程序
-        Disposer.dispose(TermoraFrameManager.getInstance())
     }
 
 

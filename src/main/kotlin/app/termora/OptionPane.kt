@@ -16,9 +16,8 @@ import java.awt.Dimension
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 import java.io.File
+import java.time.Duration
 import javax.swing.*
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 
 object OptionPane {
     private val coroutineScope = swingCoroutineScope
@@ -95,7 +94,7 @@ object OptionPane {
         message: String,
         title: String = UIManager.getString("OptionPane.messageDialogTitle"),
         messageType: Int = JOptionPane.INFORMATION_MESSAGE,
-        duration: Duration = 0.milliseconds,
+        duration: Duration = Duration.ZERO,
     ) {
         val label = JTextPane()
         label.contentType = "text/html"
@@ -105,11 +104,12 @@ object OptionPane {
         label.border = BorderFactory.createEmptyBorder()
         val pane = JOptionPane(label, messageType, JOptionPane.DEFAULT_OPTION)
         val dialog = initDialog(pane.createDialog(parentComponent, title))
-        if (duration.inWholeMilliseconds > 0) {
+
+        if (duration.toMillis() > 0) {
             dialog.addWindowListener(object : WindowAdapter() {
                 override fun windowOpened(e: WindowEvent) {
                     coroutineScope.launch(Dispatchers.Swing) {
-                        delay(duration.inWholeMilliseconds)
+                        delay(duration.toMillis())
                         if (dialog.isVisible) {
                             dialog.isVisible = false
                         }
