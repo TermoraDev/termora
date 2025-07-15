@@ -3,6 +3,7 @@ package app.termora.plugin
 import app.termora.ApplicationScope
 import org.slf4j.LoggerFactory
 import java.lang.reflect.Proxy
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KClass
 
 class ExtensionManager private constructor() {
@@ -14,6 +15,8 @@ class ExtensionManager private constructor() {
         }
     }
 
+    private val map = ConcurrentHashMap<Extension, Any>()
+
     /**
      * @return 不要缓存结果，因为可能会有动态扩展
      */
@@ -24,7 +27,8 @@ class ExtensionManager private constructor() {
             try {
                 for (extension in plugin.getExtensions(clazz)) {
                     if (clazz.isInstance(extension)) {
-                        extensions.add(clazz.cast(ExtensionProxy(plugin, extension).proxy))
+                        val proxy = map.computeIfAbsent(extension) { ExtensionProxy(plugin, extension).proxy }
+                        extensions.add(clazz.cast(proxy))
                     }
                 }
             } catch (e: Throwable) {
