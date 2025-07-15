@@ -63,6 +63,9 @@ internal open class LocalHostOptionsPane : OptionsPane() {
         terminalOption.environmentTextArea.text = host.options.env
         terminalOption.startupCommandTextField.text = host.options.startupCommand
 
+        val altModifier = host.options.extras["altModifier"] ?: AltKeyModifier.EightBit.name
+        terminalOption.altModifierComboBox.selectedItem = runCatching { AltKeyModifier.valueOf(altModifier) }
+            .getOrNull() ?: AltKeyModifier.EightBit
     }
 
     fun validateFields(): Boolean {

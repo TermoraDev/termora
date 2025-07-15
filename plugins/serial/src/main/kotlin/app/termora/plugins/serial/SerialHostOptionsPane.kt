@@ -85,6 +85,9 @@ class SerialHostOptionsPane : OptionsPane() {
         serialCommOption.stopBitsComboBox.selectedItem = serialComm.stopBits
         serialCommOption.flowControlComboBox.selectedItem = serialComm.flowControl
 
+        val altModifier = host.options.extras["altModifier"] ?: AltKeyModifier.EightBit.name
+        terminalOption.altModifierComboBox.selectedItem = runCatching { AltKeyModifier.valueOf(altModifier) }
+            .getOrNull() ?: AltKeyModifier.EightBit
     }
 
     fun validateFields(): Boolean {
