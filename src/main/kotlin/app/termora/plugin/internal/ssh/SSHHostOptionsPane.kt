@@ -153,6 +153,9 @@ internal class SSHHostOptionsPane(private val accountOwner: AccountOwner) : Opti
         terminalOption.startupCommandTextField.text = host.options.startupCommand
         terminalOption.heartbeatIntervalTextField.value = host.options.heartbeatInterval
         terminalOption.loginScripts.addAll(host.options.loginScripts)
+        val altModifier = host.options.extras["altModifier"] ?: AltKeyModifier.EightBit.name
+        terminalOption.altModifierComboBox.selectedItem = runCatching { AltKeyModifier.valueOf(altModifier) }
+            .getOrNull() ?: AltKeyModifier.EightBit
 
         tunnelingOption.tunnelings.addAll(host.tunnelings)
         tunnelingOption.x11ForwardingCheckBox.isSelected = host.options.enableX11Forwarding

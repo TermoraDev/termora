@@ -105,6 +105,9 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
             Backspace.valueOf(host.options.extras["backspace"] ?: Backspace.Delete.name)
         terminalOption.characterAtATimeTextField.selectedItem =
             host.options.extras["character-at-a-time"]?.toBooleanStrictOrNull() ?: false
+        val altModifier = host.options.extras["altModifier"] ?: AltKeyModifier.EightBit.name
+        terminalOption.altModifierComboBox.selectedItem = runCatching { AltKeyModifier.valueOf(altModifier) }
+            .getOrNull() ?: AltKeyModifier.EightBit
 
         terminalOption.loginScripts.clear()
         terminalOption.loginScripts.addAll(host.options.loginScripts)
