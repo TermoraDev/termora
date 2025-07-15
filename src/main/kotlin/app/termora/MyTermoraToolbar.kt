@@ -125,6 +125,8 @@ internal class MyTermoraToolbar(private val windowScope: WindowScope, private va
     private fun redirectUpdateAction(disposable: Disposable): AbstractButton {
         val action = AppUpdateAction.getInstance()
         val button = JButton(action.smallIcon)
+        button.toolTipText = (action.getValue(Action.SHORT_DESCRIPTION) as? String)
+            ?: action.getValue(Action.NAME) as? String
         button.isVisible = action.isEnabled
         button.addActionListener(object : AbstractAction() {
             override fun actionPerformed(e: ActionEvent) {
@@ -150,7 +152,8 @@ internal class MyTermoraToolbar(private val windowScope: WindowScope, private va
 
     private fun redirectAction(action: Action, disposable: Disposable): AbstractButton {
         val button = if (action is StateAction) JToggleButton() else JButton()
-        button.toolTipText = action.getValue(Action.SHORT_DESCRIPTION) as? String
+        button.toolTipText = (action.getValue(Action.SHORT_DESCRIPTION) as? String)
+            ?: action.getValue(Action.NAME) as? String
         button.icon = action.getValue(Action.SMALL_ICON) as? Icon
         button.addActionListener(object : AbstractAction() {
             override fun actionPerformed(e: ActionEvent) {
