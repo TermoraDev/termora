@@ -38,7 +38,7 @@ SolidCompression=yes
 WizardStyle=classic
 ;WizardStyle=modern
 SetupIconFile={#MySetupIconFile}
-;WizardSmallImageFile=
+WizardSmallImageFile={#MyWizardSmallImageFile}
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
