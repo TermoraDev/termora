@@ -1,0 +1,40 @@
+<Package
+        xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+        xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+        xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+        IgnorableNamespaces="uap rescap">
+
+    <Identity Name="TermoraDev.Termora"
+              Publisher="CN=C804E131-4368-4BF7-9E7F-95C681AD0AAC"
+              Version="@version@.0"
+              ProcessorArchitecture="@architecture@"/>
+
+    <Properties>
+        <DisplayName>Termora</DisplayName>
+        <PublisherDisplayName>TermoraDev</PublisherDisplayName>
+        <Logo>icons\termora.png</Logo>
+    </Properties>
+
+    <Resources>
+        <Resource Language="en-US"/>
+    </Resources>
+
+    <Dependencies>
+        <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0"/>
+    </Dependencies>
+
+    <Applications>
+        <Application Id="Termora" Executable="Termora.exe" EntryPoint="Windows.FullTrustApplication">
+            <uap:VisualElements
+                    DisplayName="Termora"
+                    Description="Termora is a cross-platform terminal emulator and SSH client, available on Windows, macOS, and Linux"
+                    BackgroundColor="transparent"
+                    Square150x150Logo="icons\termora_150x150.png"
+                    Square44x44Logo="icons\termora_44x44.png"/>
+        </Application>
+    </Applications>
+
+    <Capabilities>
+        <rescap:Capability Name="runFullTrust"/>
+    </Capabilities>
+</Package>

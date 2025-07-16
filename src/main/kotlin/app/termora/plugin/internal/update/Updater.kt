@@ -1,10 +1,7 @@
 package app.termora.plugin.internal.update
 
-import app.termora.Application
+import app.termora.*
 import app.termora.Application.httpClient
-import app.termora.ApplicationScope
-import app.termora.Disposable
-import app.termora.UpdaterManager
 import com.formdev.flatlaf.util.SystemInfo
 import kotlinx.coroutines.*
 import okhttp3.Request
@@ -32,6 +29,7 @@ internal class Updater private constructor() : Disposable {
     private val updaterManager get() = UpdaterManager.getInstance()
     private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var isRemindMeNextTime = false
+    private val disabledUpdater get() = Application.getLayout() == AppLayout.Appx
 
     /**
      * 安装包位置
@@ -39,6 +37,14 @@ internal class Updater private constructor() : Disposable {
     private var pkg: LatestPkg? = null
 
     fun scheduleUpdate() {
+
+        if (disabledUpdater) {
+            if (coroutineScope.isActive) {
+                coroutineScope.cancel()
+            }
+            return
+        }
+
         coroutineScope.launch(Dispatchers.IO) {
             // 启动 3 分钟后才是检查
             if (Application.isUnknownVersion().not()) {
@@ -65,6 +71,9 @@ internal class Updater private constructor() : Disposable {
     }
 
     private fun checkUpdate() {
+
+        // Windows 应用商店
+        if (disabledUpdater) return
 
         val latestVersion = updaterManager.fetchLatestVersion()
         if (latestVersion.isSelf) {

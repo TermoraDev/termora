@@ -11,11 +11,14 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ windows-11-arm, windows-latest ]
+        os: [ windows-11-arm, windows-2022 ]
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
+
+      - name: Setup MSbuild
+        uses: microsoft/setup-msbuild@v2
 
       - name: Set architecture
         id: set-arch
@@ -24,6 +27,24 @@ jobs:
             echo "ARCH=aarch64" >> $env:GITHUB_ENV
           } else {
             echo "ARCH=x64" >> $env:GITHUB_ENV
+          }
+
+      - name: Find MakeAppx
+        shell: pwsh
+        run: |
+          $installedRootsKey = "HKLM:\SOFTWARE\Microsoft\Windows Kits\Installed Roots"
+          $kitsRoot = (Get-ItemProperty $installedRootsKey).KitsRoot10
+          $versions = Get-ChildItem -Path $installedRootsKey | Select-Object -ExpandProperty PSChildName
+          $maxVersion = $versions | ForEach-Object { [version]$_ } | Sort-Object -Descending | Select-Object -First 1
+          $arch = if ($env:ARCH -eq "aarch64") { "arm64" } else { "x64" }
+          $makeAppXPath = Join-Path -Path $kitsRoot -ChildPath "bin\$maxVersion\$arch\makeappx.exe"
+          Write-Output "MakeAppx.exe path: $makeAppXPath"
+          
+          if (Test-Path $makeAppXPath) {
+            "MAKEAPPX_PATH=$makeAppXPath" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf8 -Append
+          } else {
+            Write-Output "MakeAppx.exe not found!"
+            exit 1
           }
 
       - name: Install zip
@@ -63,13 +84,33 @@ jobs:
       - name: Package
         run: .\gradlew :jpackage && .\gradlew :dist
 
+      - name: MSIX
+        env:
+          TERMORA_TYPE: appx
+        run: |
+          .\gradlew --stop
+          .\gradlew :dist
+
       - name: Stop Gradle
         run: .\gradlew.bat --stop
 
-      - name: Upload artifact
+      - name: Upload zip artifact
         uses: actions/upload-artifact@v4
         with:
-          name: termora-windows-${{ runner.arch }}
+          name: termora-windows-zip-${{ runner.arch }}
           path: |
             build/distributions/*.zip
+
+      - name: Upload exe artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: termora-windows-exe-${{ runner.arch }}
+          path: |
             build/distributions/*.exe
+
+      - name: Upload msix artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: termora-windows-msix-${{ runner.arch }}
+          path: |
+            build/distributions/*.msix

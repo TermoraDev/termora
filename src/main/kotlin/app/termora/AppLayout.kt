@@ -6,6 +6,7 @@ enum class AppLayout {
      */
     Zip,
     Exe,
+    Appx,
 
     /**
      * macOS

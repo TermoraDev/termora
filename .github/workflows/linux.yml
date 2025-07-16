@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - uses: actions/cache@v4
         with:
@@ -59,11 +59,23 @@ jobs:
         shell: bash
         run: sudo chmod -R 777 ~/.gradle
 
-      - name: Upload artifact
+      - name: Upload targz artifact
         uses: actions/upload-artifact@v4
         with:
-          name: termora-linux-${{ runner.arch }}
+          name: termora-linux-targz-${{ runner.arch }}
           path: |
             build/distributions/*.tar.gz
+
+      - name: Upload AppImage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: termora-linux-AppImage-${{ runner.arch }}
+          path: |
             build/distributions/*.AppImage
+
+      - name: Upload deb artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: termora-linux-deb-${{ runner.arch }}
+          path: |
             build/distributions/*.deb

@@ -6,9 +6,11 @@ import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.awt.Component
+import java.awt.Window
 import java.awt.event.WindowEvent
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicBoolean
+import javax.swing.JDialog
 import javax.swing.JOptionPane
 import javax.swing.SwingUtilities
 import kotlin.jvm.optionals.getOrNull
@@ -121,11 +123,22 @@ class TermoraRestarter {
 
         val instance = TermoraFrameManager.getInstance()
         for (window in instance.getWindows()) {
+            disposeChildren(window)
             window.dispatchEvent(WindowEvent(window, WindowEvent.WINDOW_CLOSED))
         }
         Disposer.dispose(instance)
     }
 
+    private fun disposeChildren(window: Window) {
+        for (win in Window.getWindows()) {
+            if (win is JDialog) {
+                if (win.owner == window) {
+                    disposeChildren(win)
+                }
+                win.dispatchEvent(WindowEvent(win, WindowEvent.WINDOW_CLOSED))
+            }
+        }
+    }
 
     private fun checkIsSupported(): Boolean {
         val appPath = Application.getAppPath()

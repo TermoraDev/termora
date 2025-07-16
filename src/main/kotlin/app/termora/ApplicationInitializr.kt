@@ -16,20 +16,19 @@ class ApplicationInitializr {
 
     fun run() {
 
-        // 由于 macOS 签名和公证问题，依赖二进制依赖会单独在一个文件夹
-        if (SystemUtils.IS_OS_MAC_OSX) {
-            setupNativeLibraries()
-        }
-
-        if (SystemUtils.IS_OS_MAC_OSX) {
-            System.setProperty("apple.awt.application.name", Application.getName())
-        }
+        // 依赖二进制依赖会单独在一个文件夹
+        setupNativeLibraries()
 
         // 设置 tinylog
         setupTinylog()
 
         // 检查是否单例
         checkSingleton()
+
+
+        if (SystemUtils.IS_OS_MAC_OSX) {
+            System.setProperty("apple.awt.application.name", Application.getName())
+        }
 
         // 启动
         val runtime = measureTimeMillis { ApplicationRunner().run() }
@@ -42,23 +41,29 @@ class ApplicationInitializr {
 
 
     private fun setupNativeLibraries() {
-        if (!SystemUtils.IS_OS_MAC_OSX) {
-            return
-        }
-
         val appPath = Application.getAppPath()
         if (StringUtils.isBlank(appPath)) {
             return
         }
 
-        val contents = File(appPath).parentFile?.parentFile ?: return
+        var contents = File(appPath)
+        if (SystemUtils.IS_OS_MAC_OSX || SystemUtils.IS_OS_LINUX) {
+            contents = contents.parentFile?.parentFile ?: return
+            if (SystemUtils.IS_OS_LINUX) {
+                contents = File(contents, "lib")
+            }
+        } else if (SystemUtils.IS_OS_WINDOWS) {
+            contents = contents.parentFile ?: return
+        }
+
         val dylib = FileUtils.getFile(contents, "app", "dylib")
-        if (!dylib.exists()) {
+        if (dylib.exists().not()) {
             return
         }
 
         val jna = FileUtils.getFile(dylib, "jna")
         if (jna.exists()) {
+            System.setProperty("jna.nounpack", "true")
             System.setProperty("jna.boot.library.path", jna.absolutePath)
         }
 
@@ -72,7 +77,10 @@ class ApplicationInitializr {
             System.setProperty("jSerialComm.library.path", jSerialComm.absolutePath)
         }
 
-        val restart4j = FileUtils.getFile(dylib, "restart4j", "restarter")
+        val restart4j = FileUtils.getFile(
+            dylib, "restart4j",
+            if (SystemUtils.IS_OS_WINDOWS) "restarter.exe" else "restarter"
+        )
         if (restart4j.exists()) {
             System.setProperty("restarter.path", restart4j.absolutePath)
         }

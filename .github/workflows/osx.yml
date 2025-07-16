@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
       - name: Install the Apple certificate
         if: "startsWith(github.event.head_commit.message, 'release: ') && github.repository == 'TermoraDev/termora' && env.BUILD_CERTIFICATE_BASE64 != ''"
@@ -93,10 +93,16 @@ jobs:
         shell: bash
         run: ./gradlew :jpackage && ./gradlew :dist
 
-      - name: Upload artifact
+      - name: Upload zip artifact
         uses: actions/upload-artifact@v4
         with:
-          name: termora-osx-${{ runner.arch }}
+          name: termora-osx-zip-${{ runner.arch }}
           path: |
             build/distributions/*.zip
+
+      - name: Upload dmg artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: termora-osx-dmg-${{ runner.arch }}
+          path: |
             build/distributions/*.dmg
