@@ -548,6 +548,7 @@ fun packOnWindows(distributionDir: Directory, finalFilenameWithoutExtension: Str
             "/DMyAppVersion=${appVersion}",
             "/DMyOutputDir=${distributionDir.asFile.absolutePath}",
             "/DMySetupIconFile=${FileUtils.getFile(projectDir, "src", "main", "resources", "icons", "termora.ico")}",
+            "/DMyWizardSmallImageFile=${FileUtils.getFile(projectDir, "src", "main", "resources", "icons", "termora_128x128.bmp")}",
             "/DMySourceDir=${FileUtils.getFile(dir, projectName).absolutePath}",
             "/F${finalFilenameWithoutExtension}",
             FileUtils.getFile(projectDir, "src", "main", "resources", "termora.iss")

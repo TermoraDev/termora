@@ -6,6 +6,7 @@ import com.pty4j.util.PtyUtil
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.SystemUtils
+import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.tinylog.configuration.Configuration
 import java.io.File
@@ -16,6 +17,15 @@ class ApplicationInitializr {
 
     fun run() {
 
+        // 提供一个选项，用于延迟启动，它通常是远程调试时使用
+        val delay = System.getProperty("app-delay")
+        if (delay.isNullOrBlank().not()) {
+            val millis = NumberUtils.toLong(delay, 0)
+            if (millis > 0) {
+                Thread.sleep(millis)
+            }
+        }
+
         // 依赖二进制依赖会单独在一个文件夹
         setupNativeLibraries()
 
@@ -24,7 +34,6 @@ class ApplicationInitializr {
 
         // 检查是否单例
         checkSingleton()
-
 
         if (SystemUtils.IS_OS_MAC_OSX) {
             System.setProperty("apple.awt.application.name", Application.getName())

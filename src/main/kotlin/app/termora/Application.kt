@@ -81,14 +81,30 @@ object Application {
 
         // 从启动参数取
         var baseDataDir = System.getProperty("${getName()}.base-data-dir".lowercase())
+
         // 取不到从环境取
         if (StringUtils.isBlank(baseDataDir)) {
             baseDataDir = System.getenv("${getName()}_BASE_DATA_DIR".uppercase())
         }
 
-        var dir = File(SystemUtils.getUserHome(), ".${getName()}".lowercase())
-        if (StringUtils.isNotBlank(baseDataDir)) {
-            dir = File(baseDataDir)
+        // Windows 并且是绿色版，那么判断所在目录是否有 data 目录
+        if (SystemInfo.isWindows && getLayout() == AppLayout.Zip && StringUtils.isBlank(baseDataDir)) {
+            val appPath = getAppPath()
+            if (StringUtils.isNotBlank(appPath)) {
+                val file = File(appPath).parentFile
+                if (file.exists()) {
+                    val dataFile = File(file, "data")
+                    if (dataFile.exists()) {
+                        baseDataDir = dataFile.absolutePath
+                    }
+                }
+            }
+        }
+
+        val dir = if (StringUtils.isNotBlank(baseDataDir)) {
+            File(baseDataDir)
+        } else {
+            File(SystemUtils.getUserHome(), ".${getName()}".lowercase())
         }
 
 
