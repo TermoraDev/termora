@@ -7,7 +7,6 @@ import com.sun.jna.platform.win32.WinDef.*
 import com.sun.jna.platform.win32.WinError
 import com.sun.jna.platform.win32.WinUser.*
 import com.sun.jna.platform.win32.Wtsapi32
-import org.slf4j.LoggerFactory
 import java.nio.channels.FileChannel
 import java.nio.channels.FileLock
 import java.nio.file.Paths
@@ -95,7 +94,6 @@ class ApplicationSingleton private constructor() : Disposable {
     private class Win32HelperWindow private constructor() : Runnable {
 
         companion object {
-            private val log = LoggerFactory.getLogger(Win32HelperWindow::class.java)
             private val WindowClass = "${Application.getName()}HelperWindowClass"
             private val WindowName =
                 "${Application.getName()} hidden helper window, used only to catch the windows events"
@@ -166,24 +164,15 @@ class ApplicationSingleton private constructor() : Disposable {
             override fun callback(hwnd: HWND, uMsg: Int, wParam: WPARAM, lParam: LPARAM): LRESULT {
                 when (uMsg) {
                     WM_CREATE -> {
-                        if (log.isDebugEnabled) {
-                            log.debug("win32 helper window created")
-                        }
                         return LRESULT()
                     }
 
                     TICK -> {
-                        if (log.isDebugEnabled) {
-                            log.debug("win32 helper window tick")
-                        }
                         onTick()
                         return LRESULT()
                     }
 
                     WM_DESTROY -> {
-                        if (log.isDebugEnabled) {
-                            log.debug("win32 helper window destroyed")
-                        }
                         User32.INSTANCE.PostQuitMessage(0)
                         return LRESULT()
                     }

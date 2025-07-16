@@ -138,6 +138,8 @@ object Application {
                 return AppLayout.Exe
             } else if ("zip" == layout) {
                 return AppLayout.Zip
+            } else if ("appx" == layout) {
+                return AppLayout.Appx
             }
         }
 

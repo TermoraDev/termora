@@ -1,3 +1,4 @@
+import org.apache.tools.ant.filters.ReplaceTokens
 import org.gradle.internal.jvm.Jvm
 import org.gradle.kotlin.dsl.support.uppercaseFirstChar
 import org.gradle.nativeplatform.platform.internal.ArchitectureInternal
@@ -28,7 +29,9 @@ version = rootProject.projectDir.resolve("VERSION").readText().trim()
 val os: OperatingSystem = DefaultNativePlatform.getCurrentOperatingSystem()
 val arch: ArchitectureInternal = DefaultNativePlatform.getCurrentArchitecture()
 val appVersion = project.version.toString().split("-")[0]
+val makeAppx = if (os.isWindows) StringUtils.defaultString(System.getenv("MAKEAPPX_PATH")) else StringUtils.EMPTY
 val isDeb = os.isLinux && System.getenv("TERMORA_TYPE") == "deb"
+val isAppx = os.isWindows && makeAppx.isNotBlank() && System.getenv("TERMORA_TYPE") == "appx"
 
 // macOS 签名信息
 val macOSSignUsername = System.getenv("TERMORA_MAC_SIGN_USER_NAME") ?: StringUtils.EMPTY
@@ -169,102 +172,145 @@ publishing {
     }
 }
 
+tasks.processResources {
+    filesMatching("**/AppxManifest.xml") {
+        filter<ReplaceTokens>(
+            "tokens" to mapOf(
+                "version" to appVersion,
+                "architecture" to if (arch.isArm64) "arm64" else "x64",
+                "projectDir" to project.projectDir.absolutePath,
+            )
+        )
+    }
+}
+
+
 tasks.test {
     useJUnitPlatform()
 }
 
+@Suppress("CascadeIf")
 tasks.register<Copy>("copy-dependencies") {
     val dir = layout.buildDirectory.dir("libs")
     from(configurations.runtimeClasspath).into(dir)
     val jna = libs.jna.asProvider().get()
     val pty4j = libs.pty4j.get()
     val flatlaf = libs.flatlaf.get()
-    val jSerialComm = libs.jSerialComm.get()
     val restart4j = libs.restart4j.get()
     val sqlite = libs.sqlite.get()
+    val archName = if (arch.isArm) "aarch64" else "x86_64"
+    val dylib = dir.get().dir("dylib").asFile
 
-    // 对 JNA 和 PTY4J 的本地库提取
-    // 提取出来是为了单独签名，不然无法通过公证
-    if (os.isMacOsX) {
-        doLast {
-            val archName = if (arch.isArm) "aarch64" else "x86_64"
-            val dylib = dir.get().dir("dylib").asFile
-            for (file in dir.get().asFile.listFiles() ?: emptyArray()) {
-                if ("${jna.name}-${jna.version}" == file.nameWithoutExtension) {
-                    val targetDir = File(dylib, jna.name)
-                    FileUtils.forceMkdir(targetDir)
+    doLast {
+        for (file in dir.get().asFile.listFiles() ?: emptyArray()) {
+            if ("${jna.name}-${jna.version}" == file.nameWithoutExtension) {
+                val targetDir = File(dylib, jna.name)
+                FileUtils.forceMkdir(targetDir)
+                if (os.isWindows) {
+                    // @formatter:off
+                    exec { commandLine("unzip","-j","-o", file.absolutePath, "com/sun/jna/win32-${arch.name}/*", "-d", targetDir.absolutePath) }
+                    // @formatter:on
+                } else if (os.isLinux) {
+                    // @formatter:off
+                    exec { commandLine("unzip","-j","-o", file.absolutePath, "com/sun/jna/linux-${arch.name}/*", "-d", targetDir.absolutePath) }
+                    // @formatter:on
+                } else if (os.isMacOsX) {
                     // @formatter:off
                     exec { commandLine("unzip","-j","-o", file.absolutePath, "com/sun/jna/darwin-${arch.name}/*", "-d", targetDir.absolutePath) }
                     // @formatter:on
-                    // 删除所有二进制类库
-                    exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/darwin-*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/win32-*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/sunos-*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/openbsd-*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/linux-*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/freebsd-*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/dragonflybsd-*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/aix-*") }
-                } else if ("${pty4j.name}-${pty4j.version}" == file.nameWithoutExtension) {
-                    val targetDir = FileUtils.getFile(dylib, pty4j.name, "darwin")
-                    FileUtils.forceMkdir(targetDir)
+                }
+
+                exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/win32-*") }
+                exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/linux-*") }
+                exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/darwin-*") }
+                exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/sunos-*") }
+                exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/openbsd-*") }
+                exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/freebsd-*") }
+                exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/dragonflybsd-*") }
+                exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/aix-*") }
+            } else if ("${pty4j.name}-${pty4j.version}" == file.nameWithoutExtension) {
+                val targetDir = FileUtils.getFile(dylib, pty4j.name, if (os.isWindows) "win32" else "linux")
+                FileUtils.forceMkdir(targetDir)
+                val myArchName = if (arch.isArm) "aarch64" else "x86-64"
+                if (os.isWindows) {
+                    // @formatter:off
+                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "resources/*win/${myArchName}/*", "-d", targetDir.absolutePath) }
+                    // @formatter:on
+                } else if (os.isLinux) {
+                    // @formatter:off
+                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "resources/*linux/${myArchName}/*", "-d", targetDir.absolutePath) }
+                    // @formatter:on
+                } else if (os.isMacOsX) {
                     // @formatter:off
                     exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "resources/com/pty4j/native/darwin*", "-d", targetDir.absolutePath) }
                     // @formatter:on
-                    // 删除所有二进制类库
-                    exec { commandLine("zip", "-d", file.absolutePath, "resources/*") }
-                } else if ("${jSerialComm.name}-${jSerialComm.version}" == file.nameWithoutExtension) {
-                    val targetDir = FileUtils.getFile(dylib, jSerialComm.name, "OSX", archName)
-                    FileUtils.forceMkdir(targetDir)
+                }
+                exec { commandLine("zip", "-d", file.absolutePath, "resources/*") }
+            } else if ("${restart4j.name}-${restart4j.version}" == file.nameWithoutExtension) {
+                val targetDir = FileUtils.getFile(dylib, restart4j.name)
+                FileUtils.forceMkdir(targetDir)
+                if (os.isWindows) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "OSX/${archName}/*", "-d", targetDir.absolutePath) }
+                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "win32/${archName}/*", "-d", targetDir.absolutePath) }
                     // @formatter:on
-                    // 删除所有二进制类库
-                    exec { commandLine("zip", "-d", file.absolutePath, "Android/*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "FreeBSD/*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "Linux/*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "OpenBSD/*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "OSX/*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "Solaris/*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "Windows/*") }
-                } else if ("${restart4j.name}-${restart4j.version}" == file.nameWithoutExtension) {
-                    val targetDir = FileUtils.getFile(dylib, restart4j.name)
-                    FileUtils.forceMkdir(targetDir)
+                } else if (os.isLinux) {
+                    // @formatter:off
+                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "linux/${archName}/*", "-d", targetDir.absolutePath) }
+                    // @formatter:on
+                } else if (os.isMacOsX) {
                     // @formatter:off
                     exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "darwin/${archName}/*", "-d", targetDir.absolutePath) }
                     // @formatter:on
-                    // 删除所有二进制类库
-                    exec { commandLine("zip", "-d", file.absolutePath, "win32/*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "darwin/*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "linux/*") }
-                    // 设置可执行权限
-                    for (e in FileUtils.listFiles(
-                        targetDir,
-                        FileFilterUtils.trueFileFilter(),
-                        FileFilterUtils.falseFileFilter()
-                    )) {
-                        e.setExecutable(true)
-                    }
-                } else if ("${sqlite.name}-${sqlite.version}" == file.nameWithoutExtension) {
-                    val targetDir = FileUtils.getFile(dylib, sqlite.name)
-                    FileUtils.forceMkdir(targetDir)
+                }
+                // 设置可执行权限
+                for (e in FileUtils.listFiles(
+                    targetDir,
+                    FileFilterUtils.trueFileFilter(),
+                    FileFilterUtils.falseFileFilter()
+                )) e.setExecutable(true)
+                exec { commandLine("zip", "-d", file.absolutePath, "win32/*") }
+                exec { commandLine("zip", "-d", file.absolutePath, "darwin/*") }
+                exec { commandLine("zip", "-d", file.absolutePath, "linux/*") }
+            } else if ("${sqlite.name}-${sqlite.version}" == file.nameWithoutExtension) {
+                val targetDir = FileUtils.getFile(dylib, sqlite.name)
+                FileUtils.forceMkdir(targetDir)
+                if (os.isWindows) {
+                    // @formatter:off
+                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "org/sqlite/native/Windows/${archName}/*", "-d", targetDir.absolutePath) }
+                    // @formatter:on
+                } else if (os.isLinux) {
+                    // @formatter:off
+                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "org/sqlite/native/Linux/${archName}/*", "-d", targetDir.absolutePath) }
+                    // @formatter:on
+                } else if (os.isMacOsX) {
                     // @formatter:off
                     exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "org/sqlite/native/Mac/${archName}/*", "-d", targetDir.absolutePath) }
                     // @formatter:on
-                    // 删除所有二进制类库
-                    exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/*") }
-                } else if ("${flatlaf.name}-${flatlaf.version}" == file.nameWithoutExtension) {
-                    val targetDir = FileUtils.getFile(dylib, flatlaf.name)
-                    FileUtils.forceMkdir(targetDir)
-                    val isArm = arch.isArm
+                }
+                exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/*") }
+            } else if ("${flatlaf.name}-${flatlaf.version}" == file.nameWithoutExtension) {
+                val targetDir = FileUtils.getFile(dylib, flatlaf.name)
+                FileUtils.forceMkdir(targetDir)
+                val isArm = arch.isArm
+                if (os.isWindows) {
+                    // @formatter:off
+                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "com/formdev/flatlaf/natives/*windows*${if (isArm) "arm64" else "x86_64"}*", "-d", targetDir.absolutePath) }
+                    // @formatter:on
+                } else if (os.isLinux) {
+                    // @formatter:off
+                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "com/formdev/flatlaf/natives/*linux*${if (isArm) "arm64" else "x86_64"}*", "-d", targetDir.absolutePath) }
+                    // @formatter:on
+                } else if (os.isMacOsX) {
                     // @formatter:off
                     exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "com/formdev/flatlaf/natives/*macos*${if (isArm) "arm" else "x86"}*", "-d", targetDir.absolutePath) }
                     // @formatter:on
-                    exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*") }
                 }
+                exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*") }
             }
+        }
 
-            // 对二进制签名
+        // 对二进制签名
+        if (os.isMacOsX) {
             Files.walk(dylib.toPath()).use { paths ->
                 for (path in paths) {
                     if (Files.isRegularFile(path)) {
@@ -273,116 +319,8 @@ tasks.register<Copy>("copy-dependencies") {
                 }
             }
         }
-    } else if (os.isLinux || os.isWindows) { // 缩减安装包
-        doLast {
-            for (file in dir.get().asFile.listFiles() ?: emptyArray()) {
-                if ("${jna.name}-${jna.version}" == file.nameWithoutExtension) {
-                    exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/darwin-*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/sunos-*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/openbsd-*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/freebsd-*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/dragonflybsd-*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/aix-*") }
-                    if (os.isWindows) {
-                        exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/linux-*") }
-                        if (arch.isArm) {
-                            exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/win32-x86*") }
-                        } else {
-                            exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/win32-aarch64/*") }
-                            exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/win32-x86/*") }
-                        }
-                    } else if (os.isLinux) {
-                        exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/win32-*") }
-                    }
-                } else if ("${pty4j.name}-${pty4j.version}" == file.nameWithoutExtension) {
-                    exec { commandLine("zip", "-d", file.absolutePath, "resources/*darwin*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "resources/*freebsd*") }
-                    if (os.isWindows) {
-                        exec { commandLine("zip", "-d", file.absolutePath, "resources/*linux*") }
-                        if (arch.isArm) {
-                            exec { commandLine("zip", "-d", file.absolutePath, "resources/*win/x86/*") }
-                            exec { commandLine("zip", "-d", file.absolutePath, "resources/*win/x86-64*") }
-                        } else {
-                            exec { commandLine("zip", "-d", file.absolutePath, "resources/*win/x86/*") }
-                            exec { commandLine("zip", "-d", file.absolutePath, "resources/*win/aarch64/*") }
-                        }
-                    } else if (os.isLinux) {
-                        exec { commandLine("zip", "-d", file.absolutePath, "resources/*win*") }
-                    }
-                } else if ("${jSerialComm.name}-${jSerialComm.version}" == file.nameWithoutExtension) {
-                    exec { commandLine("zip", "-d", file.absolutePath, "Android/*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "FreeBSD/*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "OpenBSD/*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "OSX/*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "Solaris/*") }
-                    if (os.isWindows) {
-                        exec { commandLine("zip", "-d", file.absolutePath, "Linux/*") }
-                    } else if (os.isLinux) {
-                        exec { commandLine("zip", "-d", file.absolutePath, "Windows/*") }
-                    }
-                } else if ("${restart4j.name}-${restart4j.version}" == file.nameWithoutExtension) {
-                    exec { commandLine("zip", "-d", file.absolutePath, "darwin/*") }
-                    if (os.isWindows) {
-                        exec { commandLine("zip", "-d", file.absolutePath, "linux/*") }
-                        if (arch.isArm) {
-                            exec { commandLine("zip", "-d", file.absolutePath, "win32/x86_64/*") }
-                        } else {
-                            exec { commandLine("zip", "-d", file.absolutePath, "win32/aarch64/*") }
-                        }
-                    } else if (os.isLinux) {
-                        exec { commandLine("zip", "-d", file.absolutePath, "win32/*") }
-                        if (arch.isArm) {
-                            exec { commandLine("zip", "-d", file.absolutePath, "linux/x86_64/*") }
-                        } else {
-                            exec { commandLine("zip", "-d", file.absolutePath, "linux/aarch64/*") }
-                        }
-                    }
-                } else if ("${sqlite.name}-${sqlite.version}" == file.nameWithoutExtension) {
-                    exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Linux-*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/FreeBSD/*") }
-                    exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Mac/*") }
-                    if (os.isWindows) {
-                        exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Linux/*") }
-                        exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Windows/armv7/*") }
-                        exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Windows/x86/*") }
-                        if (arch.isArm) {
-                            exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Windows/x86_64/*") }
-                        } else {
-                            exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Windows/aarch64/*") }
-                        }
-                    } else if (os.isLinux) {
-                        exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Windows/*") }
-                        exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Linux/arm*") }
-                        exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Linux/ppc64/*") }
-                        exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Linux/riscv64/*") }
-                        exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Linux/x86/*") }
-                        if (arch.isArm) {
-                            exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Linux/x86_64/*") }
-                        } else {
-                            exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/Linux/aarch64/*") }
-                        }
-                    }
-                } else if ("${flatlaf.name}-${flatlaf.version}" == file.nameWithoutExtension) {
-                    exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*macos*") }
-                    if (os.isWindows) {
-                        exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*linux*") }
-                        if (arch.isArm) {
-                            exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*x86*") }
-                        } else {
-                            exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*x86.dll") }
-                        }
-                    } else if (os.isLinux) {
-                        exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*windows*") }
-                        if (arch.isArm) {
-                            exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*x86*") }
-                        } else {
-                            exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*arm*") }
-                        }
-                    }
-                }
-            }
-        }
     }
+
 }
 
 tasks.register<Exec>("jlink") {
@@ -567,6 +505,27 @@ fun packOnWindows(distributionDir: Directory, finalFilenameWithoutExtension: Str
     val dir = layout.buildDirectory.dir("distributions").get().asFile
     val cfg = FileUtils.getFile(dir, projectName, "app", "${projectName}.cfg")
     val configText = cfg.readText()
+
+    // appx
+    if (isAppx) {
+        cfg.writeText(StringBuilder(configText).appendLine("java-options=-Djpackage.app-layout=appx").toString())
+        val appxManifest = FileUtils.getFile(dir, projectName, "AppxManifest.xml")
+        layout.buildDirectory.file("resources/main/AppxManifest.xml").get().asFile
+            .renameTo(appxManifest)
+        val icons = setOf("termora.png", "termora_44x44.png", "termora_150x150.png")
+        for (file in projectDir.resolve("src/main/resources/icons/").listFiles()) {
+            if (icons.contains(file.name)) {
+                val p = appxManifest.parentFile.resolve("icons/${file.name}")
+                FileUtils.forceMkdirParent(p)
+                file.copyTo(p, true)
+            }
+        }
+        exec {
+            commandLine(makeAppx, "pack", "/d", projectName, "/p", "${finalFilenameWithoutExtension}.msix")
+            workingDir = dir
+        }
+        return
+    }
 
     // zip
     cfg.writeText(StringBuilder(configText).appendLine("java-options=-Djpackage.app-layout=zip").toString())
