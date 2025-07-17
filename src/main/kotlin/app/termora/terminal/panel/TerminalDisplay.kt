@@ -67,6 +67,8 @@ class TerminalDisplay(
     }
 
     override fun paint(g: Graphics) {
+        if (isShowing.not()) return
+
         if (g is Graphics2D) {
             setupAntialiasing(g)
             clear(g)
@@ -238,15 +240,27 @@ class TerminalDisplay(
     }
 
     private fun drawCharacters(g: Graphics2D) {
+        drawCharacters(
+            g = g,
+            verticalScrollOffset = terminal.getScrollingModel().getVerticalScrollOffset(),
+            rows = terminal.getTerminalModel().getRows(),
+            overflowBreak = false,
+        )
+    }
+
+    internal fun drawCharacters(
+        g: Graphics2D,
+        verticalScrollOffset: Int,
+        rows: Int,
+        overflowBreak: Boolean,
+    ) {
         val terminalModel = terminal.getTerminalModel()
         val reverseVideo = terminalModel.getData(DataKey.ReverseVideo, false)
-        val rows = terminalModel.getRows()
         val cols = terminalModel.getCols()
         val triple = Triple(Char.Space.toString(), TextStyle.Default, 1)
         val cursorPosition = terminal.getCursorModel().getPosition()
         val averageCharWidth = getAverageCharWidth()
         val maxVerticalScrollOffset = terminal.getScrollingModel().getMaxVerticalScrollOffset()
-        val verticalScrollOffset = terminal.getScrollingModel().getVerticalScrollOffset()
         val selectionModel = terminal.getSelectionModel()
         val cursorStyle = terminalModel.getData(DataKey.CursorStyle)
         val showCursor = terminalModel.getData(DataKey.ShowCursor)
@@ -255,11 +269,13 @@ class TerminalDisplay(
         val blink = terminalBlink.blink
         val cursorBlink = terminalBlink.cursorBlink
         val hasFocus = terminalModel.getData(TerminalPanel.Focused, false)
-
+        val lineCount = terminal.getDocument().getLineCount()
 
         for (i in 1..rows) {
             var xOffset = 0
             val row = verticalScrollOffset + i - 1
+            // 超出总行数则熔断，避免扩容情况出现
+            if (overflowBreak && row >= lineCount) break
             val characters = smartCharacters(row).iterator()
             var j = 1
             while (j <= cols) {

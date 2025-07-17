@@ -1,8 +1,6 @@
 package app.termora.terminal.panel
 
-import app.termora.Disposable
-import app.termora.Disposer
-import app.termora.TerminalTab
+import app.termora.*
 import app.termora.actions.DataProvider
 import app.termora.actions.DataProviderSupport
 import app.termora.actions.DataProviders
@@ -10,6 +8,7 @@ import app.termora.database.DatabaseManager
 import app.termora.plugin.internal.ssh.SSHTerminalTab
 import app.termora.terminal.*
 import app.termora.terminal.panel.vw.*
+import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.util.SystemInfo
 import org.apache.commons.lang3.ArrayUtils
 import org.apache.commons.lang3.StringUtils
@@ -27,11 +26,11 @@ import java.text.AttributedCharacterIterator
 import java.text.AttributedString
 import java.text.BreakIterator
 import java.text.CharacterIterator
-import javax.swing.JLayeredPane
-import javax.swing.JPanel
-import javax.swing.SwingUtilities
+import javax.swing.*
 import kotlin.math.abs
+import kotlin.math.floor
 import kotlin.math.max
+import kotlin.math.min
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -47,6 +46,17 @@ class TerminalPanel(val tab: TerminalTab?, val terminal: Terminal, private val w
         val FocusMode = DataKey(Boolean::class)
     }
 
+    /**
+     * 内边距
+     */
+    var padding = Insets(4, 4, 4, 4)
+        set(value) {
+            field = value
+            repaintImmediate()
+        }
+
+    private val disposable = Disposer.newDisposable()
+    private val myOwner get() = SwingUtilities.getWindowAncestor(this)
     private val properties get() = DatabaseManager.getInstance().properties
     private val terminalBlink = TerminalBlink(terminal)
     private val terminalFindPanel = TerminalFindPanel(this, terminal)
@@ -54,6 +64,7 @@ class TerminalPanel(val tab: TerminalTab?, val terminal: Terminal, private val w
     private val terminalDisplay = TerminalDisplay(this, terminal, terminalBlink)
     private val layeredPane = TerminalLayeredPane()
     private var visualWindows = emptyArray<VisualWindow>()
+    private val terminalPreviewDialog = TerminalPreviewDialog()
 
     val scrollBar = TerminalScrollBar(this, terminalFindPanel, terminal)
     var enableFloatingToolbar = true
@@ -95,14 +106,6 @@ class TerminalPanel(val tab: TerminalTab?, val terminal: Terminal, private val w
      */
     var resizeToast = true
 
-    /**
-     * 内边距
-     */
-    var padding = Insets(4, 4, 4, 4)
-        set(value) {
-            field = value
-            repaintImmediate()
-        }
 
     /**
      * Toast 总开关
@@ -166,6 +169,7 @@ class TerminalPanel(val tab: TerminalTab?, val terminal: Terminal, private val w
             override fun focusLost(e: FocusEvent) {
                 terminal.getTerminalModel().setData(Focused, false)
                 repaintImmediate()
+                hidePreview()
             }
 
             override fun focusGained(e: FocusEvent) {
@@ -197,7 +201,11 @@ class TerminalPanel(val tab: TerminalTab?, val terminal: Terminal, private val w
         // 滚动相关
         this.addMouseWheelListener(object : MouseWheelListener {
             override fun mouseWheelMoved(e: MouseWheelEvent) {
-                if (!terminal.getScrollingModel().canVerticalScroll()) {
+                if (terminal.getScrollingModel().canVerticalScroll().not()) {
+                    return
+                }
+
+                if (isShowingPreview()) {
                     return
                 }
 
@@ -236,6 +244,7 @@ class TerminalPanel(val tab: TerminalTab?, val terminal: Terminal, private val w
         // 监听悬浮工具栏变化，然后重新渲染
         floatingToolbar.addPropertyChangeListener { repaintImmediate() }
 
+        Disposer.register(this, disposable)
     }
 
     private fun enableDropTarget() {
@@ -416,6 +425,7 @@ class TerminalPanel(val tab: TerminalTab?, val terminal: Terminal, private val w
     }
 
     override fun dispose() {
+        terminalPreviewDialog.dispose()
         Disposer.dispose(terminalBlink)
         Disposer.dispose(floatingToolbar)
     }
@@ -494,6 +504,64 @@ class TerminalPanel(val tab: TerminalTab?, val terminal: Terminal, private val w
         super.paint(g)
     }
 
+    internal fun showPreview(location: Point) {
+        if (terminal.getScrollingModel().canVerticalScroll().not()) return
+
+        val lineHeight = terminalDisplay.getLineHeight()
+        val size = Dimension(
+            terminalDisplay.width + min((terminalDisplay.width * 0.1).toInt(), 50) + (padding.left + padding.right),
+            lineHeight * 10 + padding.top + padding.bottom * if (SystemInfo.isWindows_11_orLater) 2 else 1
+        )
+        val myLocation = Point(
+            scrollBar.locationOnScreen.x - (scrollBar.width / 2) - size.width,
+            location.y - lineHeight * 2
+        )
+
+        // 如果超过了滚动条位置，那么使用最安全的大小
+        if (abs(myLocation.x) + size.width > scrollBar.locationOnScreen.x) {
+            size.width = terminalDisplay.width
+            myLocation.x = scrollBar.locationOnScreen.x - (scrollBar.width / 2) - size.width
+        }
+
+        // 如果超出了屏幕底部边界，那么修改弹窗位置
+        val rectangle = getUsableDeviceBounds(terminalPreviewDialog.graphicsConfiguration)
+        if (abs(myLocation.y) + size.height > rectangle.y + rectangle.height) {
+            myLocation.y = location.y + lineHeight * 2 - size.height
+        }
+
+        val point = Point(location)
+        SwingUtilities.convertPointFromScreen(point, scrollBar)
+        val scrollRatio = 1.0 * point.y / scrollBar.height
+        val count = max(terminal.getDocument().getLineCount(), terminal.getTerminalModel().getRows())
+        val totalHeight = count * lineHeight
+        val scrollTop = scrollRatio * totalHeight
+        val rowIndex = floor(scrollTop / lineHeight).toInt()
+
+        terminalPreviewDialog.row = rowIndex
+        terminalPreviewDialog.size = size
+        terminalPreviewDialog.location = myLocation
+        terminalPreviewDialog.isVisible = true
+    }
+
+    private fun getUsableDeviceBounds(gc: GraphicsConfiguration): Rectangle {
+        val bounds = gc.bounds
+        val insets = Toolkit.getDefaultToolkit().getScreenInsets(gc)
+
+        bounds.x += insets.left
+        bounds.y += insets.top
+        bounds.width -= (insets.left + insets.right)
+        bounds.height -= (insets.top + insets.bottom)
+
+        return bounds
+    }
+
+
+    internal fun hidePreview() {
+        terminalPreviewDialog.isVisible = false
+    }
+
+    internal fun isShowingPreview() = terminalPreviewDialog.isVisible
+
     private inner class TerminalLayeredPane : JLayeredPane() {
         override fun doLayout() {
             val averageCharWidth = getAverageCharWidth()
@@ -553,6 +621,82 @@ class TerminalPanel(val tab: TerminalTab?, val terminal: Terminal, private val w
                     }
                 }
             }
+        }
+    }
+
+    private inner class TerminalPreviewDialog : JDialog() {
+
+        private val terminalPreviewPanel = TerminalPreviewPanel()
+        var row
+            get() = terminalPreviewPanel.row
+            set(value) {
+                terminalPreviewPanel.row = value
+            }
+
+        init {
+            initView()
+        }
+
+        override fun setVisible(b: Boolean) {
+            if (b) terminalPreviewPanel.repaint()
+            super.setVisible(b)
+        }
+
+
+        private fun initView() {
+            isAlwaysOnTop = true
+            focusableWindowState = false
+            defaultCloseOperation = DISPOSE_ON_CLOSE
+
+            if (SystemInfo.isMacOS) {
+                rootPane.putClientProperty("apple.awt.windowTitleVisible", false)
+                rootPane.putClientProperty("apple.awt.fullWindowContent", true)
+                rootPane.putClientProperty("apple.awt.transparentTitleBar", true)
+            } else {
+                rootPane.putClientProperty(FlatClientProperties.FULL_WINDOW_CONTENT, true)
+                rootPane.putClientProperty(FlatClientProperties.TITLE_BAR_HEIGHT, 0)
+            }
+
+            val panel = JPanel(BorderLayout())
+            panel.border = BorderFactory.createEmptyBorder(
+                padding.top, padding.left,
+                padding.bottom, padding.right
+            )
+            panel.add(terminalPreviewPanel, BorderLayout.CENTER)
+            rootPane.contentPane = panel
+
+
+        }
+
+        override fun addNotify() {
+            super.addNotify()
+            if (SystemInfo.isMacOS) {
+                NativeMacLibrary.setControlsVisible(this, false)
+            } else {
+                rootPane.putClientProperty(FlatClientProperties.TITLE_BAR_SHOW_ICONIFFY, false)
+                rootPane.putClientProperty(FlatClientProperties.TITLE_BAR_SHOW_MAXIMIZE, false)
+                rootPane.putClientProperty(FlatClientProperties.TITLE_BAR_SHOW_CLOSE, false)
+            }
+
+        }
+    }
+
+    private inner class TerminalPreviewPanel : JComponent() {
+        var row = 0
+
+        private val lineCount get() = terminal.getDocument().getLineCount()
+        private val rows = 10
+        override fun paint(g: Graphics) {
+            if (g !is Graphics2D) return
+
+
+            var row = this.row
+            if (row + rows > lineCount) row = row - (row + rows - lineCount)
+
+            g.save()
+            setupAntialiasing(g)
+            terminalDisplay.drawCharacters(g, verticalScrollOffset = max(0, row), rows = rows, overflowBreak = true)
+            g.restore()
         }
     }
 
