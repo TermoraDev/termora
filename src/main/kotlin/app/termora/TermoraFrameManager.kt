@@ -92,6 +92,9 @@ class TermoraFrameManager : Disposable {
         window.addWindowListener(object : WindowAdapter() {
             override fun windowClosed(e: WindowEvent) {
 
+                // 销毁子窗口
+                TermoraRestarter.getInstance().disposeChildren(window)
+
                 // 存储位置信息
                 saveFrameRectangle(window)
 

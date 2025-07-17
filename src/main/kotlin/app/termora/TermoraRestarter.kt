@@ -129,7 +129,7 @@ class TermoraRestarter {
         Disposer.dispose(instance)
     }
 
-    private fun disposeChildren(window: Window) {
+    fun disposeChildren(window: Window) {
         for (win in Window.getWindows()) {
             if (win is JDialog) {
                 if (win.owner == window) {
