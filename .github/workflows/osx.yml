@@ -3,7 +3,7 @@ name: macOS
 on: [ push, pull_request ]
 
 env:
-  TERMORA_MAC_SIGN: "${{ startsWith(github.event.head_commit.message, 'release: ') && github.repository == 'TermoraDev/termora' }}"
+  TERMORA_MAC_SIGN: "${{ github.repository == 'TermoraDev/termora' }}"
   TERMORA_MAC_SIGN_USER_NAME: ${{ secrets.TERMORA_MAC_SIGN_USER_NAME }}
   # 只有发布版本时才需要公证
   TERMORA_MAC_NOTARY: "${{ startsWith(github.event.head_commit.message, 'release: ') && github.repository == 'TermoraDev/termora' }}"
@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 1
 
       - name: Install the Apple certificate
-        if: "startsWith(github.event.head_commit.message, 'release: ') && github.repository == 'TermoraDev/termora' && env.BUILD_CERTIFICATE_BASE64 != ''"
+        if: "env.TERMORA_MAC_SIGN && env.BUILD_CERTIFICATE_BASE64 != ''"
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
@@ -46,7 +46,7 @@ jobs:
           security list-keychain -d user -s $KEYCHAIN_PATH
 
       - name: Setup the Notary information
-        if: "startsWith(github.event.head_commit.message, 'release: ') && github.repository == 'TermoraDev/termora' && env.APPLE_ID != ''"
+        if: "env.TERMORA_MAC_NOTARY && env.APPLE_ID != ''"
         env:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
