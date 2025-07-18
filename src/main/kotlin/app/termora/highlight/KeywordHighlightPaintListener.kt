@@ -81,6 +81,11 @@ class KeywordHighlightPaintListener private constructor() : TerminalPaintListene
         terminal: Terminal
     ) {
 
+        // 如果是全屏模式，那么不激活关键词高亮
+        if (terminal.getTerminalModel().isAlternateScreenBuffer()) {
+            return
+        }
+
         if (isFirst.get()) {
             if (isFirst.compareAndSet(true, false)) {
                 // 立即刷新
@@ -89,7 +94,7 @@ class KeywordHighlightPaintListener private constructor() : TerminalPaintListene
         }
 
         for (highlight in keywordHighlights) {
-            if (!highlight.enabled) {
+            if (highlight.enabled.not()) {
                 continue
             }
 
