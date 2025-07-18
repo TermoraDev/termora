@@ -26,6 +26,8 @@ import java.util.*
 import javax.imageio.ImageIO
 import javax.swing.*
 import javax.swing.SwingUtilities.isEventDispatchThread
+import javax.swing.event.ChangeEvent
+import javax.swing.event.ChangeListener
 
 
 fun assertEventDispatchThread() {
@@ -69,6 +71,20 @@ class TermoraFrame : JFrame(), DataProvider {
             toolbar.addMouseListener(moveMouseAdapter)
             toolbar.addMouseMotionListener(moveMouseAdapter)
         }
+
+        tabbedPane.addChangeListener(object : ChangeListener {
+            override fun stateChanged(e: ChangeEvent) {
+                val index = tabbedPane.selectedIndex
+                title = Application.getName()
+                if (layout == TermoraLayout.Screen) {
+                    if (index < 1) return
+                } else if (index < 0) {
+                    return
+                }
+                title = tabbedPane.getTitleAt(index) + " - " + Application.getName()
+            }
+
+        })
 
         // 快捷键变动时重新监听
         KeymapRefresher.getInstance().addRefreshListener { initKeymap() }
