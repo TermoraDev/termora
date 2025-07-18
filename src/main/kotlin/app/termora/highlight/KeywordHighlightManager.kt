@@ -10,7 +10,7 @@ import app.termora.database.DatabaseManager
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 
-class KeywordHighlightManager private constructor() {
+internal class KeywordHighlightManager private constructor() {
 
     companion object {
         fun getInstance(): KeywordHighlightManager {

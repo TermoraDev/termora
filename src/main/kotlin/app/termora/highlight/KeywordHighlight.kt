@@ -9,6 +9,16 @@ data class KeywordHighlight(
     val id: String = randomUUID(),
 
     /**
+     * Set id，默认 0
+     */
+    val parentId: String = "0",
+
+    /**
+     * [KeywordHighlightType]
+     */
+    val type: KeywordHighlightType = KeywordHighlightType.Highlight,
+
+    /**
      * 关键词
      */
     val keyword: String = StringUtils.EMPTY,

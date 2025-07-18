@@ -3,8 +3,14 @@ package app.termora.highlight
 import app.termora.account.AccountOwner
 import javax.swing.table.DefaultTableModel
 
-class KeywordHighlightTableModel(private val accountOwner: AccountOwner) : DefaultTableModel() {
-    private val rows get() = KeywordHighlightManager.getInstance().getKeywordHighlights(accountOwner.id)
+class KeywordHighlightTableModel(
+    private val accountOwner: AccountOwner,
+    private val setId: String
+) : DefaultTableModel() {
+    private val rows
+        get() = KeywordHighlightManager.getInstance()
+            .getKeywordHighlights(accountOwner.id).filter { it.parentId == setId }
+            .filter { it.type == KeywordHighlightType.Highlight }
 
     override fun isCellEditable(row: Int, column: Int): Boolean {
         return false

@@ -1,12 +1,9 @@
 package app.termora.highlight
 
-import app.termora.ApplicationScope
-import app.termora.Disposable
-import app.termora.Disposer
+import app.termora.*
 import app.termora.account.Account
 import app.termora.account.AccountExtension
 import app.termora.account.AccountManager
-import app.termora.assertEventDispatchThread
 import app.termora.database.DataType
 import app.termora.database.DatabaseChangedExtension
 import app.termora.plugin.internal.extension.DynamicExtensionHandler
@@ -20,7 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.min
 import kotlin.random.Random
 
-class KeywordHighlightPaintListener private constructor() : TerminalPaintListener, Disposable {
+internal class KeywordHighlightPaintListener private constructor() : TerminalPaintListener, Disposable {
 
     companion object {
         fun getInstance(): KeywordHighlightPaintListener {
@@ -93,10 +90,21 @@ class KeywordHighlightPaintListener private constructor() : TerminalPaintListene
             }
         }
 
+        // 默认情况是：默认集
+        var keywordHighlightSetId = "0"
+        val terminalModel = terminal.getTerminalModel()
+        if (terminalModel.hasData(HostTerminalTab.Host)) {
+            val host = terminalModel.getData(HostTerminalTab.Host)
+            keywordHighlightSetId = host.options.extras["keywordHighlightSetId"] ?: keywordHighlightSetId
+        }
+
+        // -1 表示不使用高亮集
+        if (keywordHighlightSetId == "-1") return
+
         for (highlight in keywordHighlights) {
-            if (highlight.enabled.not()) {
-                continue
-            }
+            if (highlight.enabled.not()) continue
+            if (highlight.type != KeywordHighlightType.Highlight) continue
+            if (keywordHighlightSetId != highlight.parentId) continue
 
             val document = terminal.getDocument()
             val kinds = mutableListOf<FindKind>()

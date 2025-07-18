@@ -3,6 +3,10 @@ package app.termora.plugin.internal
 import app.termora.*
 import app.termora.OptionsPane.Companion.FORM_MARGIN
 import app.termora.OptionsPane.Option
+import app.termora.account.AccountOwner
+import app.termora.highlight.KeywordHighlight
+import app.termora.highlight.KeywordHighlightManager
+import app.termora.highlight.KeywordHighlightType
 import app.termora.plugin.internal.telnet.TelnetHostOptionsPane.Backspace
 import com.formdev.flatlaf.extras.components.FlatTabbedPane
 import com.formdev.flatlaf.ui.FlatTextBorder
@@ -24,6 +28,8 @@ class BasicTerminalOption() : JPanel(BorderLayout()), Option {
     var showBackspaceComboBox: Boolean = false
     var showCharacterAtATimeTextField: Boolean = false
     var showAltModifierComboBox: Boolean = true
+    var showHighlightSet: Boolean = true
+    var accountOwner: AccountOwner? = null
 
     val charsetComboBox = JComboBox<String>()
     val startupCommandTextField = OutlineTextField()
@@ -32,6 +38,7 @@ class BasicTerminalOption() : JPanel(BorderLayout()), Option {
     val loginScripts = mutableListOf<LoginScript>()
     val backspaceComboBox = JComboBox<Backspace>()
     val altModifierComboBox = JComboBox<AltKeyModifier>()
+    val highlightSetComboBox = JComboBox<KeywordHighlight>()
     val characterAtATimeTextField = YesOrNoComboBox()
 
 
@@ -76,6 +83,36 @@ class BasicTerminalOption() : JPanel(BorderLayout()), Option {
                         text = I18n.getString("termora.new-host.terminal.alt-modifier.by-esc")
                     } else if (value == AltKeyModifier.EightBit) {
                         text = I18n.getString("termora.new-host.terminal.alt-modifier.eight-bit")
+                    }
+                    return super.getListCellRendererComponent(list, text, index, isSelected, cellHasFocus)
+                }
+            }
+        }
+
+        val accountOwner = this.accountOwner
+        if (showHighlightSet && accountOwner != null) {
+            val highlights = KeywordHighlightManager.getInstance()
+                .getKeywordHighlights(accountOwner.id)
+                .filter { it.type == KeywordHighlightType.Set }
+            highlightSetComboBox.addItem(KeywordHighlight(id = "-1", keyword = "None"))
+            val defaultHighlight = KeywordHighlight(id = "0", keyword = I18n.getString("termora.highlight.default-set"))
+            highlightSetComboBox.addItem(defaultHighlight)
+            for (highlight in highlights) {
+                highlightSetComboBox.addItem(highlight)
+            }
+            highlightSetComboBox.selectedItem = defaultHighlight
+
+            highlightSetComboBox.renderer = object : DefaultListCellRenderer() {
+                override fun getListCellRendererComponent(
+                    list: JList<*>?,
+                    value: Any?,
+                    index: Int,
+                    isSelected: Boolean,
+                    cellHasFocus: Boolean
+                ): Component? {
+                    var text = value?.toString() ?: value
+                    if (value is KeywordHighlight) {
+                        text = value.keyword
                     }
                     return super.getListCellRendererComponent(list, text, index, isSelected, cellHasFocus)
                 }
@@ -136,9 +173,10 @@ class BasicTerminalOption() : JPanel(BorderLayout()), Option {
     private fun getCenterComponent(): JComponent {
         val layout = FormLayout(
             "left:pref, $FORM_MARGIN, default:grow",
-            "pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref"
+            "pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref"
         )
 
+        val accountOwner = this.accountOwner
         var rows = 1
         val step = 2
         val builder = FormBuilder.create().layout(layout)
@@ -149,6 +187,11 @@ class BasicTerminalOption() : JPanel(BorderLayout()), Option {
         if (showCharsetComboBox) {
             builder.add("${I18n.getString("termora.new-host.terminal.encoding")}:").xy(1, rows)
                 .add(charsetComboBox).xy(3, rows).apply { rows += step }
+        }
+
+        if (showHighlightSet && accountOwner != null) {
+            builder.add("${I18n.getString("termora.highlight")}:").xy(1, rows)
+                .add(highlightSetComboBox).xy(3, rows).apply { rows += step }
         }
 
         if (showAltModifierComboBox) {

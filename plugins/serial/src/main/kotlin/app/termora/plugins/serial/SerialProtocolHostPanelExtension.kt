@@ -16,7 +16,7 @@ internal class SerialProtocolHostPanelExtension private constructor() : Protocol
     }
 
     override fun createProtocolHostPanel(accountOwner: AccountOwner): ProtocolHostPanel {
-        return SerialProtocolHostPanel()
+        return SerialProtocolHostPanel(accountOwner)
     }
 
     override fun ordered(): Long {
