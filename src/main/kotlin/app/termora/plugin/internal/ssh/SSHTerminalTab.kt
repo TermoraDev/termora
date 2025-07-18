@@ -211,6 +211,17 @@ class SSHTerminalTab(
         return super.getData(dataKey)
     }
 
+    override fun reconnect() {
+        stop()
+
+        // 重新连接时就等于重新打开了一个标签，handler 重置
+        handler.client = null
+        handler.session = null
+        handler.client = null
+
+        start()
+    }
+
     override fun stop() {
         if (mutex.tryLock()) {
             try {
