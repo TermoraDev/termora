@@ -1,6 +1,7 @@
 package app.termora.plugin.internal.wsl
 
 import app.termora.*
+import app.termora.highlight.KeywordHighlight
 import app.termora.plugin.internal.AltKeyModifier
 import app.termora.plugin.internal.BasicTerminalOption
 import com.formdev.flatlaf.FlatClientProperties
@@ -47,6 +48,8 @@ internal open class WSLHostOptionsPane : OptionsPane() {
                 "wsl-guid" to wsl.guid, "wsl-flavor" to wsl.flavor,
                 "altModifier" to (terminalOption.altModifierComboBox.selectedItem?.toString()
                     ?: AltKeyModifier.EightBit.name),
+                "keywordHighlightSetId" to ((terminalOption.highlightSetComboBox.selectedItem as? KeywordHighlight)?.id
+                    ?: "-1"),
             )
         )
 
@@ -76,6 +79,18 @@ internal open class WSLHostOptionsPane : OptionsPane() {
             }
         }
 
+        val altModifier = host.options.extras["altModifier"] ?: AltKeyModifier.EightBit.name
+        terminalOption.altModifierComboBox.selectedItem = runCatching { AltKeyModifier.valueOf(altModifier) }
+            .getOrNull() ?: AltKeyModifier.EightBit
+
+        val keywordHighlightSetId = host.options.extras["keywordHighlightSetId"]
+        for (i in 0 until terminalOption.highlightSetComboBox.itemCount) {
+            val item = terminalOption.highlightSetComboBox.getItemAt(i)
+            if (item.id == keywordHighlightSetId) {
+                terminalOption.highlightSetComboBox.selectedItem = item
+                break
+            }
+        }
     }
 
     fun validateFields(): Boolean {

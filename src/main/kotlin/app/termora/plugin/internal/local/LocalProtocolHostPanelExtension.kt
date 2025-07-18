@@ -16,7 +16,7 @@ internal class LocalProtocolHostPanelExtension private constructor() : ProtocolH
     }
 
     override fun createProtocolHostPanel(accountOwner: AccountOwner): ProtocolHostPanel {
-        return LocalProtocolHostPanel()
+        return LocalProtocolHostPanel(accountOwner)
     }
 
     override fun ordered(): Long {

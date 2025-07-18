@@ -2,6 +2,7 @@ package app.termora.plugin.internal.ssh
 
 import app.termora.*
 import app.termora.account.AccountOwner
+import app.termora.highlight.KeywordHighlight
 import app.termora.keymgr.KeyManager
 import app.termora.keymgr.KeyManagerDialog
 import app.termora.plugin.internal.AltKeyModifier
@@ -37,6 +38,8 @@ internal class SSHHostOptionsPane(private val accountOwner: AccountOwner) : Opti
         showEnvironmentTextArea = true
         showStartupCommandTextField = true
         showHeartbeatIntervalTextField = true
+        showHighlightSet = true
+        accountOwner = this@SSHHostOptionsPane.accountOwner
         init()
     }
     private val jumpHostsOption = JumpHostsOption()
@@ -108,6 +111,8 @@ internal class SSHHostOptionsPane(private val accountOwner: AccountOwner) : Opti
             extras = mutableMapOf(
                 "altModifier" to (terminalOption.altModifierComboBox.selectedItem?.toString()
                     ?: AltKeyModifier.EightBit.name),
+                "keywordHighlightSetId" to ((terminalOption.highlightSetComboBox.selectedItem as? KeywordHighlight)?.id
+                    ?: "-1"),
             )
         )
 
@@ -156,6 +161,17 @@ internal class SSHHostOptionsPane(private val accountOwner: AccountOwner) : Opti
         val altModifier = host.options.extras["altModifier"] ?: AltKeyModifier.EightBit.name
         terminalOption.altModifierComboBox.selectedItem = runCatching { AltKeyModifier.valueOf(altModifier) }
             .getOrNull() ?: AltKeyModifier.EightBit
+
+
+        val keywordHighlightSetId = host.options.extras["keywordHighlightSetId"]
+        for (i in 0 until terminalOption.highlightSetComboBox.itemCount) {
+            val item = terminalOption.highlightSetComboBox.getItemAt(i)
+            if (item.id == keywordHighlightSetId) {
+                terminalOption.highlightSetComboBox.selectedItem = item
+                break
+            }
+        }
+
 
         tunnelingOption.tunnelings.addAll(host.tunnelings)
         tunnelingOption.x11ForwardingCheckBox.isSelected = host.options.enableX11Forwarding

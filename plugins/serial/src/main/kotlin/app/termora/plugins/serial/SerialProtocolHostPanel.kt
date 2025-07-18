@@ -2,11 +2,12 @@ package app.termora.plugins.serial
 
 import app.termora.Disposer
 import app.termora.Host
+import app.termora.account.AccountOwner
 import app.termora.protocol.ProtocolHostPanel
 import java.awt.BorderLayout
 
-class SerialProtocolHostPanel : ProtocolHostPanel() {
-    private val pane = SerialHostOptionsPane()
+class SerialProtocolHostPanel(accountOwner: AccountOwner) : ProtocolHostPanel() {
+    private val pane = SerialHostOptionsPane(accountOwner)
 
     init {
         initView()

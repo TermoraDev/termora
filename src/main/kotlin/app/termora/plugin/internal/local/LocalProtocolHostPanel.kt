@@ -2,12 +2,13 @@ package app.termora.plugin.internal.local
 
 import app.termora.Disposer
 import app.termora.Host
+import app.termora.account.AccountOwner
 import app.termora.protocol.ProtocolHostPanel
 import java.awt.BorderLayout
 
-internal class LocalProtocolHostPanel : ProtocolHostPanel() {
+internal class LocalProtocolHostPanel(accountOwner: AccountOwner) : ProtocolHostPanel() {
 
-    private val pane = LocalHostOptionsPane()
+    private val pane = LocalHostOptionsPane(accountOwner)
 
     init {
         initView()

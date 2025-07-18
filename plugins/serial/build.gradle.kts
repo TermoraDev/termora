@@ -4,7 +4,7 @@ plugins {
 
 
 
-project.version = "0.0.3"
+project.version = "0.0.4"
 
 
 dependencies {

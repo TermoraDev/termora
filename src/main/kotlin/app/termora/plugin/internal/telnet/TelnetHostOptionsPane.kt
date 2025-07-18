@@ -2,6 +2,7 @@ package app.termora.plugin.internal.telnet
 
 import app.termora.*
 import app.termora.account.AccountOwner
+import app.termora.highlight.KeywordHighlight
 import app.termora.plugin.internal.AltKeyModifier
 import app.termora.plugin.internal.BasicProxyOption
 import app.termora.plugin.internal.BasicTerminalOption
@@ -16,7 +17,7 @@ import java.awt.event.ComponentEvent
 import javax.swing.*
 
 class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPane() {
-    protected val generalOption = GeneralOption()
+    private val generalOption = GeneralOption()
 
     // telnet 不支持代理密码
     private val proxyOption = BasicProxyOption(authenticationTypes = listOf())
@@ -27,6 +28,7 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
         showCharacterAtATimeTextField = true
         showEnvironmentTextArea = true
         showLoginScripts = true
+        accountOwner = this@TelnetHostOptionsPane.accountOwner
         init()
     }
 
@@ -70,6 +72,8 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
                 "character-at-a-time" to (terminalOption.characterAtATimeTextField.selectedItem?.toString() ?: "false"),
                 "altModifier" to (terminalOption.altModifierComboBox.selectedItem?.toString()
                     ?: AltKeyModifier.EightBit.name),
+                "keywordHighlightSetId" to ((terminalOption.highlightSetComboBox.selectedItem as? KeywordHighlight)?.id
+                    ?: "-1"),
             )
         )
 
@@ -108,6 +112,16 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
         val altModifier = host.options.extras["altModifier"] ?: AltKeyModifier.EightBit.name
         terminalOption.altModifierComboBox.selectedItem = runCatching { AltKeyModifier.valueOf(altModifier) }
             .getOrNull() ?: AltKeyModifier.EightBit
+
+
+        val keywordHighlightSetId = host.options.extras["keywordHighlightSetId"]
+        for (i in 0 until terminalOption.highlightSetComboBox.itemCount) {
+            val item = terminalOption.highlightSetComboBox.getItemAt(i)
+            if (item.id == keywordHighlightSetId) {
+                terminalOption.highlightSetComboBox.selectedItem = item
+                break
+            }
+        }
 
         terminalOption.loginScripts.clear()
         terminalOption.loginScripts.addAll(host.options.loginScripts)
