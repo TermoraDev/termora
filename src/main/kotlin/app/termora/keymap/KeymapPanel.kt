@@ -50,6 +50,8 @@ class KeymapPanel : JPanel(BorderLayout()) {
 
         allowKeyCodes.add(KeyEvent.VK_EQUALS)
         allowKeyCodes.add(KeyEvent.VK_MINUS)
+        // https://github.com/TermoraDev/termora/issues/902
+        allowKeyCodes.add(KeyEvent.VK_PLUS)
 
 
         copyBtn.toolTipText = I18n.getString("termora.welcome.contextmenu.copy")
