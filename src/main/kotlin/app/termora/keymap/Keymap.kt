@@ -3,6 +3,7 @@ package app.termora.keymap
 import app.termora.Application.ohMyJson
 import app.termora.randomUUID
 import kotlinx.serialization.json.*
+import java.awt.event.KeyEvent
 import javax.swing.KeyStroke
 
 open class Keymap(
@@ -103,9 +104,26 @@ open class Keymap(
     open fun getActionIds(shortcut: Shortcut): List<String> {
         val actionIds = mutableListOf<String>()
         shortcuts[shortcut]?.let { actionIds.addAll(it) }
+
+
+        // https://github.com/TermoraDev/termora/issues/902
+        if (actionIds.isEmpty()) {
+            if (shortcut is KeyShortcut) {
+                val plusKeys = mutableSetOf(KeyEvent.VK_PLUS, KeyEvent.VK_EQUALS, KeyEvent.VK_ADD)
+                if (plusKeys.contains(shortcut.keyStroke.keyCode)) {
+                    plusKeys.remove(shortcut.keyStroke.keyCode)
+                    for (keyCode in plusKeys) {
+                        val c = KeyShortcut(KeyStroke.getKeyStroke(keyCode, shortcut.keyStroke.modifiers))
+                        shortcuts[c]?.let { actionIds.addAll(it) }
+                    }
+                }
+            }
+        }
+
         if (actionIds.isEmpty()) {
             parent?.getActionIds(shortcut)?.let { actionIds.addAll(it) }
         }
+
         return actionIds
     }
 

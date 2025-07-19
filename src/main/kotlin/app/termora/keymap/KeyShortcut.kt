@@ -8,6 +8,7 @@ import javax.swing.KeyStroke
 class KeyShortcut(val keyStroke: KeyStroke) : Shortcut() {
 
     companion object {
+        @Suppress("CascadeIf")
         fun toHumanText(keyStroke: KeyStroke): String {
 
             var text = keyStroke.toString()
@@ -22,6 +23,8 @@ class KeyShortcut(val keyStroke: KeyStroke) : Shortcut() {
                 text = text.replace("EQUALS", "+")
             } else if (keyStroke.keyCode == KeyEvent.VK_MINUS) {
                 text = text.replace("MINUS", "-")
+            } else if (keyStroke.keyCode == KeyEvent.VK_PLUS) {
+                text = text.replace("PLUS", "+")
             }
 
             text = text.toCharArray().joinToString(" + ")

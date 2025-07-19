@@ -251,6 +251,7 @@ class TermoraFrame : JFrame(), DataProvider {
 
     }
 
+    @Suppress("CascadeIf")
     private fun registerKeyStroke(
         actionMap: ActionMap,
         inputMap: InputMap,
@@ -259,7 +260,18 @@ class TermoraFrame : JFrame(), DataProvider {
     ) {
         val keyShortcutActionId = "KeyShortcutAction_${randomUUID()}"
         actionMap.put(keyShortcutActionId, redirectAction(actionIds))
+
+        // https://github.com/TermoraDev/termora/issues/902
+        val plusKeys = mutableSetOf(KeyEvent.VK_PLUS, KeyEvent.VK_EQUALS, KeyEvent.VK_ADD)
+        if (plusKeys.contains(keyStroke.keyCode)) {
+            plusKeys.remove(keyStroke.keyCode)
+            for (keyCode in plusKeys) {
+                inputMap.put(KeyStroke.getKeyStroke(keyCode, keyStroke.modifiers), keyShortcutActionId)
+            }
+        }
+
         inputMap.put(keyStroke, keyShortcutActionId)
+
     }
 
     private fun redirectAction(actionIds: List<String>): Action {
