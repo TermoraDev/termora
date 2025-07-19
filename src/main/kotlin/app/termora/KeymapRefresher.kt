@@ -24,7 +24,7 @@ internal class KeymapRefresher private constructor() : DatabasePropertiesChanged
         source: DatabaseChangedExtension.Source
     ) {
         if (type != "Keymap") return
-        refresh()
+        refresh(true)
     }
 
     override fun onPropertyChanged(name: String, key: String, value: String) {
@@ -33,10 +33,12 @@ internal class KeymapRefresher private constructor() : DatabasePropertiesChanged
         refresh()
     }
 
-    private fun refresh() {
+    private fun refresh(force: Boolean = false) {
         synchronized(this) {
-            if (currentKeymap == activeKeymapName) {
-                return
+            if (force.not()) {
+                if (currentKeymap == activeKeymapName) {
+                    return
+                }
             }
 
             currentKeymap = activeKeymapName
