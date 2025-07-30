@@ -8,7 +8,7 @@ project.version = "0.0.3"
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation("com.qcloud:cos_api:5.6.247")
+    implementation("com.qcloud:cos_api:5.6.249")
     compileOnly(project(":"))
 }
 
