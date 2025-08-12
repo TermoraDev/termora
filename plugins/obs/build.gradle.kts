@@ -8,7 +8,7 @@ project.version = "0.0.2"
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation("com.huaweicloud:esdk-obs-java-bundle:3.25.5")
+    implementation("com.huaweicloud:esdk-obs-java-bundle:3.25.7")
     compileOnly(project(":"))
 }
 
