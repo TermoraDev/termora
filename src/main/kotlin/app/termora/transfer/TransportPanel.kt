@@ -507,6 +507,28 @@ internal class TransportPanel(
             }
         })
 
+        table.actionMap.put("Delete", object : AbstractAction() {
+            override fun actionPerformed(e: ActionEvent) {
+                val rows = table.selectedRows.map { sorter.convertRowIndexToModel(it) }.toTypedArray()
+                val files = rows.map { model.getPath(it) to model.getAttributes(it) }
+                // 排除父目录
+                val validFiles = files.filter { !it.second.isParent }
+                if (validFiles.isNotEmpty()) {
+                    // 显示删除确认对话框
+                    if (OptionPane.showConfirmDialog(
+                            owner,
+                            I18n.getString("termora.keymgr.delete-warning"),
+                            messageType = JOptionPane.WARNING_MESSAGE
+                        ) == JOptionPane.YES_OPTION
+                    ) {
+                        // 直接执行删除操作
+                        val future = internalTransferManager.addTransfer(validFiles, InternalTransferManager.TransferMode.Delete)
+                        mountFuture(future)
+                    }
+                }
+            }
+        })
+
         // 快速导航
         table.addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
@@ -530,12 +552,25 @@ internal class TransportPanel(
             }
         })
 
+        // 重写全选行为，排除".."父目录
+        table.actionMap.put("selectAll", object : AbstractAction() {
+            override fun actionPerformed(e: ActionEvent) {
+                table.clearSelection()
+                val startRow = if (hasParent) 1 else 0  // 跳过".."行
+                if (startRow < table.rowCount) {
+                    table.setRowSelectionInterval(startRow, table.rowCount - 1)
+                }
+            }
+        })
+
         val inputMap = table.getInputMap(WHEN_ANCESTOR_OF_FOCUSED_COMPONENT)
         if (SystemInfo.isMacOS.not()) {
             inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_F5, 0), "Reload")
         }
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "EnterSelectionFolder")
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_R, toolkit.menuShortcutKeyMaskEx), "Reload")
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "Delete")
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "Delete")
     }
 
     private fun initTransferHandler() {
