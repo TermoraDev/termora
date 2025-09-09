@@ -57,6 +57,7 @@ internal open class WSLHostOptionsPane : OptionsPane() {
             name = name,
             protocol = protocol,
             host = host,
+            username = generalOption.usernameTextField.text,
             options = options,
             sort = System.currentTimeMillis(),
             remark = generalOption.remarkTextArea.text,
@@ -65,6 +66,7 @@ internal open class WSLHostOptionsPane : OptionsPane() {
 
     fun setHost(host: Host) {
         generalOption.nameTextField.text = host.name
+        generalOption.usernameTextField.text = host.username
         generalOption.hostComboBox.selectedItem = host.host
         generalOption.remarkTextArea.text = host.remark
         generalOption.hostComboBox.selectedItem = null
@@ -133,6 +135,7 @@ internal open class WSLHostOptionsPane : OptionsPane() {
     protected inner class GeneralOption : JPanel(BorderLayout()), Option {
         val nameTextField = OutlineTextField(128)
         val hostComboBox = OutlineComboBox<WSLDistribution>()
+        val usernameTextField = OutlineTextField(128)
         val remarkTextArea = FixedLengthTextArea(512)
 
         init {
@@ -204,7 +207,7 @@ internal open class WSLHostOptionsPane : OptionsPane() {
         private fun getCenterComponent(): JComponent {
             val layout = FormLayout(
                 "left:pref, $FORM_MARGIN, default:grow",
-                "pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref"
+                "pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref"
             )
             remarkTextArea.setFocusTraversalKeys(
                 KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,
@@ -229,6 +232,9 @@ internal open class WSLHostOptionsPane : OptionsPane() {
 
                 .add("${I18n.getString("termora.new-host.wsl.distribution")}:").xy(1, rows)
                 .add(hostComboBox).xy(3, rows).apply { rows += step }
+
+                .add("${I18n.getString("termora.new-host.general.username")}:").xy(1, rows)
+                .add(usernameTextField).xy(3, rows).apply { rows += step }
 
                 .add("${I18n.getString("termora.new-host.general.remark")}:").xy(1, rows)
                 .add(JScrollPane(remarkTextArea).apply { border = FlatTextBorder() })

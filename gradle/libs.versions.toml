@@ -106,7 +106,7 @@ eddsa = { module = "net.i2p.crypto:eddsa", version.ref = "eddsa" }
 exposed-core = { module = "org.jetbrains.exposed:exposed-core", version.ref = "exposed" }
 exposed-crypt = { module = "org.jetbrains.exposed:exposed-crypt", version.ref = "exposed" }
 exposed-jdbc = { module = "org.jetbrains.exposed:exposed-jdbc", version.ref = "exposed" }
-exposed-migration = { module = "org.jetbrains.exposed:exposed-migration", version.ref = "exposed" }
+exposed-migration = { module = "org.jetbrains.exposed:exposed-migration-core", version.ref = "exposed" }
 h2 = { module = "com.h2database:h2", version.ref = "h2" }
 sqlite = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite" }
 jug = { module = "com.fasterxml.uuid:java-uuid-generator", version.ref = "jug" }
