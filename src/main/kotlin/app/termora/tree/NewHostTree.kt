@@ -213,6 +213,9 @@ class NewHostTree : SimpleTree(), Disposable {
     }
 
     override fun dispose() {
+        // 销毁
+        ToolTipManager.sharedInstance().unregisterComponent(this)
+
         val name = super.getName()
         if (name.isNullOrBlank().not()) {
             properties.putString("${name}.state", TreeUtils.saveExpansionState(this))
