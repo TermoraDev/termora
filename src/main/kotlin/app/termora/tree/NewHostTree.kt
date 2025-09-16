@@ -146,6 +146,26 @@ class NewHostTree : SimpleTree(), Disposable {
             }
         })
 
+        // 开启 ToolTip 功能
+        ToolTipManager.sharedInstance().registerComponent(this)
+
+        // 设置鼠标移动提示
+        addMouseMotionListener(object : java.awt.event.MouseMotionAdapter() {
+            override fun mouseMoved(e: MouseEvent) {
+                val path: TreePath? = getPathForLocation(e.x, e.y)
+                if (path != null) {
+                    val node: HostTreeNode = path.lastPathComponent as HostTreeNode
+                    if (node.host.remark.isNotEmpty()){
+                        toolTipText = node.host.remark
+                    }else{
+                        toolTipText = null
+                    }
+                } else {
+                    toolTipText = null
+                }
+            }
+        })
+
         actionMap.put("copy", object : AnAction() {
             override fun actionPerformed(evt: AnActionEvent) {
                 toolkit.systemClipboard.setContents(StringSelection(StringUtils.EMPTY), null)
