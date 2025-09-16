@@ -6,6 +6,7 @@ import app.termora.I18n
 import app.termora.formatBytes
 import app.termora.plugin.internal.ssh.SSHTerminalTab
 import app.termora.plugin.internal.ssh.SshClients
+import com.formdev.flatlaf.extras.components.FlatTextField
 import com.jgoodies.forms.builder.FormBuilder
 import com.jgoodies.forms.layout.FormLayout
 import kotlinx.coroutines.Dispatchers
@@ -52,9 +53,12 @@ internal class SystemInformationVisualWindow(tab: SSHTerminalTab, visualWindowMa
         private val cpuProgressBar = SmartProgressBar()
         private val memoryProgressBar = SmartProgressBar()
         private val swapProgressBar = SmartProgressBar()
+        private val networkUploadTextField = FlatTextField()
+        private val networkDownloadTextField = FlatTextField()
         private val mem = Mem()
         private val cpu = CPU()
         private val swap = Swap()
+        private val network = Network()
         private val tableModel = object : DefaultTableModel() {
             override fun isCellEditable(row: Int, column: Int): Boolean {
                 return false
@@ -77,10 +81,21 @@ internal class SystemInformationVisualWindow(tab: SSHTerminalTab, visualWindowMa
             var rows = 1
             val step = 2
             val p = JPanel(BorderLayout())
+
+            // 设置只读
+            networkUploadTextField.isEditable = false
+            networkDownloadTextField.isEditable = false
+
+            networkUploadTextField.isFocusable = false
+            networkDownloadTextField.isFocusable = false
+            // 设置文本居中
+            networkUploadTextField.horizontalAlignment = JTextField.CENTER
+            networkDownloadTextField.horizontalAlignment = JTextField.CENTER
+
             val n = FormBuilder.create().debug(false).layout(
                 FormLayout(
                     "left:pref, $formMargin, default:grow",
-                    "pref, $formMargin, pref, $formMargin, pref, $formMargin"
+                    "pref, $formMargin, pref, $formMargin, pref, $formMargin, pref, $formMargin, pref, $formMargin"
                 )
             )
                 .add("CPU: ").xy(1, rows)
@@ -89,6 +104,10 @@ internal class SystemInformationVisualWindow(tab: SSHTerminalTab, visualWindowMa
                 .add(memoryProgressBar).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.visual-window.system-information.swap")}: ").xy(1, rows)
                 .add(swapProgressBar).xy(3, rows).apply { rows += step }
+                .add("${I18n.getString("termora.visual-window.system-information.network_upload")}: ").xy(1, rows)
+                .add(networkUploadTextField).xy(3, rows).apply { rows += step }
+                .add("${I18n.getString("termora.visual-window.system-information.network_download")}: ").xy(1, rows)
+                .add(networkDownloadTextField).xy(3, rows).apply { rows += step }
                 .build()
 
             val table = JTable(tableModel)
@@ -136,6 +155,15 @@ internal class SystemInformationVisualWindow(tab: SSHTerminalTab, visualWindowMa
             } catch (e: Exception) {
                 if (log.isErrorEnabled) {
                     log.error("refreshDisk", e)
+                }
+            }
+
+            try {
+                // 刷新网络
+                refreshNetwork(session)
+            } catch (e: Exception) {
+                if (log.isErrorEnabled) {
+                    log.error("refreshNetwork", e)
                 }
             }
         }
@@ -287,6 +315,65 @@ internal class SystemInformationVisualWindow(tab: SSHTerminalTab, visualWindowMa
             }
         }
 
+        private suspend fun refreshNetwork(session: ClientSession) {
+            val pair = SshClients.execChannel(session, "cat /proc/net/dev")
+            if (pair.first != 0) return
+
+            val lines = pair.second.lines()
+            var totalRx = 0L
+            var totalTx = 0L
+
+            for (line in lines) {
+                val trimmed = line.trim()
+                if (trimmed.isEmpty() || trimmed.startsWith("Inter-|") || trimmed.startsWith("face")) continue
+
+                val parts = trimmed.split(Regex("\\s+"))
+                val iface = parts[0].removeSuffix(":")
+
+                // 跳过 lo 和常见虚拟网卡
+                if (iface == "lo" || iface.startsWith("br") || iface.startsWith("docker") ||
+                    iface.startsWith("veth") || iface.startsWith("vet")) continue
+
+                try {
+                    val rxBytes = parts[1].toLong()
+                    val txBytes = parts[9].toLong()
+                    totalRx += rxBytes
+                    totalTx += txBytes
+                } catch (e: NumberFormatException) {
+                    continue
+                }
+            }
+
+            val currentTime = System.currentTimeMillis()
+            val timeDiffSec = (currentTime - network.networkSampleTime) / 1000.0
+            network.networkSampleTime = currentTime
+
+            val rxRate = if (timeDiffSec > 0) (totalRx - network.receiveBytes) / timeDiffSec else 0.0
+            val txRate = if (timeDiffSec > 0) (totalTx - network.transmitBytes) / timeDiffSec else 0.0
+
+            network.receiveBytes = totalRx
+            network.transmitBytes = totalTx
+
+            val downloadText = "${formatBytes(rxRate, true)} | ${formatBytes(totalRx.toDouble())}"
+            val uploadText = "${formatBytes(txRate, true)} | ${formatBytes(totalTx.toDouble())}"
+
+            withContext(Dispatchers.Swing) {
+                networkDownloadTextField.text = downloadText
+                networkUploadTextField.text = uploadText
+            }
+        }
+
+        // 优化单位换算，保留一位小数
+        private fun formatBytes(bytes: Double, isRate: Boolean = false): String {
+            val suffix = if (isRate) "/s" else ""
+            val (value, unit) = when {
+                bytes < 1024 -> bytes to "B"
+                bytes < 1024 * 1024 -> bytes / 1024 to "KB"
+                bytes < 1024 * 1024 * 1024 -> bytes / (1024 * 1024) to "MB"
+                else -> bytes / (1024 * 1024 * 1024) to "GB"
+            }
+            return String.format("%.1f %s%s", value, unit, suffix)
+        }
     }
 
     private data class Mem(
@@ -406,4 +493,19 @@ internal class SystemInformationVisualWindow(tab: SSHTerminalTab, visualWindowMa
         var mountedOn: String = StringUtils.EMPTY
     )
 
+    private data class Network(
+        /**
+         *  接收字节数
+         */
+        var receiveBytes: Long = 0L,
+        /**
+         *  发送字节数
+         */
+        var transmitBytes: Long = 0L,
+
+        /**
+         * 采样时间
+         */
+        var networkSampleTime: Long = System.currentTimeMillis()
+    )
 }
