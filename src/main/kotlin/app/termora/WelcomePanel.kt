@@ -170,16 +170,18 @@ class WelcomePanel() : JPanel(BorderLayout()), Disposable, TerminalTab, DataProv
 
         filterableTreeModel.addFilter(object : Filter {
             override fun filter(node: Any): Boolean {
-                val text = searchTextField.text
+                val text = searchTextField.text.trim()
                 if (text.isBlank()) return true
                 if (node !is HostTreeNode) return false
                 if (node is TeamTreeNode || node.id == "0") return true
-                return node.host.name.contains(text) || node.host.host.contains(text)
-                        || node.host.username.contains(text)
+                return node.host.name.contains(text, ignoreCase = true)
+                        || node.host.host.contains(text, ignoreCase = true)
+                        || node.host.username.contains(text, ignoreCase = true)
+                        || node.host.remark.contains(text, ignoreCase = true)
             }
 
             override fun canFilter(): Boolean {
-                return searchTextField.text.isNotBlank()
+                return searchTextField.text.trim().isNotBlank()
             }
 
         })
