@@ -9,7 +9,7 @@ dependencies {
     compileOnly(project(":"))
     implementation("com.maxmind.geoip2:geoip2:4.4.0")
     // https://github.com/hstyi/geolite2
-    implementation("com.github.hstyi:geolite2:v1.0-202510060050")
+    implementation("com.github.hstyi:geolite2:v1.0-202510200054")
 }
 
 apply(from = "$rootDir/plugins/common.gradle.kts")
