@@ -21,7 +21,7 @@ versioncompare = "1.4.1"
 jna = "5.18.1"
 jSystemThemeDetector = "3.9.1"
 commons-io = "2.20.0"
-jbr-api = "17.1.10.1"
+jbr-api = "1.9.0"
 hutool = "5.8.40"
 jsch = "2.27.3"
 okhttp = "5.2.1"
@@ -81,7 +81,7 @@ jfa = { module = "de.jangassen:jfa", version.ref = "jfa" }
 oshi-core = { module = "com.github.oshi:oshi-core", version.ref = "oshi" }
 commons-io = { module = "commons-io:commons-io", version.ref = "commons-io" }
 restart4j = { module = "com.github.hstyi:restart4j", version.ref = "restart4j" }
-jbr-api = { module = "com.jetbrains:jbr-api", version.ref = "jbr-api" }
+jbr-api = { module = "org.jetbrains.runtime:jbr-api", version.ref = "jbr-api" }
 hutool = { module = "cn.hutool:hutool-all", version.ref = "hutool" }
 jsch = { module = "com.github.mwiede:jsch", version.ref = "jsch" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }

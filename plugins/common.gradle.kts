@@ -68,13 +68,13 @@ tasks.register("run-plugin") {
         }
         commands.addAll(listOf("-cp", classpath, mainClass))
 
-        exec {
+        providers.exec {
             commandLine = commands
             environment(
                 "TERMORA_PLUGIN_DIRECTORY" to file("${rootProject.layout.buildDirectory.get().asFile.absolutePath}/plugins/"),
                 "TERMORA_BASE_DATA_DIR" to "${layout.buildDirectory.get().asFile.absolutePath}/data",
             )
-        }
+        }.result.get()
     }
 }
 

@@ -211,26 +211,26 @@ tasks.register<Copy>("copy-dependencies") {
                 FileUtils.forceMkdir(targetDir)
                 if (os.isWindows) {
                     // @formatter:off
-                    exec { commandLine("unzip","-j","-o", file.absolutePath, "com/sun/jna/win32-${arch.name}/*", "-d", targetDir.absolutePath) }
+                    providers.exec { commandLine("unzip","-j","-o", file.absolutePath, "com/sun/jna/win32-${arch.name}/*", "-d", targetDir.absolutePath) }.result.get()
                     // @formatter:on
                 } else if (os.isLinux) {
                     // @formatter:off
-                    exec { commandLine("unzip","-j","-o", file.absolutePath, "com/sun/jna/linux-${arch.name}/*", "-d", targetDir.absolutePath) }
+                    providers.exec { commandLine("unzip","-j","-o", file.absolutePath, "com/sun/jna/linux-${arch.name}/*", "-d", targetDir.absolutePath) }.result.get()
                     // @formatter:on
                 } else if (os.isMacOsX) {
                     // @formatter:off
-                    exec { commandLine("unzip","-j","-o", file.absolutePath, "com/sun/jna/darwin-${arch.name}/*", "-d", targetDir.absolutePath) }
+                    providers.exec { commandLine("unzip","-j","-o", file.absolutePath, "com/sun/jna/darwin-${arch.name}/*", "-d", targetDir.absolutePath) }.result.get()
                     // @formatter:on
                 }
 
-                exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/win32-*") }
-                exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/linux-*") }
-                exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/darwin-*") }
-                exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/sunos-*") }
-                exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/openbsd-*") }
-                exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/freebsd-*") }
-                exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/dragonflybsd-*") }
-                exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/aix-*") }
+                providers.exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/win32-*") }.result.get()
+                providers.exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/linux-*") }.result.get()
+                providers.exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/darwin-*") }.result.get()
+                providers.exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/sunos-*") }.result.get()
+                providers.exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/openbsd-*") }.result.get()
+                providers.exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/freebsd-*") }.result.get()
+                providers.exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/dragonflybsd-*") }.result.get()
+                providers.exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/aix-*") }.result.get()
             } else if ("${pty4j.name}-${pty4j.version}" == file.nameWithoutExtension) {
                 val osName = if (os.isWindows) "win32" else if (os.isMacOsX) "darwin" else "linux"
                 val myArchName = if (arch.isArm) "aarch64" else "x86-64"
@@ -239,32 +239,32 @@ tasks.register<Copy>("copy-dependencies") {
                 FileUtils.forceMkdir(targetDir)
                 if (os.isWindows) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "resources/*win/${myArchName}/*", "-d", targetDir.absolutePath) }
+                    providers.exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "resources/*win/${myArchName}/*", "-d", targetDir.absolutePath) }.result.get()
                     // @formatter:on
                 } else if (os.isLinux) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "resources/*linux/${myArchName}/*", "-d", targetDir.absolutePath) }
+                    providers.exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "resources/*linux/${myArchName}/*", "-d", targetDir.absolutePath) }.result.get()
                     // @formatter:on
                 } else if (os.isMacOsX) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "resources/com/pty4j/native/darwin*", "-d", targetDir.absolutePath) }
+                    providers.exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "resources/com/pty4j/native/darwin*", "-d", targetDir.absolutePath) }.result.get()
                     // @formatter:on
                 }
-                exec { commandLine("zip", "-d", file.absolutePath, "resources/*") }
+                providers.exec { commandLine("zip", "-d", file.absolutePath, "resources/*") }.result.get()
             } else if ("${restart4j.name}-${restart4j.version}" == file.nameWithoutExtension) {
                 val targetDir = FileUtils.getFile(dylib, restart4j.name)
                 FileUtils.forceMkdir(targetDir)
                 if (os.isWindows) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "win32/${archName}/*", "-d", targetDir.absolutePath) }
+                    providers.exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "win32/${archName}/*", "-d", targetDir.absolutePath) }.result.get()
                     // @formatter:on
                 } else if (os.isLinux) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "linux/${archName}/*", "-d", targetDir.absolutePath) }
+                    providers.exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "linux/${archName}/*", "-d", targetDir.absolutePath) }.result.get()
                     // @formatter:on
                 } else if (os.isMacOsX) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "darwin/${archName}/*", "-d", targetDir.absolutePath) }
+                    providers.exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "darwin/${archName}/*", "-d", targetDir.absolutePath) }.result.get()
                     // @formatter:on
                 }
                 // 设置可执行权限
@@ -273,44 +273,44 @@ tasks.register<Copy>("copy-dependencies") {
                     FileFilterUtils.trueFileFilter(),
                     FileFilterUtils.falseFileFilter()
                 )) e.setExecutable(true)
-                exec { commandLine("zip", "-d", file.absolutePath, "win32/*") }
-                exec { commandLine("zip", "-d", file.absolutePath, "darwin/*") }
-                exec { commandLine("zip", "-d", file.absolutePath, "linux/*") }
+                providers.exec { commandLine("zip", "-d", file.absolutePath, "win32/*") }.result.get()
+                providers.exec { commandLine("zip", "-d", file.absolutePath, "darwin/*") }.result.get()
+                providers.exec { commandLine("zip", "-d", file.absolutePath, "linux/*") }.result.get()
             } else if ("${sqlite.name}-${sqlite.version}" == file.nameWithoutExtension) {
                 val targetDir = FileUtils.getFile(dylib, sqlite.name)
                 FileUtils.forceMkdir(targetDir)
                 if (os.isWindows) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "org/sqlite/native/Windows/${archName}/*", "-d", targetDir.absolutePath) }
+                    providers.exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "org/sqlite/native/Windows/${archName}/*", "-d", targetDir.absolutePath) }.result.get()
                     // @formatter:on
                 } else if (os.isLinux) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "org/sqlite/native/Linux/${archName}/*", "-d", targetDir.absolutePath) }
+                    providers.exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "org/sqlite/native/Linux/${archName}/*", "-d", targetDir.absolutePath) }.result.get()
                     // @formatter:on
                 } else if (os.isMacOsX) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "org/sqlite/native/Mac/${archName}/*", "-d", targetDir.absolutePath) }
+                    providers.exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "org/sqlite/native/Mac/${archName}/*", "-d", targetDir.absolutePath) }.result.get()
                     // @formatter:on
                 }
-                exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/*") }
+                providers.exec { commandLine("zip", "-d", file.absolutePath, "org/sqlite/native/*") }.result.get()
             } else if ("${flatlaf.name}-${flatlaf.version}" == file.nameWithoutExtension) {
                 val targetDir = FileUtils.getFile(dylib, flatlaf.name)
                 FileUtils.forceMkdir(targetDir)
                 val isArm = arch.isArm
                 if (os.isWindows) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "com/formdev/flatlaf/natives/*windows*${if (isArm) "arm64" else "x86_64"}*", "-d", targetDir.absolutePath) }
+                    providers.exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "com/formdev/flatlaf/natives/*windows*${if (isArm) "arm64" else "x86_64"}*", "-d", targetDir.absolutePath) }.result.get()
                     // @formatter:on
                 } else if (os.isLinux) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "com/formdev/flatlaf/natives/*linux*${if (isArm) "arm64" else "x86_64"}*", "-d", targetDir.absolutePath) }
+                    providers.exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "com/formdev/flatlaf/natives/*linux*${if (isArm) "arm64" else "x86_64"}*", "-d", targetDir.absolutePath) }.result.get()
                     // @formatter:on
                 } else if (os.isMacOsX) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "com/formdev/flatlaf/natives/*macos*${if (isArm) "arm" else "x86"}*", "-d", targetDir.absolutePath) }
+                    providers.exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "com/formdev/flatlaf/natives/*macos*${if (isArm) "arm" else "x86"}*", "-d", targetDir.absolutePath) }.result.get()
                     // @formatter:on
                 }
-                exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*") }
+                providers.exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*") }.result.get()
             }
         }
 
@@ -515,27 +515,27 @@ fun packOnWindows(distributionDir: Directory, finalFilenameWithoutExtension: Str
                 file.copyTo(p, true)
             }
         }
-        exec {
+        providers.exec {
             commandLine(makeAppx, "pack", "/d", projectName, "/p", "${finalFilenameWithoutExtension}.msix")
             workingDir = dir
-        }
+        }.result.get()
         return
     }
 
     // zip
     cfg.writeText(StringBuilder(configText).appendLine("java-options=-Djpackage.app-layout=zip").toString())
-    exec {
+    providers.exec {
         commandLine(
             "tar", "-vacf",
             distributionDir.file("${finalFilenameWithoutExtension}.zip").asFile.absolutePath,
             projectName
         )
         workingDir = dir
-    }
+    }.result.get()
 
     // exe
     cfg.writeText(StringBuilder(configText).appendLine("java-options=-Djpackage.app-layout=exe").toString())
-    exec {
+    providers.exec {
         commandLine(
             "iscc",
             "/DMyAppId=${projectName}",
@@ -557,7 +557,7 @@ fun packOnWindows(distributionDir: Directory, finalFilenameWithoutExtension: Str
             "/F${finalFilenameWithoutExtension}",
             FileUtils.getFile(projectDir, "src", "main", "resources", "termora.iss")
         )
-    }
+    }.result.get()
 
 }
 
@@ -570,7 +570,7 @@ fun packOnMac(distributionDir: Directory, finalFilenameWithoutExtension: String,
 
     // rename
     // @formatter:off
-    exec { commandLine("mv", distributionDir.file("${projectName}-${appVersion}.dmg").asFile.absolutePath, dmgFile.absolutePath,) }
+    providers.exec { commandLine("mv", distributionDir.file("${projectName}-${appVersion}.dmg").asFile.absolutePath, dmgFile.absolutePath) }.result.get()
     // @formatter:on
 
     // sign dmg
@@ -583,7 +583,7 @@ fun packOnMac(distributionDir: Directory, finalFilenameWithoutExtension: String,
 
     // zip
     // @formatter:off
-    exec { commandLine("ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", appFile.absolutePath, zipFile.absolutePath) }
+    providers.exec { commandLine("ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", appFile.absolutePath, zipFile.absolutePath) }.result.get()
     // @formatter:on
 
     // sign zip
@@ -604,7 +604,7 @@ fun packOnMac(distributionDir: Directory, finalFilenameWithoutExtension: String,
             FileUtils.deleteQuietly(zipFile)
             // 再对盖完章的 app 打成 zip 包
             // @formatter:off
-            exec { commandLine("ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", appFile.absolutePath, zipFile.absolutePath) }
+            providers.exec { commandLine("ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", appFile.absolutePath, zipFile.absolutePath) }.result.get()
             // @formatter:on
             // 再对 zip 签名
             signMacOSLocalFile(zipFile)
@@ -644,31 +644,31 @@ fun packOnLinux(distributionDir: Directory, finalFilenameWithoutExtension: Strin
 
     // tar.gz
     cfg.writeText(StringBuilder(configText).appendLine("java-options=-Djpackage.app-layout=tar.gz").toString())
-    exec {
+    providers.exec {
         commandLine(
             "tar", "-czvf",
             distributionDir.file("${finalFilenameWithoutExtension}.tar.gz").asFile.absolutePath,
             projectName
         )
         workingDir = distributionDir.asFile
-    }
+    }.result.get()
 
 
     // AppImage
     // Download AppImageKit
     val appimagetool = FileUtils.getFile(projectDir, ".gradle", "appimagetool")
     if (!appimagetool.exists()) {
-        exec {
+        providers.exec {
             commandLine(
                 "wget",
                 "-O", appimagetool.absolutePath,
                 "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-${if (arch.isArm) "aarch64" else "x86_64"}.AppImage"
             )
             workingDir = distributionDir.asFile
-        }
+        }.result.get()
 
         // AppImageKit chmod
-        exec { commandLine("chmod", "+x", appimagetool.absolutePath) }
+        providers.exec { commandLine("chmod", "+x", appimagetool.absolutePath) }.result.get()
     }
 
     // Desktop file
@@ -706,10 +706,10 @@ Terminal=false
 
     // AppImage
     cfg.writeText(StringBuilder(configText).appendLine("java-options=-Djpackage.app-layout=AppImage").toString())
-    exec {
+    providers.exec {
         commandLine(appimagetool.absolutePath, termoraName, "${finalFilenameWithoutExtension}.AppImage")
         workingDir = distributionDir.asFile
-    }
+    }.result.get()
 }
 
 /**
@@ -718,7 +718,7 @@ Terminal=false
 fun signMacOSLocalFile(file: File) {
     if (os.isMacOsX && macOSSign) {
         if (file.exists() && file.isFile) {
-            exec {
+            providers.exec {
                 commandLine(
                     "/usr/bin/codesign",
                     "-s", macOSSignUsername,
@@ -726,7 +726,7 @@ fun signMacOSLocalFile(file: File) {
                     "-vvvv", "--options", "runtime",
                     file.absolutePath,
                 )
-            }
+            }.result.get()
         }
     }
 }
@@ -737,14 +737,14 @@ fun signMacOSLocalFile(file: File) {
 fun notaryMacOSLocalFile(file: File) {
     if (os.isMacOsX && macOSNotary) {
         if (file.exists()) {
-            exec {
+            providers.exec {
                 commandLine(
                     "/usr/bin/xcrun", "notarytool",
                     "submit", file,
                     "--keychain-profile", macOSNotaryKeychainProfile,
                     "--wait",
                 )
-            }
+            }.result.get()
         }
     }
 }
@@ -755,12 +755,12 @@ fun notaryMacOSLocalFile(file: File) {
 fun stapleMacOSLocalFile(file: File) {
     if (os.isMacOsX && macOSNotary) {
         if (file.exists()) {
-            exec {
+            providers.exec {
                 commandLine(
                     "/usr/bin/xcrun",
                     "stapler", "staple", file,
                 )
-            }
+            }.result.get()
         }
     }
 }
