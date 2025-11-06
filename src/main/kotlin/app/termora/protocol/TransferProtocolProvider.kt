@@ -3,9 +3,11 @@ package app.termora.protocol
 import app.termora.plugin.internal.local.LocalProtocolProvider
 import app.termora.plugin.internal.sftppty.SFTPPtyProtocolProvider
 import app.termora.plugin.internal.ssh.SSHProtocolProvider
+import app.termora.plugin.internal.wsl.WSLProtocolProvider
 import app.termora.protocol.ProtocolProvider.Companion.providers
 import app.termora.transfer.internal.local.LocalTransferProtocolProvider
 import app.termora.transfer.internal.sftp.SFTPTransferProtocolProvider
+import app.termora.transfer.internal.wsl.WSLTransferProtocolProvider
 import org.apache.commons.lang3.StringUtils
 
 interface TransferProtocolProvider : ProtocolProvider {
@@ -23,6 +25,10 @@ interface TransferProtocolProvider : ProtocolProvider {
                 StringUtils.equalsIgnoreCase(protocol, LocalTransferProtocolProvider.PROTOCOL)
             ) {
                 p = "file"
+            } else if (StringUtils.equalsIgnoreCase(protocol, WSLProtocolProvider.PROTOCOL) ||
+                StringUtils.equalsIgnoreCase(protocol, WSLTransferProtocolProvider.PROTOCOL)
+            ) {
+                p = "wsl"
             }
 
             return providers.filterIsInstance<TransferProtocolProvider>()

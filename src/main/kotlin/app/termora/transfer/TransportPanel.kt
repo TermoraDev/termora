@@ -9,6 +9,7 @@ import app.termora.plugin.ExtensionManager
 import app.termora.plugin.internal.wsl.WSLHostTerminalTab
 import app.termora.terminal.DataKey
 import app.termora.transfer.TransportTableModel.Attributes
+import app.termora.transfer.internal.wsl.WSLFileSystem
 import app.termora.transfer.s3.S3FileAttributes
 import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.extras.components.FlatToolBar
@@ -313,7 +314,9 @@ internal open class TransportPanel(
                 if (state != TransferTreeTableNode.State.Done && state != TransferTreeTableNode.State.Failed) return
                 val target = transfer.target()
                 if (loader.isLoaded()) {
-                    if (target.fileSystem != loader.getSyncTransportSupport().getFileSystem()) return
+                    if (target.fileSystem != loader.getSyncTransportSupport().getFileSystem() &&
+                        loader.getSyncTransportSupport().getFileSystem() !is WSLFileSystem
+                    ) return
                 }
                 if (target.pathString == workdir?.pathString || target.parent.pathString == workdir?.pathString) {
                     val c = {

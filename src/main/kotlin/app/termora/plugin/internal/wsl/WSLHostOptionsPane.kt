@@ -39,6 +39,7 @@ internal open class WSLHostOptionsPane : OptionsPane() {
         val protocol = WSLProtocolProvider.PROTOCOL
         val wsl = generalOption.hostComboBox.selectedItem as WSLDistribution
         val host = wsl.distributionName
+        val wslPath = generalOption.pathTextField.text
 
         val options = Options.Companion.Default.copy(
             encoding = terminalOption.charsetComboBox.selectedItem as String,
@@ -50,6 +51,7 @@ internal open class WSLHostOptionsPane : OptionsPane() {
                     ?: AltKeyModifier.EightBit.name),
                 "keywordHighlightSetId" to ((terminalOption.highlightSetComboBox.selectedItem as? KeywordHighlight)?.id
                     ?: "-1"),
+                "wslPath" to wslPath
             )
         )
 
@@ -68,6 +70,7 @@ internal open class WSLHostOptionsPane : OptionsPane() {
         generalOption.hostComboBox.selectedItem = host.host
         generalOption.remarkTextArea.text = host.remark
         generalOption.hostComboBox.selectedItem = null
+        generalOption.pathTextField.text = host.options.extras["wslPath"] ?: StringUtils.EMPTY
         terminalOption.startupCommandTextField.text = host.options.startupCommand
         terminalOption.environmentTextArea.text = host.options.env
         terminalOption.charsetComboBox.selectedItem = host.options.encoding
@@ -134,6 +137,7 @@ internal open class WSLHostOptionsPane : OptionsPane() {
         val nameTextField = OutlineTextField(128)
         val hostComboBox = OutlineComboBox<WSLDistribution>()
         val remarkTextArea = FixedLengthTextArea(512)
+        val pathTextField = OutlineTextField(512)
 
         init {
             initView()
@@ -141,8 +145,6 @@ internal open class WSLHostOptionsPane : OptionsPane() {
         }
 
         private fun initView() {
-
-
             hostComboBox.renderer = object : DefaultListCellRenderer() {
                 override fun getListCellRendererComponent(
                     list: JList<*>?,
@@ -170,6 +172,8 @@ internal open class WSLHostOptionsPane : OptionsPane() {
                     return c
                 }
             }
+
+            pathTextField.placeholderText = I18n.getString("termora.new-host.wsl.explorer-path.placeholder")
 
             add(getCenterComponent(), BorderLayout.CENTER)
         }
@@ -204,7 +208,7 @@ internal open class WSLHostOptionsPane : OptionsPane() {
         private fun getCenterComponent(): JComponent {
             val layout = FormLayout(
                 "left:pref, $FORM_MARGIN, default:grow",
-                "pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref"
+                "pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref,$FORM_MARGIN, pref"
             )
             remarkTextArea.setFocusTraversalKeys(
                 KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,
@@ -229,6 +233,9 @@ internal open class WSLHostOptionsPane : OptionsPane() {
 
                 .add("${I18n.getString("termora.new-host.wsl.distribution")}:").xy(1, rows)
                 .add(hostComboBox).xy(3, rows).apply { rows += step }
+
+                .add("${I18n.getString("termora.new-host.wsl.explorer-path")}:").xy(1, rows)
+                .add(pathTextField).xy(3, rows).apply { rows += step }
 
                 .add("${I18n.getString("termora.new-host.general.remark")}:").xy(1, rows)
                 .add(JScrollPane(remarkTextArea).apply { border = FlatTextBorder() })
