@@ -169,9 +169,11 @@ class TermoraFrameManager : Disposable {
             }
             val window = windows.last()
             window.toFront()
-            // On Windows, use setAlwaysOnTop to bring window to front
-            // when restored from minimized to tray state
-            if (SystemInfo.isWindows) {
+            // On Windows, toFront() may not work for windows restored from hidden state
+            // due to focus stealing prevention. Toggling isAlwaysOnTop is a known
+            // workaround to bypass this restriction and bring the window to front.
+            // See: https://github.com/TermoraDev/termora/issues/1278
+            if (SystemInfo.isWindows && window.isVisible) {
                 window.isAlwaysOnTop = true
                 window.isAlwaysOnTop = false
             }
