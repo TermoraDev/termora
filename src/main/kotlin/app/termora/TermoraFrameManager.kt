@@ -167,7 +167,16 @@ class TermoraFrameManager : Disposable {
                 }
                 window.isVisible = true
             }
-            windows.last().toFront()
+            val window = windows.last()
+            window.toFront()
+            // On Windows, toFront() may not work for windows restored from hidden state
+            // due to focus stealing prevention. Toggling isAlwaysOnTop is a known
+            // workaround to bypass this restriction and bring the window to front.
+            // See: https://github.com/TermoraDev/termora/issues/1278
+            if (SystemInfo.isWindows && window.isVisible) {
+                window.isAlwaysOnTop = true
+                window.isAlwaysOnTop = false
+            }
         } else {
             SwingUtilities.invokeLater { tick() }
         }
