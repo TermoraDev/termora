@@ -167,7 +167,14 @@ class TermoraFrameManager : Disposable {
                 }
                 window.isVisible = true
             }
-            windows.last().toFront()
+            val window = windows.last()
+            window.toFront()
+            // On Windows, use setAlwaysOnTop to bring window to front
+            // when restored from minimized to tray state
+            if (SystemInfo.isWindows) {
+                window.isAlwaysOnTop = true
+                window.isAlwaysOnTop = false
+            }
         } else {
             SwingUtilities.invokeLater { tick() }
         }
