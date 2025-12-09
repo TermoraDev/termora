@@ -56,7 +56,12 @@ class OpenHostAction : AnAction() {
 
         if (tab == null) return
 
-        terminalTabbedManager.addTerminalTab(tab)
+        if (evt.tabIndex >= 0) {
+            terminalTabbedManager.addTerminalTab(evt.tabIndex, tab)
+        } else {
+            terminalTabbedManager.addTerminalTab(tab)
+        }
+
         if (tab is PtyHostTerminalTab) {
             tab.start()
         }

@@ -141,25 +141,28 @@ class TerminalTabbed(
 
     }
 
-    private fun removeTabAt(index: Int, disposable: Boolean = true) {
+    private fun removeTabAt(index: Int, disposable: Boolean = true, reconnect: Boolean = false) {
         if (tabbedPane.isTabClosable(index)) {
             val tab = tabs[index]
 
             // 询问是否可以关闭
             if (disposable) {
-                // 如果开启了关闭确认，那么直接询问用户
-                if (appearance.confirmTabClose) {
-                    if (OptionPane.showConfirmDialog(
-                            windowScope.window,
-                            I18n.getString("termora.tabbed.tab.close-prompt"),
-                            messageType = JOptionPane.QUESTION_MESSAGE,
-                            optionType = JOptionPane.OK_CANCEL_OPTION
-                        ) != JOptionPane.OK_OPTION
-                    ) {
+                // 如果是重连接，那么直接关闭不进行任何形式的询问
+                if (reconnect.not()) {
+                    // 如果开启了关闭确认，那么直接询问用户
+                    if (appearance.confirmTabClose) {
+                        if (OptionPane.showConfirmDialog(
+                                windowScope.window,
+                                I18n.getString("termora.tabbed.tab.close-prompt"),
+                                messageType = JOptionPane.QUESTION_MESSAGE,
+                                optionType = JOptionPane.OK_CANCEL_OPTION
+                            ) != JOptionPane.OK_OPTION
+                        ) {
+                            return
+                        }
+                    } else if (!tab.willBeClose()) { // 如果没有开启则询问用户
                         return
                     }
-                } else if (!tab.willBeClose()) { // 如果没有开启则询问用户
-                    return
                 }
             }
 
@@ -233,7 +236,7 @@ class TerminalTabbed(
             if (tab is HostTerminalTab) {
                 actionManager
                     .getAction(OpenHostAction.OPEN_HOST)
-                    .actionPerformed(OpenHostActionEvent(this, tab.host, evt))
+                    .actionPerformed(OpenHostActionEvent(this, tab.host, evt, tabIndex + 1))
             }
         }
 
@@ -361,7 +364,7 @@ class TerminalTabbed(
         }
     }
 
-    override fun indexOfTerminalTab(tab: TerminalTab):Int {
+    override fun indexOfTerminalTab(tab: TerminalTab): Int {
         return tabbedPane.indexOfComponent(tab.getJComponent())
     }
 
@@ -451,10 +454,10 @@ class TerminalTabbed(
         }
     }
 
-    override fun closeTerminalTab(tab: TerminalTab, disposable: Boolean) {
+    override fun closeTerminalTab(tab: TerminalTab, disposable: Boolean, reconnect: Boolean) {
         for (i in 0 until tabs.size) {
             if (tabs[i] == tab) {
-                removeTabAt(i, disposable)
+                removeTabAt(i, disposable, reconnect)
                 break
             }
         }

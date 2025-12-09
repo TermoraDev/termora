@@ -332,6 +332,12 @@ class ControlSequenceIntroducerProcessor(terminal: Terminal, reader: TerminalRea
                 var top = sr.getOrElse(0) { 1 }
                 var bottom = sr.getOrElse(1) { terminalModel.getRows() }
 
+                // ";r" https://vt100.net/docs/vt510-rm/DECSTBM.html
+                if (sr.size == 1 && args.startsWith(';')) {
+                    bottom = top
+                    top = 1
+                }
+
                 if (bottom <= top) {
                     if (log.isWarnEnabled) {
                         log.warn("Set Scrolling Region Error. top: $top , bottom: $bottom")

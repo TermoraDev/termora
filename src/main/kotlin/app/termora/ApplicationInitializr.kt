@@ -50,6 +50,17 @@ class ApplicationInitializr {
             }
         }
 
+        // https://github.com/TermoraDev/termora/issues/1254
+        if (System.getProperty(FlatSystemProperties.UI_SCALE).isNullOrBlank()) {
+            val scale = System.getenv("TERMORA_SCALE")
+            if (scale.isNullOrBlank().not()) {
+                if (NumberUtils.toDouble(scale, -1.0) > 0) {
+                    System.setProperty(FlatSystemProperties.UI_SCALE_ENABLED, "true")
+                    System.setProperty(FlatSystemProperties.UI_SCALE, scale)
+                }
+            }
+        }
+
         // 启动
         val runtime = measureTimeMillis { ApplicationRunner().run() }
         val log = LoggerFactory.getLogger(javaClass)

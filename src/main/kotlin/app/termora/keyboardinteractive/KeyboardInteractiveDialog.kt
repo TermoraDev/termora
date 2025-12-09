@@ -27,11 +27,13 @@ class KeyboardInteractiveDialog(
         isModal = true
         isResizable = true
         controlsVisible = false
-        title = I18n.getString("termora.new-host.title")
 
         init()
         pack()
         size = Dimension(max(300, size.width), size.height)
+
+        // fix https://github.com/TermoraDev/termora/issues/1311
+        pack()
 
         setLocationRelativeTo(null)
 

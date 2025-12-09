@@ -27,9 +27,14 @@ class CloneSessionTerminalTabbedContextMenuExtension private constructor() : Ter
                     cloneSession.addActionListener(object : AnAction() {
                         override fun actionPerformed(evt: AnActionEvent) {
                             val terminalTabbedManager = evt.getData(DataProviders.TerminalTabbedManager) ?: return
+                            val index = terminalTabbedManager.indexOfTerminalTab(tab)
                             val handler = c.copy(channel = null)
                             val newTab = SSHTerminalTab(windowScope, tab.host, handler)
-                            terminalTabbedManager.addTerminalTab(newTab)
+                            if (index >= 0) {
+                                terminalTabbedManager.addTerminalTab(index + 1, newTab)
+                            } else {
+                                terminalTabbedManager.addTerminalTab(newTab)
+                            }
                             newTab.start()
                         }
                     })

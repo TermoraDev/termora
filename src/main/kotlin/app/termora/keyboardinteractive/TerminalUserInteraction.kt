@@ -30,6 +30,7 @@ class TerminalUserInteraction(
                 )
                 dialog.setLocationRelativeTo(owner)
                 dialog.title = instruction ?: name ?: "OTP"
+                dialog.title = StringUtils.defaultIfBlank(dialog.title, "OTP")
                 passwords[i] = dialog.getText()
                 if (passwords[i].isBlank()) {
                     break

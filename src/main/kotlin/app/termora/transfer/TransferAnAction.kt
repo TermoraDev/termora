@@ -46,6 +46,7 @@ class TransferAnAction : AnAction(I18n.getString("termora.transport.sftp"), Icon
                 val panel = tabbed.getTransportPanel(i) ?: continue
                 if (panel.host.id == host.id) {
                     tabbed.selectedIndex = i
+                    terminalTabbedManager.setSelectedTerminalTab(sftpTab)
                     return
                 }
             }
