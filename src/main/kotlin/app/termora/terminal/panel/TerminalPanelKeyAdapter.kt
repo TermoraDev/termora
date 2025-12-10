@@ -1,5 +1,6 @@
 package app.termora.terminal.panel
 
+import app.termora.actions.TerminalCopyAction
 import app.termora.keymap.KeyShortcut
 import app.termora.keymap.KeymapManager
 import app.termora.terminal.ControlCharacters
@@ -69,6 +70,7 @@ class TerminalPanelKeyAdapter(
         }
 
         val keyStroke = KeyStroke.getKeyStrokeForEvent(e)
+        val keymapActions = activeKeymap.getActionIds(KeyShortcut(keyStroke))
         for (action in terminalPanel.getTerminalActions()) {
             if (action.test(keyStroke, e)) {
                 action.actionPerformed(e)
@@ -100,7 +102,9 @@ class TerminalPanelKeyAdapter(
         }
 
         // 如果命中了全局快捷键，那么不处理
-        if (keyStroke.modifiers != 0 && activeKeymap.getActionIds(KeyShortcut(keyStroke)).isNotEmpty()) {
+        val copyShortcutWithoutSelection =
+            keymapActions.contains(TerminalCopyAction.COPY) && terminal.getSelectionModel().hasSelection().not()
+        if (keyStroke.modifiers != 0 && keymapActions.isNotEmpty() && !copyShortcutWithoutSelection) {
             return
         }
 
