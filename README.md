@@ -1,5 +1,6 @@
 <div align="center">
-<a href="./README.zh_CN.md">简体中文</a>
+<a href="./README.zh_CN.md">简体中文</a> &nbsp;
+<a href="./README.ko_KR.md">한국어</a>
 </div>
 
 # Termora
