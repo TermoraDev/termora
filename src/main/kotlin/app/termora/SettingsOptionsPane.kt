@@ -547,6 +547,7 @@ class SettingsOptionsPane : OptionsPane() {
 
             rightClickComboBox.addItem("Copy")
             rightClickComboBox.addItem("CopyAndPaste")
+            rightClickComboBox.addItem("Nothing")
 
             rightClickComboBox.selectedItem = terminalSetting.rightClick
 
@@ -576,6 +577,8 @@ class SettingsOptionsPane : OptionsPane() {
                         text = I18n.getString("termora.settings.terminal.right-click.copy")
                     } else if (value == "CopyAndPaste") {
                         text = I18n.getString("termora.settings.terminal.right-click.copy-and-paste")
+                    }else if (value == "Nothing") {
+                        text = I18n.getString("termora.settings.terminal.right-click.nothing")
                     }
                     return super.getListCellRendererComponent(list, text, index, isSelected, cellHasFocus)
                 }

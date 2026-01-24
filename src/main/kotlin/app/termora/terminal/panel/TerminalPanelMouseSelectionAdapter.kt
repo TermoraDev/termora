@@ -53,30 +53,31 @@ class TerminalPanelMouseSelectionAdapter(private val terminalPanel: TerminalPane
         if (SwingUtilities.isRightMouseButton(e)) {
             // 如果有选中并且开启了选中复制，那么右键直接是粘贴
             if (selectionModel.hasSelection() && isSelectCopy.not()) {
-                triggerCopyAction(
-                    KeyEvent(
-                        e.component,
-                        KeyEvent.KEY_PRESSED,
-                        e.`when`,
-                        e.modifiersEx,
-                        KeyEvent.VK_C,
-                        'C'
-                    )
-                )
-
-                if (rightClickMode == "CopyAndPaste") {
-                    triggerPasteAction(
+                if (rightClickMode != "Nothing") {
+                    triggerCopyAction(
                         KeyEvent(
                             e.component,
                             KeyEvent.KEY_PRESSED,
                             e.`when`,
                             e.modifiersEx,
-                            KeyEvent.VK_V,
-                            'V'
+                            KeyEvent.VK_C,
+                            'C'
                         )
                     )
-                }
 
+                    if (rightClickMode == "CopyAndPaste") {
+                        triggerPasteAction(
+                            KeyEvent(
+                                e.component,
+                                KeyEvent.KEY_PRESSED,
+                                e.`when`,
+                                e.modifiersEx,
+                                KeyEvent.VK_V,
+                                'V'
+                            )
+                        )
+                    }
+                }
             } else {
                 // paste
                 triggerPasteAction(

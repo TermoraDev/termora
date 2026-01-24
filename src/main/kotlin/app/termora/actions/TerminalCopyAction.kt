@@ -20,6 +20,10 @@ class TerminalCopyAction : AnAction() {
 
     override fun actionPerformed(evt: AnActionEvent) {
         val terminalPanel = evt.getData(DataProviders.TerminalPanel) ?: return
+        val selectionModel = terminalPanel.terminal.getSelectionModel()
+        if (!selectionModel.hasSelection()) {
+            return
+        }
         val text = terminalPanel.copy()
         val systemClipboard = terminalPanel.toolkit.systemClipboard
 

@@ -7,7 +7,7 @@ project.version = "0.0.2"
 dependencies {
     testImplementation(kotlin("test"))
     compileOnly(project(":"))
-    implementation("org.apache.commons:commons-pool2:2.12.1")
+    implementation("org.apache.commons:commons-pool2:2.13.0")
     testImplementation(project(":"))
 }
 
