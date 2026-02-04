@@ -1,10 +1,12 @@
 package app.termora.plugin.internal.local
 
 import app.termora.*
+import app.termora.database.DatabaseManager
 import app.termora.terminal.PtyConnector
 import app.termora.terminal.PtyConnectorDelegate
 import app.termora.terminal.PtyProcessConnector
 import org.apache.commons.io.Charsets
+import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
 import java.nio.charset.StandardCharsets
 import javax.swing.Icon
@@ -21,11 +23,28 @@ class LocalTerminalTab(windowScope: WindowScope, host: Host) :
 
     override suspend fun openPtyConnector(): PtyConnector {
         val winSize = terminalPanel.winSize()
-        val ptyConnector = PtyConnectorFactory.Companion.getInstance().createPtyConnector(
-            winSize.rows, winSize.cols,
-            host.options.envs(),
-            Charsets.toCharset(host.options.encoding, StandardCharsets.UTF_8),
-        )
+        val workDir = host.options.extras["workDir"]
+
+        val ptyConnector = if (workDir != null && workDir.isNotBlank()) {
+            val command = DatabaseManager.getInstance().terminal.localShell
+            val commands = mutableListOf(command)
+            if (SystemUtils.IS_OS_UNIX) {
+                commands.add("-l")
+            }
+            PtyConnectorFactory.Companion.getInstance().createPtyConnector(
+                commands.toTypedArray(),
+                winSize.rows, winSize.cols,
+                host.options.envs(),
+                workDir,
+                Charsets.toCharset(host.options.encoding, StandardCharsets.UTF_8),
+            )
+        } else {
+            PtyConnectorFactory.Companion.getInstance().createPtyConnector(
+                winSize.rows, winSize.cols,
+                host.options.envs(),
+                Charsets.toCharset(host.options.encoding, StandardCharsets.UTF_8),
+            )
+        }
 
         return ptyConnector
     }

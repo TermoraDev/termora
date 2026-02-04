@@ -1,6 +1,8 @@
 package app.termora
 
 import com.formdev.flatlaf.util.SystemInfo
+import com.sun.jna.Memory
+import com.sun.jna.Pointer
 import com.sun.jna.platform.win32.Kernel32
 import com.sun.jna.platform.win32.User32
 import com.sun.jna.platform.win32.WinDef.*
@@ -9,9 +11,11 @@ import com.sun.jna.platform.win32.WinUser.*
 import com.sun.jna.platform.win32.Wtsapi32
 import java.nio.channels.FileChannel
 import java.nio.channels.FileLock
+import java.nio.charset.StandardCharsets
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.util.concurrent.atomic.AtomicBoolean
+import javax.swing.SwingUtilities
 
 class ApplicationSingleton private constructor() : Disposable {
 
@@ -26,7 +30,7 @@ class ApplicationSingleton private constructor() : Disposable {
         }
     }
 
-    fun isSingleton(): Boolean {
+    fun isSingleton(args: Array<String>): Boolean {
         var singleton = this.isSingleton
         if (singleton != null) return singleton
 
@@ -43,7 +47,7 @@ class ApplicationSingleton private constructor() : Disposable {
                         Thread.ofVirtual().start(Win32HelperWindow.getInstance())
                     } else {
                         // 尝试激活窗口
-                        Win32HelperWindow.tick()
+                        Win32HelperWindow.tick(args)
                     }
                 } else {
                     singleton = FileLocker.getInstance().tryLock()
@@ -105,9 +109,27 @@ class ApplicationSingleton private constructor() : Disposable {
             }
 
 
-            fun tick() {
+            fun tick(args: Array<String>) {
                 val hWnd = User32.INSTANCE.FindWindow(WindowClass, WindowName) ?: return
                 User32.INSTANCE.SendMessage(hWnd, TICK, WPARAM(), LPARAM())
+
+                if (args.isNotEmpty()) {
+                    val data = args.joinToString(" ")
+                    val bytes = data.toByteArray(StandardCharsets.UTF_8)
+                    val memory = Memory((bytes.size + 1).toLong())
+                    memory.write(0, bytes, 0, bytes.size)
+                    memory.setByte(bytes.size.toLong(), 0)
+
+                    val copyData = COPYDATASTRUCT()
+                    copyData.dwData = null
+                    copyData.cbData = (bytes.size + 1)
+                    copyData.lpData = memory
+
+                    copyData.write()
+                    val pCopyData = copyData.pointer
+
+                    User32.INSTANCE.SendMessage(hWnd, WM_COPYDATA, WPARAM(), LPARAM(Pointer.nativeValue(pCopyData)))
+                }
             }
         }
 
@@ -170,6 +192,22 @@ class ApplicationSingleton private constructor() : Disposable {
                     TICK -> {
                         onTick()
                         return LRESULT()
+                    }
+
+                    WM_COPYDATA -> {
+                        val copyData = COPYDATASTRUCT(Pointer(lParam.toLong()))
+                        copyData.read()
+                        val bytes = copyData.lpData?.getByteArray(0, copyData.cbData)
+                        if (bytes != null) {
+                            val len = if (bytes.isNotEmpty() && bytes.last() == 0.toByte()) bytes.size - 1 else bytes.size
+                            val str = String(bytes, 0, len, StandardCharsets.UTF_8)
+                            if (str.isNotBlank()) {
+                                SwingUtilities.invokeLater {
+                                    TermoraFrameManager.getInstance().openLocalTerminal(str)
+                                }
+                            }
+                        }
+                        return LRESULT(1)
                     }
 
                     WM_DESTROY -> {

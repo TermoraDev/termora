@@ -1,6 +1,5 @@
 package app.termora
 
-fun main() {
-    ApplicationInitializr().run()
+fun main(args: Array<String>) {
+    ApplicationInitializr().run(args)
 }
-
