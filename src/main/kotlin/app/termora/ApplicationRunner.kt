@@ -32,7 +32,7 @@ import kotlin.system.exitProcess
 class ApplicationRunner {
     private val log by lazy { LoggerFactory.getLogger(ApplicationRunner::class.java) }
 
-    fun run() {
+    fun run(args: Array<String>) {
 
         // 异步初始化
         val loadPluginThread = Thread.ofVirtual().start { PluginManager.getInstance() }
@@ -64,7 +64,7 @@ class ApplicationRunner {
         }
 
         // 启动主窗口
-        SwingUtilities.invokeLater { startMainFrame() }
+        SwingUtilities.invokeLater { startMainFrame(args) }
 
     }
 
@@ -76,10 +76,14 @@ class ApplicationRunner {
 
     }
 
-    private fun startMainFrame() {
+    private fun startMainFrame(args: Array<String>) {
 
 
         TermoraFrameManager.getInstance().createWindow().isVisible = true
+
+        if (args.isNotEmpty()) {
+            TermoraFrameManager.getInstance().openLocalTerminal(args.joinToString(" "))
+        }
 
         if (SystemInfo.isMacOS) {
             SwingUtilities.invokeLater {

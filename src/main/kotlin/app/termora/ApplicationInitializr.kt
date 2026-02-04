@@ -16,7 +16,7 @@ import kotlin.system.measureTimeMillis
 
 class ApplicationInitializr {
 
-    fun run() {
+    fun run(args: Array<String>) {
 
         // 提供一个选项，用于延迟启动，它通常是远程调试时使用
         val delay = System.getProperty("app-delay")
@@ -34,7 +34,7 @@ class ApplicationInitializr {
         setupTinylog()
 
         // 检查是否单例
-        checkSingleton()
+        checkSingleton(args)
 
         if (SystemInfo.isMacOS) {
             System.setProperty("apple.awt.application.name", Application.getName())
@@ -62,7 +62,7 @@ class ApplicationInitializr {
         }
 
         // 启动
-        val runtime = measureTimeMillis { ApplicationRunner().run() }
+        val runtime = measureTimeMillis { ApplicationRunner().run(args) }
         val log = LoggerFactory.getLogger(javaClass)
         if (log.isInfoEnabled) {
             log.info("Application initialization ${runtime}ms")
@@ -140,8 +140,8 @@ class ApplicationInitializr {
         }
     }
 
-    private fun checkSingleton() {
-        if (ApplicationSingleton.getInstance().isSingleton()) return
+    private fun checkSingleton(args: Array<String>) {
+        if (ApplicationSingleton.getInstance().isSingleton(args)) return
         System.err.println("Program is already running")
         exitProcess(1)
     }

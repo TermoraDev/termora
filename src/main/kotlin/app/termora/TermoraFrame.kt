@@ -9,6 +9,8 @@ import app.termora.keymap.KeyShortcut
 import app.termora.keymap.KeymapManager
 import app.termora.plugin.ExtensionManager
 import app.termora.plugin.internal.extension.DynamicExtensionHandler
+import app.termora.plugin.internal.local.LocalProtocolProvider
+import app.termora.plugin.internal.local.LocalTerminalTab
 import app.termora.plugin.internal.ssh.SSHProtocolProvider
 import app.termora.terminal.DataKey
 import app.termora.tree.NewHostTreeModel
@@ -320,6 +322,17 @@ class TermoraFrame : JFrame(), DataProvider {
 
     fun removeNotifyListener(listener: NotifyListener) {
         notifyListeners = ArrayUtils.removeElements(notifyListeners, listener)
+    }
+
+    fun openLocalTerminal(workDir: String) {
+        val host = Host(
+            name = "Local",
+            protocol = LocalProtocolProvider.PROTOCOL,
+            options = Options(extras = mapOf("workDir" to workDir))
+        )
+        val tab = LocalTerminalTab(windowScope, host)
+        terminalTabbed.addTerminalTab(tab, true)
+        tab.start()
     }
 
     override fun addNotify() {

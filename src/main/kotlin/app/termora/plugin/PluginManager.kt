@@ -13,6 +13,7 @@ import app.termora.plugin.internal.sftppty.SFTPPtyInternalPlugin
 import app.termora.plugin.internal.ssh.SSHInternalPlugin
 import app.termora.plugin.internal.telnet.TelnetInternalPlugin
 import app.termora.plugin.internal.updater.UpdaterPlugin
+import app.termora.plugin.internal.windows.WindowsIntegrationPlugin
 import app.termora.plugin.internal.wsl.WSLInternalPlugin
 import app.termora.swingCoroutineScope
 import app.termora.terminal.panel.vw.FloatingToolbarPlugin
@@ -126,6 +127,7 @@ internal class PluginManager private constructor() {
         // wsl plugin
         if (SystemUtils.IS_OS_WINDOWS) {
             plugins.add(PluginDescriptor(WSLInternalPlugin(), origin = PluginOrigin.Internal, version = version))
+            plugins.add(PluginDescriptor(WindowsIntegrationPlugin(), origin = PluginOrigin.Internal, version = version))
         }
         // sftp pty plugin
         plugins.add(PluginDescriptor(SFTPPtyInternalPlugin(), origin = PluginOrigin.Internal, version = version))

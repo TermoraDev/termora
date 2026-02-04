@@ -173,6 +173,28 @@ class TermoraFrameManager : Disposable {
         }
     }
 
+    fun openLocalTerminal(workDir: String) {
+        if (SwingUtilities.isEventDispatchThread()) {
+            val windows = getWindows()
+            val window = if (windows.isEmpty()) {
+                val window = createWindow()
+                window.isVisible = true
+                window
+            } else {
+                windows.last()
+            }
+
+            if (window.extendedState and JFrame.ICONIFIED == JFrame.ICONIFIED) {
+                window.extendedState = window.extendedState and JFrame.ICONIFIED.inv()
+            }
+            window.isVisible = true
+            window.toFront()
+            window.openLocalTerminal(workDir)
+        } else {
+            SwingUtilities.invokeLater { openLocalTerminal(workDir) }
+        }
+    }
+
     override fun dispose() {
         if (isDisposed.compareAndSet(false, true)) {
             Disposer.dispose(ApplicationScope.forApplicationScope())
