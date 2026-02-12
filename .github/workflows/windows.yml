@@ -3,8 +3,8 @@ name: Windows
 on: [ push, pull_request ]
 
 env:
-  JBR_MAJOR: 21.0.8
-  JBR_PATCH: b1163.69
+  JBR_MAJOR: 21.0.9
+  JBR_PATCH: b895.149
 
 jobs:
   build:

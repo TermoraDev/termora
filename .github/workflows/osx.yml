@@ -8,8 +8,8 @@ env:
   # 只有发布版本时才需要公证
   TERMORA_MAC_NOTARY: "${{ startsWith(github.event.head_commit.message, 'release: ') && github.repository == 'TermoraDev/termora' }}"
   TERMORA_MAC_NOTARY_KEYCHAIN_PROFILE: ${{ secrets.TERMORA_MAC_NOTARY_KEYCHAIN_PROFILE }}
-  JBR_MAJOR: 21.0.8
-  JBR_PATCH: b1163.69
+  JBR_MAJOR: 21.0.9
+  JBR_PATCH: b895.149
 
 jobs:
   build:
