@@ -65,7 +65,12 @@ class TerminalPanelMouseTrackingAdapter(
     }
 
     override fun mouseWheelMoved(e: MouseWheelEvent) {
-        if (this.shouldSendMouseData || terminalModel.isAlternateScreenBuffer()) {
+        if (shouldSendMouseData) {
+            // Application requested mouse tracking (e.g. tmux with mouse on), send raw mouse sequence
+            val p = terminalPanel.pointToPosition(e.point)
+            sendMouseEvent(p, AWTTerminalMouseEvent(e), TerminalMouseEventType.Pressed)
+        } else if (terminalModel.isAlternateScreenBuffer()) {
+            // Alternate screen without mouse tracking (e.g. plain vim), fall back to arrow keys
             val unitsToScroll = e.unitsToScroll
             val encode = terminal.getKeyEncoder()
                 .encode(TerminalKeyEvent(if (e.wheelRotation < 0) KeyEvent.VK_UP else KeyEvent.VK_DOWN))
