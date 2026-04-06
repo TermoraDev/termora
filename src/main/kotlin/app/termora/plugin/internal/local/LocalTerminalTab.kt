@@ -19,6 +19,10 @@ class LocalTerminalTab(windowScope: WindowScope, host: Host) :
         private val log = LoggerFactory.getLogger(LocalTerminalTab::class.java)
     }
 
+    init {
+        terminalPanel.dropFiles = true
+    }
+
     override suspend fun openPtyConnector(): PtyConnector {
         val winSize = terminalPanel.winSize()
         val ptyConnector = PtyConnectorFactory.Companion.getInstance().createPtyConnector(

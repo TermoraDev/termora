@@ -5,6 +5,7 @@ import app.termora.account.AccountManager
 import app.termora.account.AccountOwner
 import app.termora.database.OwnerType
 import com.formdev.flatlaf.extras.components.FlatTabbedPane
+import org.apache.commons.lang3.StringUtils
 import java.awt.Dimension
 import java.awt.Window
 import javax.swing.BorderFactory
@@ -45,25 +46,27 @@ class KeywordHighlightDialog(owner: Window) : DialogWrapper(owner) {
                 AccountOwner(
                     accountManager.getAccountId(),
                     accountManager.getEmail(),
-                    OwnerType.User
+                    OwnerType.User,
+                    StringUtils.EMPTY,
                 )
             ).apply { Disposer.register(disposable, this) }
         )
 
-        if (accountManager.hasTeamFeature()) {
-            for (team in accountManager.getTeams()) {
-                tabbed.addTab(
-                    team.name,
-                    Icons.cwmUsers,
-                    KeywordHighlightPanel(
-                        AccountOwner(
-                            team.id,
-                            team.name,
-                            OwnerType.Team
-                        )
-                    ).apply { Disposer.register(disposable, this) })
-            }
+//        if (accountManager.hasTeamFeature()) {
+        for (team in accountManager.getTeams()) {
+            tabbed.addTab(
+                team.name,
+                Icons.cwmUsers,
+                KeywordHighlightPanel(
+                    AccountOwner(
+                        team.id,
+                        team.name,
+                        OwnerType.Team,
+                        team.role,
+                    )
+                ).apply { Disposer.register(disposable, this) })
         }
+//        }
 
 
         return tabbed

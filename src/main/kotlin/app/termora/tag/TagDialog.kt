@@ -46,27 +46,27 @@ class TagDialog(owner: Window, private val accountOwnerId: String = StringUtils.
                 AccountOwner(
                     accountManager.getAccountId(),
                     accountManager.getEmail(),
-                    OwnerType.User
+                    OwnerType.User,
+                    StringUtils.EMPTY,
                 )
             ).apply { Disposer.register(disposable, this) }
         )
 
-        if (accountManager.hasTeamFeature()) {
-            for (team in accountManager.getTeams()) {
-                tabbed.addTab(
-                    team.name,
-                    Icons.cwmUsers,
-                    TagPanel(
-                        AccountOwner(
-                            team.id,
-                            team.name,
-                            OwnerType.Team
-                        )
-                    ).apply { Disposer.register(disposable, this) })
+        for (team in accountManager.getTeams()) {
+            tabbed.addTab(
+                team.name,
+                Icons.cwmUsers,
+                TagPanel(
+                    AccountOwner(
+                        team.id,
+                        team.name,
+                        OwnerType.Team,
+                        team.role,
+                    )
+                ).apply { Disposer.register(disposable, this) })
 
-                if (accountOwnerId == team.id) {
-                    tabbed.selectedIndex = tabbed.tabCount - 1
-                }
+            if (accountOwnerId == team.id) {
+                tabbed.selectedIndex = tabbed.tabCount - 1
             }
         }
 

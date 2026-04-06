@@ -2,6 +2,8 @@ package app.termora.tag
 
 import app.termora.*
 import app.termora.account.AccountOwner
+import app.termora.account.TeamRole
+import app.termora.database.OwnerType
 import com.jgoodies.forms.builder.FormBuilder
 import com.jgoodies.forms.layout.FormLayout
 import java.awt.BorderLayout
@@ -9,7 +11,7 @@ import java.awt.Component
 import javax.swing.*
 import javax.swing.border.EmptyBorder
 
-class TagPanel(accountOwner: AccountOwner) : JPanel(BorderLayout()), Disposable {
+class TagPanel(private val accountOwner: AccountOwner) : JPanel(BorderLayout()), Disposable {
 
     private val owner get() = SwingUtilities.getWindowAncestor(this)
 
@@ -23,6 +25,7 @@ class TagPanel(accountOwner: AccountOwner) : JPanel(BorderLayout()), Disposable 
     init {
         initView()
         initEvents()
+        preventImportantData()
     }
 
     private fun initView() {
@@ -106,6 +109,14 @@ class TagPanel(accountOwner: AccountOwner) : JPanel(BorderLayout()), Disposable 
             deleteBtn.isEnabled = editBtn.isEnabled
         }
 
+    }
+
+    private fun preventImportantData() {
+        if (accountOwner.isVisitorMode()) {
+            addBtn.isVisible = false
+            editBtn.isVisible = false
+            deleteBtn.isVisible = false
+        }
     }
 
     private fun createCenterPanel(): JComponent {

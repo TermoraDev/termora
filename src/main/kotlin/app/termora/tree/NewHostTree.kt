@@ -3,6 +3,8 @@ package app.termora.tree
 import app.termora.*
 import app.termora.Application.ohMyJson
 import app.termora.account.AccountManager
+import app.termora.account.Team
+import app.termora.account.TeamRole
 import app.termora.actions.AnAction
 import app.termora.actions.AnActionEvent
 import app.termora.actions.OpenHostAction
@@ -155,9 +157,9 @@ class NewHostTree : SimpleTree(), Disposable {
                 val path: TreePath? = getPathForLocation(e.x, e.y)
                 if (path != null) {
                     val node: HostTreeNode = path.lastPathComponent as HostTreeNode
-                    if (node.host.remark.isNotEmpty()){
+                    if (node.host.remark.isNotEmpty()) {
                         toolTipText = node.host.remark
-                    }else{
+                    } else {
                         toolTipText = null
                     }
                 } else {
@@ -181,7 +183,7 @@ class NewHostTree : SimpleTree(), Disposable {
             override fun actionPerformed(evt: AnActionEvent) {
                 val lastNode = getLastSelectedPathNode() ?: return
                 val folder = if (lastNode.isFolder) lastNode.parent ?: simpleTreeModel.root
-                    else lastNode.parent ?: return
+                else lastNode.parent ?: return
 
                 if (toolkit.systemClipboard.isDataFlavorAvailable(NodesTransferable.FLAVOR).not()) return
                 val nodes = (toolkit.systemClipboard.getData(NodesTransferable.FLAVOR) as? List<*>)
@@ -451,6 +453,33 @@ class NewHostTree : SimpleTree(), Disposable {
             }
 
             override fun popupMenuCanceled(e: PopupMenuEvent?) {
+            }
+
+        })
+
+        popupMenu.addPopupMenuListener(object : PopupMenuListener {
+
+            override fun popupMenuWillBecomeVisible(e: PopupMenuEvent?) {
+                for (node in nodes) {
+                    val team = TeamTreeNode.parentTeam(node) ?: continue
+                    if (team.role == TeamRole.Visitor.name) {
+                        copy.isEnabled = false
+                        remove.isEnabled = false
+                        rename.isEnabled = false
+                        importMenu.isEnabled = false
+                        newMenu.isEnabled = false
+                        tagsMenu.isEnabled = false
+                        break
+                    }
+                }
+            }
+
+            override fun popupMenuWillBecomeInvisible(e: PopupMenuEvent?) {
+
+            }
+
+            override fun popupMenuCanceled(e: PopupMenuEvent?) {
+
             }
 
         })

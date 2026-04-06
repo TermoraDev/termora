@@ -326,7 +326,8 @@ class TerminalDisplay(
                 // Focus Mode
                 if (terminalModel.getData(TerminalPanel.FocusMode, false)) {
                     if (terminalModel.isAlternateScreenBuffer().not()) {
-                        if (isCursorLine.not()) {
+                        // https://github.com/TermoraDev/termora/issues/1471
+                        if (isCursorLine.not() && hasSelection.not()) {
                             background = colorPalette.getColor(TerminalColor.Basic.BACKGROUND)
                             foreground = UIManager.getColor("textInactiveText").rgb
                         }

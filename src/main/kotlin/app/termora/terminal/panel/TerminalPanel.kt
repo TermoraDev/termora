@@ -251,7 +251,7 @@ class TerminalPanel(val tab: TerminalTab?, val terminal: Terminal, private val w
     private fun enableDropTarget() {
         dropTarget = object : DropTarget() {
             override fun drop(e: DropTargetDropEvent) {
-                if (!dropFiles) {
+                if (dropFiles.not()) {
                     return
                 }
 

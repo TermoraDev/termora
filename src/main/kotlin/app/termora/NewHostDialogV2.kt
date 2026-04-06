@@ -1,8 +1,10 @@
 package app.termora
 
 import app.termora.account.AccountOwner
+import app.termora.account.TeamRole
 import app.termora.actions.AnAction
 import app.termora.actions.AnActionEvent
+import app.termora.database.OwnerType
 import app.termora.protocol.*
 import app.termora.transfer.ScaleIcon
 import com.formdev.flatlaf.extras.components.FlatToolBar
@@ -13,9 +15,11 @@ import kotlinx.coroutines.swing.Swing
 import kotlinx.coroutines.withContext
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.exception.ExceptionUtils
+import org.jdesktop.swingx.SwingXUtilities
 import java.awt.BorderLayout
 import java.awt.CardLayout
 import java.awt.Dimension
+import java.awt.Graphics
 import java.awt.Window
 import javax.swing.*
 
@@ -144,10 +148,33 @@ class NewHostDialogV2(
         val provider = extension.getProtocolProvider()
         testConnectionBtn.isVisible = provider is ProtocolTester
 
+        preventImportantData()
+    }
+
+    private fun preventImportantData() {
+        if (visitorMode()) {
+            for (component in SwingUtils.getDescendantsOfType(JComponent::class.java, cardPanel)) {
+                if (component is OutlinePasswordField) {
+                    component.styleMap = component.styleMap.toMutableMap().apply {
+                        put("showRevealButton", false)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun visitorMode(): Boolean {
+        return accountOwner.isVisitorMode()
     }
 
     override fun createActions(): List<AbstractAction> {
-        return listOf(createOkAction(), testConnectionAction, CancelAction())
+        val actions = mutableListOf<AbstractAction>()
+        if (visitorMode().not()) {
+            actions.add(createOkAction())
+            actions.add(testConnectionAction)
+        }
+        actions.add(CancelAction())
+        return actions
     }
 
     override fun createJButtonForAction(action: Action): JButton {
@@ -237,6 +264,5 @@ class NewHostDialogV2(
 
         super.doOKAction()
     }
-
 
 }

@@ -1,5 +1,8 @@
 import org.gradle.nativeplatform.platform.internal.DefaultNativePlatform
 
+fun exec(action: ExecSpec.() -> Unit) {
+    providers.exec(action).result.get().assertNormalExitValue()
+}
 
 tasks.withType<Jar> {
 

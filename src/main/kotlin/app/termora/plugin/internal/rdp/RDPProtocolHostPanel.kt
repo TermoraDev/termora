@@ -2,11 +2,12 @@ package app.termora.plugin.internal.rdp
 
 import app.termora.Disposer
 import app.termora.Host
+import app.termora.account.AccountOwner
 import app.termora.protocol.ProtocolHostPanel
 import java.awt.BorderLayout
 
-class RDPProtocolHostPanel : ProtocolHostPanel() {
-    private val pane = RDPHostOptionsPane()
+class RDPProtocolHostPanel(private val accountOwner: AccountOwner) : ProtocolHostPanel() {
+    private val pane = RDPHostOptionsPane(accountOwner)
 
     init {
         initView()

@@ -44,6 +44,10 @@ val macOSNotaryKeychainProfile = System.getenv("TERMORA_MAC_NOTARY_KEYCHAIN_PROF
 val macOSNotary = macOSSign && macOSNotaryKeychainProfile.isNotBlank()
         && System.getenv("TERMORA_MAC_NOTARY").toBoolean()
 
+fun exec(action: ExecSpec.() -> Unit) {
+    providers.exec(action).result.get().assertNormalExitValue()
+}
+
 allprojects {
     repositories {
         mavenCentral()
@@ -133,6 +137,11 @@ application {
         args.add("--add-exports java.desktop/com.apple.eawt=ALL-UNNAMED")
         args.add("-Dsun.java2d.metal=true")
         args.add("-Dapple.awt.application.appearance=system")
+    }
+
+    if (os.isLinux) {
+        // https://blog.jetbrains.com/platform/2026/02/wayland-by-default-in-2026-1-eap/
+        args.add("-Dawt.toolkit.name=XToolkit")
     }
 
     args.add("-DTERMORA_PLUGIN_DIRECTORY=${layout.buildDirectory.get().asFile.absolutePath}${File.separator}plugins")
@@ -577,9 +586,8 @@ fun packOnMac(distributionDir: Directory, finalFilenameWithoutExtension: String,
     signMacOSLocalFile(dmgFile)
 
     // 找到 .app
-    val imageFile = layout.buildDirectory.dir("jpackage/images/").get().asFile
-    val appFile = imageFile.listFiles()?.firstOrNull()?.listFiles()?.firstOrNull()
-        ?: throw FileNotFoundException("${projectName}.app")
+    val imageFile = layout.buildDirectory.dir("jpackage/image/").get().asFile
+    val appFile = imageFile.listFiles()?.firstOrNull() ?: throw FileNotFoundException("${projectName}.app")
 
     // zip
     // @formatter:off
@@ -768,7 +776,7 @@ fun stapleMacOSLocalFile(file: File) {
 
 kotlin {
     jvmToolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 

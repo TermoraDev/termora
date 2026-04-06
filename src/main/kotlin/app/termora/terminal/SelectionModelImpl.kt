@@ -113,6 +113,8 @@ open class SelectionModelImpl(private val terminal: Terminal) : SelectionModel {
                 val line = iterator.next()
                 val chars = line.chars()
                 if (chars.isEmpty() || chars.first().first.isNull) {
+                    // fix https://github.com/TermoraDev/termora/issues/1473
+                    sb.appendLine()
                     continue
                 }
 

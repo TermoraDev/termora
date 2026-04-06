@@ -25,7 +25,7 @@ class Team(
     /**
      * 所属角色
      */
-    val role: TeamRole,
+    val role: String,
 ) {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

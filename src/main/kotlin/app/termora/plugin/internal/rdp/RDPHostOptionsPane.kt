@@ -1,6 +1,7 @@
 package app.termora.plugin.internal.rdp
 
 import app.termora.*
+import app.termora.account.AccountOwner
 import app.termora.plugin.internal.BasicProxyOption
 import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.extras.components.FlatComboBox
@@ -17,7 +18,7 @@ import java.awt.event.ComponentEvent
 import java.awt.event.ItemEvent
 import javax.swing.*
 
-internal open class RDPHostOptionsPane : OptionsPane() {
+internal open class RDPHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPane() {
     protected val generalOption = GeneralOption()
     protected val proxyOption = BasicProxyOption()
     protected val owner: Window get() = SwingUtilities.getWindowAncestor(this)

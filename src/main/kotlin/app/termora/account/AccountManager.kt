@@ -54,24 +54,24 @@ class AccountManager private constructor() : ApplicationRunnerExtension {
     fun getOwnerIds() = account.teams.map { it.id }.toMutableList().apply { add(getAccountId()) }.toSet()
     fun getOwners(): Set<AccountOwner> {
         val owners = mutableSetOf<AccountOwner>()
-        owners.add(AccountOwner(getAccountId(), getEmail(), OwnerType.User))
+        owners.add(AccountOwner(getAccountId(), getEmail(), OwnerType.User, StringUtils.EMPTY))
         for (team in getTeams()) {
-            owners.add(AccountOwner(team.id, team.name, OwnerType.Team))
+            owners.add(AccountOwner(team.id, team.name, OwnerType.Team, team.role))
         }
         return owners
     }
 
     fun isFreePlan(): Boolean {
-        return isLocally() || getSubscription().plan == SubscriptionPlan.Free
+        return isLocally() || getSubscription().plan == SubscriptionPlan.Free.name
     }
 
     fun getSubscription(): Subscription {
 
         if (isLocally().not()) {
             val subscriptions = getSubscriptions()
-            val enterprises = getSubscriptions().filter { it.plan == SubscriptionPlan.Enterprise }
-            val teams = subscriptions.filter { it.plan == SubscriptionPlan.Team }
-            val pros = subscriptions.filter { it.plan == SubscriptionPlan.Pro }
+            val enterprises = getSubscriptions().filter { it.plan == SubscriptionPlan.Enterprise.name }
+            val teams = subscriptions.filter { it.plan == SubscriptionPlan.Team.name }
+            val pros = subscriptions.filter { it.plan == SubscriptionPlan.Pro.name }
             val now = System.currentTimeMillis()
 
             if (enterprises.any { it.endAt > now }) {
@@ -83,15 +83,8 @@ class AccountManager private constructor() : ApplicationRunnerExtension {
             }
         }
 
-        return Subscription(id = "0", plan = SubscriptionPlan.Free, startAt = 0, endAt = 0)
+        return Subscription(id = "0", plan = SubscriptionPlan.Free.name, startAt = 0, endAt = 0)
     }
-
-    fun hasTeamFeature(): Boolean {
-        if (accountProperties.signed.not()) return false
-        val plan = getSubscription().plan
-        return SubscriptionPlan.Team == plan || SubscriptionPlan.Enterprise == plan
-    }
-
 
     /**
      * 刷新 Token

@@ -61,11 +61,11 @@ class NewHostTreeModel private constructor() : SimpleTreeModel<Host>(
 
         // 如果是根，需要引入团队功能
         if (parent == getRoot()) {
-            if (accountManager.hasTeamFeature()) {
-                for (team in accountManager.getTeams()) {
-                    nodes[team.id] = TeamTreeNode(team)
-                }
+//            if (accountManager.hasTeamFeature()) {
+            for (team in accountManager.getTeams()) {
+                nodes[team.id] = TeamTreeNode(team)
             }
+//            }
 
             nodes[accountManager.getAccountId()] = HostTreeNode(
                 Host(
@@ -93,11 +93,11 @@ class NewHostTreeModel private constructor() : SimpleTreeModel<Host>(
         }
 
         if (parent == getRoot()) {
-            if (accountManager.hasTeamFeature()) {
-                for (team in accountManager.getTeams()) {
-                    parent.add(nodes.getValue(team.id))
-                }
+//            if (accountManager.hasTeamFeature()) {
+            for (team in accountManager.getTeams()) {
+                parent.add(nodes.getValue(team.id))
             }
+//            }
             parent.add(nodes.getValue(accountManager.getAccountId()))
         } else {
             for (node in nodes.values) {

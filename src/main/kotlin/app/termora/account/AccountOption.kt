@@ -123,7 +123,7 @@ class AccountOption : JPanel(BorderLayout()), OptionsPane.Option, Disposable {
         }
 
         val planBox = Box.createHorizontalBox()
-        planBox.add(JLabel(if (isLocally) "-" else subscription.plan.name))
+        planBox.add(JLabel(if (isLocally) "-" else subscription.plan))
         if (isFreePlan && isLocally.not()) {
             planBox.add(Box.createHorizontalStrut(16))
             val upgrade = JXHyperlink(object : AnAction(I18n.getString("termora.settings.account.upgrade")) {

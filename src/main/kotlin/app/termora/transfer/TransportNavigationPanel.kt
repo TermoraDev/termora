@@ -17,6 +17,8 @@ import java.awt.CardLayout
 import java.awt.Dimension
 import java.awt.Insets
 import java.awt.Point
+import java.awt.datatransfer.Clipboard
+import java.awt.datatransfer.DataFlavor
 import java.awt.event.*
 import java.beans.PropertyChangeEvent
 import java.beans.PropertyChangeListener
@@ -28,6 +30,7 @@ import kotlin.io.path.absolutePathString
 import kotlin.io.path.name
 import kotlin.io.path.pathString
 import kotlin.math.round
+
 
 internal class TransportNavigationPanel(private val navigator: TransportNavigator) : JPanel() {
 
@@ -43,7 +46,20 @@ internal class TransportNavigationPanel(private val navigator: TransportNavigato
     }
 
     private val layeredPane = LayeredPane()
-    private val textField = FlatTextField()
+    private val textField = object : FlatTextField() {
+        // https://github.com/TermoraDev/termora/issues/1445
+        override fun paste() {
+            val clipboard = toolkit.systemClipboard
+            if (clipboard.isDataFlavorAvailable(DataFlavor.stringFlavor)) {
+                val text = clipboard.getData(DataFlavor.stringFlavor) as String?
+                if (text != null) {
+                    replaceSelection(text.trim())
+                    return
+                }
+            }
+            super.paste()
+        }
+    }
     private val downBtn = JButton(Icons.chevronDown)
     private val comboBox = object : JComboBox<Path>() {
         override fun getLocationOnScreen(): Point {
@@ -105,7 +121,7 @@ internal class TransportNavigationPanel(private val navigator: TransportNavigato
 
         val itemListener = object : ItemListener {
             override fun itemStateChanged(e: ItemEvent) {
-                val path = comboBox.selectedItem as Path? ?: return
+                val path = comboBox.selectedItem as? Path? ?: return
                 navigator.navigateTo(path.absolutePathString())
             }
         }

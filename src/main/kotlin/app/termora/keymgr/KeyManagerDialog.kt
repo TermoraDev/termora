@@ -8,6 +8,7 @@ import app.termora.account.AccountManager
 import app.termora.account.AccountOwner
 import app.termora.database.OwnerType
 import com.formdev.flatlaf.extras.components.FlatTabbedPane
+import org.apache.commons.lang3.StringUtils
 import java.awt.Dimension
 import java.awt.Window
 import javax.swing.BorderFactory
@@ -65,13 +66,14 @@ class KeyManagerDialog(
                     AccountOwner(
                         accountManager.getAccountId(),
                         accountManager.getEmail(),
-                        OwnerType.User
+                        OwnerType.User,
+                        StringUtils.EMPTY,
                     )
                 )
             )
         }
 
-        if (accountOwner != null && accountManager.hasTeamFeature()) {
+        if (accountOwner != null) {
             for (team in accountManager.getTeams()) {
                 if (team.id == accountOwner.id) {
                     tabbed.addTab(
@@ -81,7 +83,8 @@ class KeyManagerDialog(
                             AccountOwner(
                                 team.id,
                                 team.name,
-                                OwnerType.Team
+                                OwnerType.Team,
+                                team.role,
                             )
                         )
                     )
@@ -91,22 +94,22 @@ class KeyManagerDialog(
         }
 
 
-
-        if (accountManager.hasTeamFeature()) {
-            for (team in accountManager.getTeams()) {
-                tabbed.addTab(
-                    team.name,
-                    Icons.cwmUsers,
-                    KeyManagerPanel(
-                        AccountOwner(
-                            team.id,
-                            team.name,
-                            OwnerType.Team
-                        )
+//        if (accountManager.hasTeamFeature()) {
+        for (team in accountManager.getTeams()) {
+            tabbed.addTab(
+                team.name,
+                Icons.cwmUsers,
+                KeyManagerPanel(
+                    AccountOwner(
+                        team.id,
+                        team.name,
+                        OwnerType.Team,
+                        team.role,
                     )
                 )
-            }
+            )
         }
+//        }
 
 
         return tabbed

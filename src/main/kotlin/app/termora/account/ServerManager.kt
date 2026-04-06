@@ -159,5 +159,5 @@ class ServerManager private constructor() {
 
 
     @Serializable
-    data class MeTeam(val id: String, val name: String, val role: TeamRole, val secretKey: String)
+    data class MeTeam(val id: String, val name: String, val role: String, val secretKey: String)
 }

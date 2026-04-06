@@ -248,6 +248,9 @@ class KeywordHighlightPanel(private val accountOwner: AccountOwner) : JPanel(Bor
 
             table.addMouseListener(object : MouseAdapter() {
                 override fun mouseClicked(e: MouseEvent) {
+                    if (accountOwner.isVisitorMode()) {
+                        return
+                    }
                     if (SwingUtilities.isLeftMouseButton(e)) {
                         val row = table.rowAtPoint(e.point)
                         val column = table.columnAtPoint(e.point)
@@ -299,7 +302,8 @@ class KeywordHighlightPanel(private val accountOwner: AccountOwner) : JPanel(Bor
 
                     if (keywordHighlight.backgroundColor in 0..16) {
                         if (keywordHighlight.backgroundColor == 0) {
-                            dialog.backgroundColor.background = Color(colorPalette.getColor(TerminalColor.Basic.BACKGROUND))
+                            dialog.backgroundColor.background =
+                                Color(colorPalette.getColor(TerminalColor.Basic.BACKGROUND))
                             dialog.backgroundColor.colorIndex = -1
                         } else {
                             dialog.backgroundColor.color =
@@ -402,7 +406,7 @@ class KeywordHighlightPanel(private val accountOwner: AccountOwner) : JPanel(Bor
             val panel = JPanel(BorderLayout())
             panel.add(JScrollPane(table).apply {
                 border = BorderFactory.createCompoundBorder(
-                    BorderFactory.createEmptyBorder(8, 8, 8, 0),
+                    BorderFactory.createEmptyBorder(8, 8, 8, if (accountOwner.isVisitorMode()) 8 else 0),
                     BorderFactory.createMatteBorder(1, 1, 1, 1, DynamicColor.BorderColor)
                 )
             }, BorderLayout.CENTER)
@@ -414,17 +418,18 @@ class KeywordHighlightPanel(private val accountOwner: AccountOwner) : JPanel(Bor
                 "default:grow",
                 "pref, $formMargin, pref, $formMargin, pref, $formMargin, pref, $formMargin, pref"
             )
-            panel.add(
-                FormBuilder.create().layout(layout)
-                    .border(BorderFactory.createEmptyBorder(8, 8, 8, 8))
-                    .add(addBtn).xy(1, rows).apply { rows += step }
-                    .add(editBtn).xy(1, rows).apply { rows += step }
-                    .add(deleteBtn).xy(1, rows).apply { rows += step }
-                    .add(importBtn).xy(1, rows).apply { rows += step }
-                    .add(exportBtn).xy(1, rows).apply { rows += step }
-                    .build(),
-                BorderLayout.EAST)
-
+            if (accountOwner.isVisitorMode().not()) {
+                panel.add(
+                    FormBuilder.create().layout(layout)
+                        .border(BorderFactory.createEmptyBorder(8, 8, 8, 8))
+                        .add(addBtn).xy(1, rows).apply { rows += step }
+                        .add(editBtn).xy(1, rows).apply { rows += step }
+                        .add(deleteBtn).xy(1, rows).apply { rows += step }
+                        .add(importBtn).xy(1, rows).apply { rows += step }
+                        .add(exportBtn).xy(1, rows).apply { rows += step }
+                        .build(),
+                    BorderLayout.EAST)
+            }
             return panel
         }
     }

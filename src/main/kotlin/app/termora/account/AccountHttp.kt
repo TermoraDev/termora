@@ -40,8 +40,8 @@ object AccountHttp {
             throw ResponseException(response.code, response)
         }
 
-        val text = response.use { response.body.use { it?.string() } }
-        if (text.isNullOrBlank()) {
+        val text = response.use { response.body.use { it.string() } }
+        if (text.isBlank()) {
             throw ResponseException(response.code, "response body is empty", response)
         }
 

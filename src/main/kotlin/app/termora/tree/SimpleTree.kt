@@ -1,6 +1,7 @@
 package app.termora.tree
 
 import app.termora.OutlineTextField
+import app.termora.account.TeamRole
 import com.formdev.flatlaf.ui.FlatTreeUI
 import org.jdesktop.swingx.JXTree
 import java.awt.Dimension
@@ -134,6 +135,13 @@ open class SimpleTree : JXTree() {
                     }
                 }
 
+                for (node in nodes) {
+                    val team = TeamTreeNode.parentTeam(node) ?: continue
+                    if (team.role == TeamRole.Visitor.name) {
+                        return null
+                    }
+                }
+
                 return MoveNodeTransferable(nodes)
             }
 
@@ -153,9 +161,14 @@ open class SimpleTree : JXTree() {
                 if (nodes.isEmpty()) return false
                 if (!node.isFolder) return false
 
+                val team = TeamTreeNode.parentTeam(node)
+                if (team?.role == TeamRole.Visitor.name) {
+                    return false
+                }
+
                 for (e in nodes) {
                     // 禁止拖拽到自己的子下面
-                    if (path.equals(TreePath(e.path)) || TreePath(e.path).isDescendant(path)) {
+                    if (path == TreePath(e.path) || TreePath(e.path).isDescendant(path)) {
                         return false
                     }
 
@@ -333,7 +346,7 @@ open class SimpleTree : JXTree() {
 
     private inner class MyTreeUI : FlatTreeUI() {
 
-        override fun createNodeDimensions(): AbstractLayoutCache.NodeDimensions? {
+        override fun createNodeDimensions(): AbstractLayoutCache.NodeDimensions {
             return object : NodeDimensionsHandler() {
                 override fun getNodeDimensions(
                     value: Any?, row: Int, depth: Int, expanded: Boolean,

@@ -26,4 +26,16 @@ class TeamTreeNode(val team: Team) : HostTreeNode(
     override fun toString(): String {
         return team.name
     }
+
+    companion object {
+        fun parentTeam(node: SimpleTreeNode<*>?): Team? {
+            if (node is TeamTreeNode) {
+                return node.team
+            } else if (node == null) {
+                return null
+            }
+            return parentTeam(node.parent)
+        }
+
+    }
 }

@@ -409,7 +409,8 @@ class DatabaseManager private constructor() : Disposable {
             val accountOwner = AccountOwner(
                 id = account.id,
                 name = account.email,
-                type = OwnerType.User
+                type = OwnerType.User,
+                role = StringUtils.EMPTY,
             )
 
             for (host in hostManager.hosts()) {
