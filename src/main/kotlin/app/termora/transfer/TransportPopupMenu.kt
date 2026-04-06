@@ -10,6 +10,7 @@ import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.sshd.sftp.client.fs.SftpFileSystem
 import java.awt.Window
+import java.awt.datatransfer.DataFlavor
 import java.awt.datatransfer.StringSelection
 import java.awt.event.ActionEvent
 import java.awt.event.ActionListener
@@ -192,6 +193,7 @@ internal class TransportPopupMenu(
             override fun popupMenuWillBecomeVisible(e: PopupMenuEvent?) {
                 pasteMenu.isEnabled = toolkit.systemClipboard
                     .isDataFlavorAvailable(TransportPanel.TransferTransferable.FLAVOR)
+                        || toolkit.systemClipboard.isDataFlavorAvailable(DataFlavor.javaFileListFlavor)
             }
 
             override fun popupMenuWillBecomeInvisible(e: PopupMenuEvent?) {
