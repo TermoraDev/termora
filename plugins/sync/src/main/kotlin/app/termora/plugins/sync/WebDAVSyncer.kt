@@ -14,6 +14,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.apache.commons.io.IOUtils
 import org.slf4j.LoggerFactory
+import java.net.URI
 
 class WebDAVSyncer private constructor() : SafetySyncer() {
     companion object {
@@ -26,6 +27,7 @@ class WebDAVSyncer private constructor() : SafetySyncer() {
 
 
     override fun pull(config: SyncConfig): GistResponse {
+        ensureFileExists(config)
         val response = httpClient.newCall(newRequestBuilder(config).get().build()).execute()
         if (response.isSuccessful.not()) {
             IOUtils.closeQuietly(response)
@@ -91,6 +93,7 @@ class WebDAVSyncer private constructor() : SafetySyncer() {
     }
 
     override fun push(config: SyncConfig): GistResponse {
+        ensureFileExists(config)
         // aes key
         val key = getKey(config)
         val json = buildJsonObject {
@@ -182,7 +185,11 @@ class WebDAVSyncer private constructor() : SafetySyncer() {
 
 
     private fun getWebDavFileUrl(config: SyncConfig): String {
-        return config.options["domain"] ?: throw IllegalStateException("domain is not defined")
+        val domain = config.options["domain"] ?: throw IllegalStateException("domain is not defined")
+        if (domain.endsWith("/")) {
+            return domain + "Termora/sync.json"
+        }
+        return domain
     }
 
     override fun getKey(config: SyncConfig): ByteArray {
@@ -197,5 +204,48 @@ class WebDAVSyncer private constructor() : SafetySyncer() {
         return Request.Builder()
             .header("Authorization", Credentials.basic(config.gistId, config.token, Charsets.UTF_8))
             .url(getWebDavFileUrl(config))
+    }
+
+    private fun ensureFileExists(config: SyncConfig) {
+        val fileUrl = getWebDavFileUrl(config)
+        val uri = URI(fileUrl)
+
+        val path = uri.path
+        val lastSlash = path.lastIndexOf('/')
+        if (lastSlash > 0) {
+            val dirPath = path.substring(0, lastSlash + 1)
+            val dirUrl = URI(uri.scheme, null, uri.host, uri.port, dirPath, null, null).toString()
+            sendMkcol(config, dirUrl)
+        }
+
+        val getResponse = httpClient.newCall(newRequestBuilder(config).get().build()).execute()
+        if (getResponse.isSuccessful) {
+            IOUtils.closeQuietly(getResponse)
+            return
+        }
+        IOUtils.closeQuietly(getResponse)
+
+        if (getResponse.code == 404) {
+            if (log.isDebugEnabled) {
+                log.debug("File not found, creating initial file: {}", fileUrl)
+            }
+            val initialContent = "{}"
+            val putResponse = httpClient.newCall(
+                newRequestBuilder(config).put(
+                    initialContent.toRequestBody("application/json".toMediaType())
+                ).build()
+            ).execute()
+            IOUtils.closeQuietly(putResponse)
+        }
+    }
+
+    private fun sendMkcol(config: SyncConfig, dirUrl: String) {
+        val request = Request.Builder()
+            .header("Authorization", Credentials.basic(config.gistId, config.token, Charsets.UTF_8))
+            .url(dirUrl)
+            .method("MKCOL", null)
+            .build()
+        val response = httpClient.newCall(request).execute()
+        IOUtils.closeQuietly(response)
     }
 }
