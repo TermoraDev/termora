@@ -1,3 +1,7 @@
+<div align="center">
+<a href="./README.md">English</a> | <a href="./README.de_DE.md">Deutsch</a> | <a href="./README.pt_BR.md">Português (Brasil)</a>
+</div>
+
 # Termora
 
 **Termora** 是一款跨平台终端模拟器和 SSH 客户端，支持 **Windows、macOS、Linux**。
