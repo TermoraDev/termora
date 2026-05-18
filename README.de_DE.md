@@ -10,7 +10,7 @@
   <img src="docs/readme.png" alt="Readme" />
 </div>
 
-Termora wird mit [**Kotlin/JVM**](https://kotlinlang.org/) entwickelt und implementiert Teile des [**XTerm-Control-Sequence-Protokolls**](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html). Langfristig verfolgt das Projekt das Ziel, über [**Kotlin Multiplatform**](https://kotlinlang.org/docs/multiplatform.html) eine umfassende Plattformunterstützung zu ermöglichen — einschließlich Android, iOS und iPadOS.
+Termora wird mit [**Kotlin/JVM**](https://kotlinlang.org/) entwickelt und implementiert Teile des [**XTerm-Steuersequenzprotokolls**](https://invisible-island.net/xterm/ctlseqs/ctlseqs.html). Langfristig verfolgt das Projekt das Ziel, mit [**Kotlin Multiplatform**](https://kotlinlang.org/docs/multiplatform.html) eine umfassende Plattformunterstützung zu erreichen, einschließlich Android, iOS und iPadOS.
 
 
 
@@ -55,7 +55,7 @@ Termora wird mit [**Kotlin/JVM**](https://kotlinlang.org/) entwickelt und implem
 - Hierarchische Baumstruktur, ähnlich wie bei Ordnern
 - Tags für einzelne Hosts vergeben
 - Hosts aus anderen Tools importieren
-- Direkt mit dem Dateiübertragungs-Tool öffnen
+- Direkt im Dateiübertragungs-Tool öffnen
 
 <div align="center">
   <img src="docs/host.png" alt="Transfer Edit" />
@@ -63,15 +63,15 @@ Termora wird mit [**Kotlin/JVM**](https://kotlinlang.org/) entwickelt und implem
 
 ## 🧩 Plugins
 
-- 🌍 Geo: Standortinformationen von Hosts anzeigen
+- 🌍 Geo: Geolokalisierung von Hosts anzeigen
 - 🔄 Sync: Einstellungen mit Gist oder WebDAV synchronisieren
-- 🗂️ WebDAV: Verbindung zu WebDAV-Speicher herstellen
-- 📝 Editor: Integrierter Editor für SFTP-Dateien
-- 📡 SMB: Verbindung zu [SMB](https://en.wikipedia.org/wiki/Server_Message_Block) herstellen
-- ☁️ S3: Verbindung zu S3-Objektspeicher herstellen
-- ☁️ Huawei OBS: Verbindung zu Huawei Cloud OBS herstellen
-- ☁️ Tencent COS: Verbindung zu Tencent Cloud COS herstellen
-- ☁️ Alibaba OSS: Verbindung zu Alibaba Cloud OSS herstellen
+- 🗂️ WebDAV: Verbindung mit WebDAV-Speicher herstellen
+- 📝 Editor: Integrierter SFTP-Dateieditor
+- 📡 SMB: Verbindung mit [SMB](https://en.wikipedia.org/wiki/Server_Message_Block) herstellen
+- ☁️ S3: Verbindung mit S3-Objektspeicher herstellen
+- ☁️ Huawei OBS: Verbindung mit Huawei Cloud OBS herstellen
+- ☁️ Tencent COS: Verbindung mit Tencent Cloud COS herstellen
+- ☁️ Alibaba OSS: Verbindung mit Alibaba Cloud OSS herstellen
 - 👉 [Alle Plugins ansehen...](https://www.termora.app/plugins)
 
 
@@ -88,14 +88,14 @@ Termora wird mit [**Kotlin/JVM**](https://kotlinlang.org/) entwickelt und implem
 
 ## 🛠️ Entwicklung
 
-Für die Entwicklung empfehlen wir das [JetBrainsRuntime](https://github.com/JetBrains/JetBrainsRuntime) JDK.
+Für die Entwicklung empfehlen wir das [JetBrainsRuntime](https://github.com/JetBrains/JetBrainsRuntime)-JDK.
 
 - Lokal starten: `./gradlew :run`
 
 
 ## 📄 Lizenz
 
-Diese Software wird unter einem Dual-License-Modell veröffentlicht. Du kannst eine der folgenden Optionen wählen:
+Diese Software wird unter einem Dual-License-Modell veröffentlicht. Du kannst zwischen den folgenden Optionen wählen:
 
 - **AGPL-3.0**: Die Software darf gemäß den Bedingungen der [AGPL-3.0](https://opensource.org/license/agpl-v3) genutzt, verteilt und verändert werden.
 - **Proprietäre Lizenz**: Für Closed-Source- oder proprietäre Nutzung kontaktiere bitte den Autor, um eine kommerzielle Lizenz zu erhalten.
