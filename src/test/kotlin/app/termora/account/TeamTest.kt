@@ -12,7 +12,7 @@ class TeamTest {
                     id = "test",
                     name = "test",
                     secretKey = byteArrayOf(1, 123, 123, 123, 123, 123, 123, 123, 123),
-                    role = TeamRole.Member
+                    role = TeamRole.Member.name
                 )
             )
         )

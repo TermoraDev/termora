@@ -23,4 +23,10 @@ class I18nTest {
         val bundle = ResourceBundle.getBundle("i18n/messages", LocaleUtils.toLocale("zh_TW"))
         assertEquals(bundle.getString("termora.confirm"), "確定")
     }
+
+    @Test
+    fun test_de_DE() {
+        val bundle = ResourceBundle.getBundle("i18n/messages", LocaleUtils.toLocale("de_DE"))
+        assertEquals(bundle.getString("termora.settings.appearance.language"), "Sprache")
+    }
 }

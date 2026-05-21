@@ -13,6 +13,7 @@ import kotlinx.coroutines.withContext
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.apache.sshd.sftp.client.fs.SftpPath
+import org.apache.sshd.sftp.client.fs.WithFileAttributes
 import org.slf4j.LoggerFactory
 import java.awt.Component
 import java.awt.Dimension
@@ -153,7 +154,7 @@ internal class DefaultInternalTransferManager(
         if (context.applyAll) return context.action
 
         if (path.exists()) {
-            val transfer = askTransfer(source, source)
+            val transfer = askTransfer(source, readAttributes(path))
             context.action = transfer.action
             context.applyAll = transfer.applyAll
             if (transfer.option != JOptionPane.OK_OPTION) return null
@@ -421,5 +422,37 @@ internal class DefaultInternalTransferManager(
         }
     }
 
+}
 
+internal fun readAttributes(path: Path): TransportTableModel.Attributes {
+    if (path is WithFileAttributes) {
+        val attrs = path.attributes
+        if (attrs != null) {
+            return TransportTableModel.Attributes(
+                name = path.name,
+                type = TransportTableModel.Attributes.computeType(attrs.isSymbolicLink, attrs.isDirectory, path.name),
+                isDirectory = attrs.isDirectory,
+                isFile = attrs.isRegularFile,
+                isSymbolicLink = attrs.isSymbolicLink,
+                fileSize = attrs.size,
+                permissions = fromSftpPermissions(attrs.permissions),
+                owner = attrs.owner ?: StringUtils.EMPTY,
+                lastModifiedTime = attrs.modifyTime.toMillis()
+            )
+        }
+    }
+    val basic = runCatching { Files.readAttributes(path, BasicFileAttributes::class.java) }.getOrNull()
+    val isDirectory = basic?.isDirectory ?: false
+    val isSymbolicLink = basic?.isSymbolicLink ?: false
+    return TransportTableModel.Attributes(
+        name = path.name,
+        type = TransportTableModel.Attributes.computeType(isSymbolicLink, isDirectory, path.name),
+        isDirectory = isDirectory,
+        isFile = basic?.isRegularFile ?: false,
+        isSymbolicLink = isSymbolicLink,
+        fileSize = basic?.size() ?: 0,
+        permissions = emptySet(),
+        owner = StringUtils.EMPTY,
+        lastModifiedTime = basic?.lastModifiedTime()?.toMillis() ?: 0
+    )
 }
