@@ -185,11 +185,7 @@ class WebDAVSyncer private constructor() : SafetySyncer() {
 
 
     private fun getWebDavFileUrl(config: SyncConfig): String {
-        val domain = config.options["domain"] ?: throw IllegalStateException("domain is not defined")
-        if (domain.endsWith("/")) {
-            return domain + "Termora/sync.json"
-        }
-        return domain
+        return config.options["domain"] ?: throw IllegalStateException("domain is not defined")
     }
 
     override fun getKey(config: SyncConfig): ByteArray {

@@ -59,7 +59,31 @@ class CloudSyncOption : JPanel(BorderLayout()), OptionsPane.PluginOption {
     val tokenTextField = OutlinePasswordField(255)
     val gistTextField = OutlineTextField(255)
     val policyComboBox = JComboBox<SyncPolicy>()
-    val domainTextField = OutlineTextField(255)
+    val domainTextField = object : OutlineTextField(255) {
+        // https://github.com/TermoraDev/termora/issues/1445
+        override fun paste() {
+            val clipboard = toolkit.systemClipboard
+            if (clipboard.isDataFlavorAvailable(java.awt.datatransfer.DataFlavor.stringFlavor)) {
+                val text = clipboard.getData(java.awt.datatransfer.DataFlavor.stringFlavor) as String?
+                if (text != null) {
+                    val trimmedText = text.trim()
+                    // if the text looks like a URL but doesn't end with .json, append /Termora/sync.json
+                    val correctedText = if (trimmedText.isNotEmpty() && !trimmedText.endsWith(".json")) {
+                        if (trimmedText.endsWith("/")) {
+                            trimmedText + "Termora/sync.json"
+                        } else {
+                            "$trimmedText/Termora/sync.json"
+                        }
+                    } else {
+                        trimmedText
+                    }
+                    replaceSelection(correctedText)
+                    return
+                }
+            }
+            super.paste()
+        }
+    }
     val syncConfigButton = JButton(SyncI18n.getString("termora.settings.sync"), Icons.settingSync)
     val lastSyncTimeLabel = JLabel()
     val sync get() = SyncProperties.getInstance()
