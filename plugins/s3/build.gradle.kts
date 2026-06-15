@@ -13,7 +13,7 @@ dependencies {
     testImplementation(libs.testcontainers.junit.jupiter)
     testImplementation(project(":"))
 
-    implementation("io.minio:minio:8.6.0")
+    implementation("io.minio:minio:9.0.3")
     compileOnly(project(":"))
 }
 
