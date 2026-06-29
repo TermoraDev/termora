@@ -31,6 +31,18 @@ open class KeyEncoderImpl(private val terminal: Terminal) : KeyEncoder, DataList
         // Ctrl + C: 0x7F ASCII Delete
         putCode(TerminalKeyEvent(keyCode = KeyEvent.VK_BACK_SPACE), String(byteArrayOf(0x7F)))
 
+        // Shift + Tab -> CBT (Cursor Backward Tabulation)
+        putCode(
+            TerminalKeyEvent(keyCode = KeyEvent.VK_TAB, modifiers = TerminalEvent.SHIFT_MASK),
+            encode = "${ControlCharacters.ESC}[Z"
+        )
+
+        // Shift + Enter -> CSI-u modified Enter.
+        putCode(
+            TerminalKeyEvent(keyCode = KeyEvent.VK_ENTER, modifiers = TerminalEvent.SHIFT_MASK),
+            encode = "${ControlCharacters.ESC}[13;2u"
+        )
+
         // Enter
         if (terminalModel.getData(DataKey.AutoNewline, false)) {
             putCode(TerminalKeyEvent(keyCode = 10), encode = "\r\n")
