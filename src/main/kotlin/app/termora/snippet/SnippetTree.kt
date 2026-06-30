@@ -48,6 +48,9 @@ class SnippetTree : SimpleTree() {
         val expandAll = popupMenu.add(I18n.getString("termora.welcome.contextmenu.expand-all"))
         val colspanAll = popupMenu.add(I18n.getString("termora.welcome.contextmenu.collapse-all"))
         popupMenu.addSeparator()
+        val exportSnippets = popupMenu.add(I18n.getString("termora.snippet.export"))
+        val importSnippets = popupMenu.add(I18n.getString("termora.snippet.import"))
+        popupMenu.addSeparator()
 
         newFolder.addActionListener {
             val snippet = Snippet(
@@ -108,6 +111,86 @@ class SnippetTree : SimpleTree() {
                 }
             }
         })
+
+        exportSnippets.addActionListener {
+            val fileChooser = javax.swing.JFileChooser()
+            fileChooser.dialogTitle = I18n.getString("termora.snippet.export")
+            fileChooser.fileFilter = javax.swing.filechooser.FileNameExtensionFilter("JSON Files", "json")
+            fileChooser.selectedFile = java.io.File("snippets-${System.currentTimeMillis()}.json")
+
+            if (fileChooser.showSaveDialog(SwingUtilities.getWindowAncestor(this)) == javax.swing.JFileChooser.APPROVE_OPTION) {
+                try {
+                    var file = fileChooser.selectedFile
+                    if (!file.name.endsWith(".json")) {
+                        file = java.io.File(file.parentFile, file.name + ".json")
+                    }
+                    snippetManager.exportSnippets(file)
+                    OptionPane.showMessageDialog(
+                        SwingUtilities.getWindowAncestor(this),
+                        I18n.getString("termora.snippet.export.success", file.absolutePath),
+                        I18n.getString("termora.snippet.export"),
+                        JOptionPane.INFORMATION_MESSAGE
+                    )
+                } catch (e: Exception) {
+                    OptionPane.showMessageDialog(
+                        SwingUtilities.getWindowAncestor(this),
+                        I18n.getString("termora.snippet.export.error", e.message ?: "Unknown error"),
+                        I18n.getString("termora.snippet.export"),
+                        JOptionPane.ERROR_MESSAGE
+                    )
+                }
+            }
+        }
+
+        importSnippets.addActionListener {
+            val fileChooser = javax.swing.JFileChooser()
+            fileChooser.dialogTitle = I18n.getString("termora.snippet.import")
+            fileChooser.fileFilter = javax.swing.filechooser.FileNameExtensionFilter("JSON Files", "json")
+
+            if (fileChooser.showOpenDialog(SwingUtilities.getWindowAncestor(this)) == javax.swing.JFileChooser.APPROVE_OPTION) {
+                try {
+                    val file = fileChooser.selectedFile
+
+                    // 询问导入模式
+                    val options: Array<Any> = arrayOf(
+                        I18n.getString("termora.snippet.import.merge.merge"),
+                        I18n.getString("termora.snippet.import.merge.replace")
+                    )
+                    val choice = OptionPane.showConfirmDialog(
+                        SwingUtilities.getWindowAncestor(this),
+                        I18n.getString("termora.snippet.import.merge.message"),
+                        I18n.getString("termora.snippet.import.merge.title"),
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        options,
+                        options[0]
+                    )
+
+                    if (choice == -1) return@addActionListener
+
+                    val replaceAll = (choice == 1)
+                    val count = snippetManager.importSnippets(file, replaceAll)
+
+                    // 刷新树
+                    simpleTreeModel.reload()
+
+                    OptionPane.showMessageDialog(
+                        SwingUtilities.getWindowAncestor(this),
+                        I18n.getString("termora.snippet.import.success", count),
+                        I18n.getString("termora.snippet.import"),
+                        JOptionPane.INFORMATION_MESSAGE
+                    )
+                } catch (e: Exception) {
+                    OptionPane.showMessageDialog(
+                        SwingUtilities.getWindowAncestor(this),
+                        I18n.getString("termora.snippet.import.error", e.message ?: "Unknown error"),
+                        I18n.getString("termora.snippet.import"),
+                        JOptionPane.ERROR_MESSAGE
+                    )
+                }
+            }
+        }
 
 
         rename.isEnabled = lastNode != simpleTreeModel.root

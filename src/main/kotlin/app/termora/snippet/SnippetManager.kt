@@ -8,6 +8,10 @@ import app.termora.database.Data
 import app.termora.database.DataType
 import app.termora.database.DatabaseManager
 import app.termora.database.OwnerType
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import java.io.File
+import java.nio.file.Files
 
 
 class SnippetManager private constructor() {
@@ -54,5 +58,48 @@ class SnippetManager private constructor() {
             .sortedWith(compareBy<Snippet> { if (it.type == SnippetType.Folder) 0 else 1 }.thenBy { it.sort })
     }
 
+    /**
+     * 导出所有代码片段到JSON文件
+     */
+    fun exportSnippets(file: File) {
+        val snippets = snippets()
+        val exportData = SnippetExportData(
+            version = 1,
+            exportDate = System.currentTimeMillis(),
+            snippets = snippets.map { it.copy(deleted = false) } // 导出时不包含deleted标记
+        )
+        val json = ohMyJson.encodeToString(exportData)
+        Files.writeString(file.toPath(), json)
+    }
 
+    /**
+     * 从JSON文件导入代码片段
+     * @param file 要导入的文件
+     * @param replaceAll true=替换所有现有片段，false=合并（保留现有片段）
+     * @return 导入的片段数量
+     */
+    fun importSnippets(file: File, replaceAll: Boolean): Int {
+        assertEventDispatchThread()
+        val json = Files.readString(file.toPath())
+        val importData = ohMyJson.decodeFromString<SnippetExportData>(json)
+
+        if (replaceAll) {
+            // 删除所有现有片段
+            snippets().forEach { removeSnippet(it.id) }
+        }
+
+        // 导入新片段
+        importData.snippets.forEach { snippet ->
+            addSnippet(snippet)
+        }
+
+        return importData.snippets.size
+    }
+
+    @Serializable
+    private data class SnippetExportData(
+        val version: Int,
+        val exportDate: Long,
+        val snippets: List<Snippet>
+    )
 }

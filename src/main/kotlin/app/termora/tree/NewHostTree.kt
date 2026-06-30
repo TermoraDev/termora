@@ -284,6 +284,9 @@ class NewHostTree : SimpleTree(), Disposable {
         popupMenu.add(importMenu)
         popupMenu.add(newMenu)
         popupMenu.addSeparator()
+        val exportHosts = popupMenu.add(I18n.getString("termora.host.export"))
+        val importHostsJson = popupMenu.add(I18n.getString("termora.host.import"))
+        popupMenu.addSeparator()
         val tagsMenu = popupMenu.add(JMenu(I18n.getString("termora.tag"))) as JMenu
         val showMenu = popupMenu.add(JMenu(I18n.getString("termora.welcome.contextmenu.show"))) as JMenu
         val showMoreInfo = showMenu.add(JCheckBoxMenuItem(I18n.getString("termora.welcome.contextmenu.show.more-info")))
@@ -306,6 +309,87 @@ class NewHostTree : SimpleTree(), Disposable {
         finalShellMenu.addActionListener { importHosts(lastNode, ImportType.FinalShell) }
         csvMenu.addActionListener { importHosts(lastNode, ImportType.CSV) }
         windTermMenu.addActionListener { importHosts(lastNode, ImportType.WindTerm) }
+
+        exportHosts.addActionListener {
+            val fileChooser = JFileChooser()
+            fileChooser.dialogTitle = I18n.getString("termora.host.export")
+            fileChooser.fileFilter = FileNameExtensionFilter("JSON Files", "json")
+            fileChooser.selectedFile = File("hosts-${System.currentTimeMillis()}.json")
+
+            if (fileChooser.showSaveDialog(SwingUtilities.getWindowAncestor(this)) == JFileChooser.APPROVE_OPTION) {
+                try {
+                    var file = fileChooser.selectedFile
+                    if (!file.name.endsWith(".json")) {
+                        file = File(file.parentFile, file.name + ".json")
+                    }
+                    HostManager.getInstance().exportHosts(file)
+                    OptionPane.showMessageDialog(
+                        SwingUtilities.getWindowAncestor(this),
+                        I18n.getString("termora.host.export.success", file.absolutePath),
+                        I18n.getString("termora.host.export"),
+                        JOptionPane.INFORMATION_MESSAGE
+                    )
+                } catch (e: Exception) {
+                    OptionPane.showMessageDialog(
+                        SwingUtilities.getWindowAncestor(this),
+                        I18n.getString("termora.host.export.error", e.message ?: "Unknown error"),
+                        I18n.getString("termora.host.export"),
+                        JOptionPane.ERROR_MESSAGE
+                    )
+                }
+            }
+        }
+
+        importHostsJson.addActionListener {
+            val fileChooser = JFileChooser()
+            fileChooser.dialogTitle = I18n.getString("termora.host.import")
+            fileChooser.fileFilter = FileNameExtensionFilter("JSON Files", "json")
+
+            if (fileChooser.showOpenDialog(SwingUtilities.getWindowAncestor(this)) == JFileChooser.APPROVE_OPTION) {
+                try {
+                    val file = fileChooser.selectedFile
+
+                    // 询问导入模式
+                    val options: Array<Any> = arrayOf(
+                        I18n.getString("termora.host.import.merge.merge"),
+                        I18n.getString("termora.host.import.merge.replace")
+                    )
+                    val choice = OptionPane.showConfirmDialog(
+                        SwingUtilities.getWindowAncestor(this),
+                        I18n.getString("termora.host.import.merge.message"),
+                        I18n.getString("termora.host.import.merge.title"),
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        options,
+                        options[0]
+                    )
+
+                    if (choice == -1) return@addActionListener
+
+                    val replaceAll = (choice == 1)
+                    val count = HostManager.getInstance().importHosts(file, replaceAll)
+
+                    // 刷新树
+                    simpleTreeModel.reload()
+
+                    OptionPane.showMessageDialog(
+                        SwingUtilities.getWindowAncestor(this),
+                        I18n.getString("termora.host.import.success", count),
+                        I18n.getString("termora.host.import"),
+                        JOptionPane.INFORMATION_MESSAGE
+                    )
+                } catch (e: Exception) {
+                    OptionPane.showMessageDialog(
+                        SwingUtilities.getWindowAncestor(this),
+                        I18n.getString("termora.host.import.error", e.message ?: "Unknown error"),
+                        I18n.getString("termora.host.import"),
+                        JOptionPane.ERROR_MESSAGE
+                    )
+                }
+            }
+        }
+
         open.addActionListener { openHosts(it, false) }
         openInNewWindow.addActionListener { openHosts(it, true) }
         openWithSFTP.addActionListener { openWithSFTP(it) }
