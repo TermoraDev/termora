@@ -5,10 +5,12 @@ import com.sun.jna.Pointer;
 import com.sun.jna.WString;
 import com.sun.jna.win32.StdCallLibrary;
 
-interface MyKernel32 extends StdCallLibrary {
+public interface MyKernel32 extends StdCallLibrary {
 
     MyKernel32 INSTANCE = Native.load("Kernel32", MyKernel32.class);
     WString INVARIANT_LOCALE = new WString("");
+
+    int CP_ACP = 0; // System default ANSI code page
 
     int CompareStringEx(WString lpLocaleName,
                         int dwCmpFlags,
@@ -35,4 +37,6 @@ interface MyKernel32 extends StdCallLibrary {
                         Pointer.NULL,
                         0);
     }
+
+    int MultiByteToWideChar(int CodePage, int dwFlags, byte[] lpMultiByteStr, int cbMultiByte, char[] lpWideCharStr, int cchWideChar);
 }
