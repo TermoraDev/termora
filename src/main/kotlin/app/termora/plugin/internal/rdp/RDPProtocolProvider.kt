@@ -98,7 +98,7 @@ internal class RDPProtocolProvider private constructor() : GenericProtocolProvid
 
             if (SystemInfo.isWindows) {
                 val cmd = "ConvertTo-SecureString '${password}' -AsPlainText -Force | ConvertFrom-SecureString"
-                val process = ProcessBuilder("powershell.exe", "-Command", cmd).start()
+                val process = ProcessBuilder("powershell.exe", "-NoProfile", "-Command", cmd).start()
                 if (process.waitFor() == 0) {
                     ep = String(process.inputStream.readAllBytes())
                 }
