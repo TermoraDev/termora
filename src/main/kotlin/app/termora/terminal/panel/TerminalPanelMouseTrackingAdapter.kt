@@ -30,7 +30,7 @@ class TerminalPanelMouseTrackingAdapter(
                 || mouseMode == MouseMode.MOUSE_REPORTING_ALL_MOTION
 
     override fun mousePressed(e: MouseEvent) {
-        if (isNotMouseTracking) {
+        if (isNotMouseTracking || e.isShiftDown) {
             return
         }
         if (shouldSendMouseData) {
@@ -44,7 +44,7 @@ class TerminalPanelMouseTrackingAdapter(
 
 
     override fun mouseReleased(e: MouseEvent) {
-        if (isNotMouseTracking) {
+        if (isNotMouseTracking || e.isShiftDown) {
             return
         }
         if (shouldSendMouseData) {
@@ -57,7 +57,7 @@ class TerminalPanelMouseTrackingAdapter(
     }
 
     override fun mouseMoved(e: MouseEvent) {
-        if (mouseMode == MouseMode.MOUSE_REPORTING_ALL_MOTION) {
+        if (mouseMode == MouseMode.MOUSE_REPORTING_ALL_MOTION && e.isShiftDown.not()) {
             val p = terminalPanel.pointToPosition(e.point)
             // release - for 1000/1005/1015 mode
             mouseReport(3, p.x, p.y)
@@ -65,13 +65,26 @@ class TerminalPanelMouseTrackingAdapter(
     }
 
     override fun mouseWheelMoved(e: MouseWheelEvent) {
-        if (this.shouldSendMouseData || terminalModel.isAlternateScreenBuffer()) {
-            val unitsToScroll = e.unitsToScroll
+        if (e.isShiftDown) {
+            return
+        }
+
+        val unitsToScroll = abs(e.unitsToScroll).coerceAtLeast(1)
+        if (shouldSendMouseData) {
+            val position = terminalPanel.pointToPosition(e.point)
+            val event = AWTTerminalMouseEvent(e)
+            for (i in 0 until unitsToScroll) {
+                sendMouseEvent(position, event, TerminalMouseEventType.Pressed)
+            }
+            return
+        }
+
+        if (terminalModel.isAlternateScreenBuffer()) {
             val encode = terminal.getKeyEncoder()
                 .encode(TerminalKeyEvent(if (e.wheelRotation < 0) KeyEvent.VK_UP else KeyEvent.VK_DOWN))
             if (encode.isBlank()) return
             val bytes = encode.toByteArray(writer.getCharset())
-            for (i in 0 until abs(unitsToScroll)) {
+            for (i in 0 until unitsToScroll) {
                 writer.write(TerminalWriter.WriteRequest.fromBytes(bytes))
             }
         }

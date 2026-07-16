@@ -46,7 +46,7 @@ class TerminalPanelMouseSelectionAdapter(private val terminalPanel: TerminalPane
 
         terminalPanel.requestFocusInWindow()
 
-        if (isMouseTracking) {
+        if (isMouseTracking && e.isShiftDown.not()) {
             return
         }
 
@@ -135,8 +135,8 @@ class TerminalPanelMouseSelectionAdapter(private val terminalPanel: TerminalPane
     }
 
     override fun mouseDragged(e: MouseEvent) {
-        // 如果开启了鼠标追踪，那么就不支持选择功能了
-        if (isMouseTracking) {
+        // 如果开启了鼠标追踪，那么只有按住 Shift 时才支持本地选择功能
+        if (isMouseTracking && e.isShiftDown.not()) {
             return
         }
 
