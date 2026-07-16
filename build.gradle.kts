@@ -48,6 +48,13 @@ fun exec(action: ExecSpec.() -> Unit) {
     providers.exec(action).result.get().assertNormalExitValue()
 }
 
+fun execIgnoreExitValue(action: ExecSpec.() -> Unit) {
+    providers.exec {
+        isIgnoreExitValue = true
+        action()
+    }.result.get()
+}
+
 allprojects {
     repositories {
         mavenCentral()
@@ -220,15 +227,15 @@ tasks.register<Copy>("copy-dependencies") {
                 FileUtils.forceMkdir(targetDir)
                 if (os.isWindows) {
                     // @formatter:off
-                    exec { commandLine("unzip","-j","-o", file.absolutePath, "com/sun/jna/win32-${arch.name}/*", "-d", targetDir.absolutePath) }
+                    execIgnoreExitValue { commandLine("unzip","-j","-o", file.absolutePath, "com/sun/jna/win32-${arch.name}/*", "-d", targetDir.absolutePath) }
                     // @formatter:on
                 } else if (os.isLinux) {
                     // @formatter:off
-                    exec { commandLine("unzip","-j","-o", file.absolutePath, "com/sun/jna/linux-${arch.name}/*", "-d", targetDir.absolutePath) }
+                    execIgnoreExitValue { commandLine("unzip","-j","-o", file.absolutePath, "com/sun/jna/linux-${arch.name}/*", "-d", targetDir.absolutePath) }
                     // @formatter:on
                 } else if (os.isMacOsX) {
                     // @formatter:off
-                    exec { commandLine("unzip","-j","-o", file.absolutePath, "com/sun/jna/darwin-${arch.name}/*", "-d", targetDir.absolutePath) }
+                    execIgnoreExitValue { commandLine("unzip","-j","-o", file.absolutePath, "com/sun/jna/darwin-${arch.name}/*", "-d", targetDir.absolutePath) }
                     // @formatter:on
                 }
 
@@ -241,14 +248,14 @@ tasks.register<Copy>("copy-dependencies") {
                 exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/dragonflybsd-*") }
                 exec { commandLine("zip", "-d", file.absolutePath, "com/sun/jna/aix-*") }
             } else if ("${pty4j.name}-${pty4j.version}" == file.nameWithoutExtension) {
-                val osName = if (os.isWindows) "win32" else if (os.isMacOsX) "darwin" else "linux"
+                val osName = if (os.isWindows) "win" else if (os.isMacOsX) "darwin" else "linux"
                 val myArchName = if (arch.isArm) "aarch64" else "x86-64"
                 val targetDir = if (os.isMacOsX) FileUtils.getFile(dylib, pty4j.name, osName)
                 else FileUtils.getFile(dylib, pty4j.name, osName, myArchName)
                 FileUtils.forceMkdir(targetDir)
                 if (os.isWindows) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "resources/*win/${myArchName}/*", "-d", targetDir.absolutePath) }
+                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "resources/com/pty4j/native/win/${myArchName}/*", "-d", targetDir.absolutePath) }
                     // @formatter:on
                 } else if (os.isLinux) {
                     // @formatter:off
@@ -308,15 +315,15 @@ tasks.register<Copy>("copy-dependencies") {
                 val isArm = arch.isArm
                 if (os.isWindows) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "com/formdev/flatlaf/natives/*windows*${if (isArm) "arm64" else "x86_64"}*", "-d", targetDir.absolutePath) }
+                    execIgnoreExitValue { commandLine("unzip", "-j" , "-o", file.absolutePath, "com/formdev/flatlaf/natives/*windows*${if (isArm) "arm64" else "x86_64"}*", "-d", targetDir.absolutePath) }
                     // @formatter:on
                 } else if (os.isLinux) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "com/formdev/flatlaf/natives/*linux*${if (isArm) "arm64" else "x86_64"}*", "-d", targetDir.absolutePath) }
+                    execIgnoreExitValue { commandLine("unzip", "-j" , "-o", file.absolutePath, "com/formdev/flatlaf/natives/*linux*${if (isArm) "arm64" else "x86_64"}*", "-d", targetDir.absolutePath) }
                     // @formatter:on
                 } else if (os.isMacOsX) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "com/formdev/flatlaf/natives/*macos*${if (isArm) "arm" else "x86"}*", "-d", targetDir.absolutePath) }
+                    execIgnoreExitValue { commandLine("unzip", "-j" , "-o", file.absolutePath, "com/formdev/flatlaf/natives/*macos*${if (isArm) "arm" else "x86"}*", "-d", targetDir.absolutePath) }
                     // @formatter:on
                 }
                 exec { commandLine("zip", "-d", file.absolutePath, "com/formdev/flatlaf/natives/*") }
