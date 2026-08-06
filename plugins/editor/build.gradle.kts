@@ -12,7 +12,7 @@ dependencies {
     compileOnly(project(":"))
     implementation("com.fifesoft:rsyntaxtextarea:3.6.2")
     implementation("com.fifesoft:languagesupport:3.4.0")
-    implementation("com.fifesoft:autocomplete:3.3.2")
+    implementation("com.fifesoft:autocomplete:3.3.3")
 }
 
 apply(from = "$rootDir/plugins/common.gradle.kts")
