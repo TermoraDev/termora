@@ -18,6 +18,7 @@ import app.termora.swingCoroutineScope
 import app.termora.terminal.panel.vw.FloatingToolbarPlugin
 import app.termora.transfer.internal.local.LocalPlugin
 import app.termora.transfer.internal.sftp.SFTPPlugin
+import app.termora.transfer.internal.wsl.WSLPlugin
 import com.formdev.flatlaf.util.SystemInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -126,6 +127,7 @@ internal class PluginManager private constructor() {
         // wsl plugin
         if (SystemUtils.IS_OS_WINDOWS) {
             plugins.add(PluginDescriptor(WSLInternalPlugin(), origin = PluginOrigin.Internal, version = version))
+            plugins.add(PluginDescriptor(WSLPlugin(), origin = PluginOrigin.Internal, version = version))
         }
         // sftp pty plugin
         plugins.add(PluginDescriptor(SFTPPtyInternalPlugin(), origin = PluginOrigin.Internal, version = version))

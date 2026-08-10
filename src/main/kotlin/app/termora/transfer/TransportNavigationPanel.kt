@@ -3,6 +3,7 @@ package app.termora.transfer
 import app.termora.DynamicColor
 import app.termora.Icons
 import app.termora.transfer.TransportPanel.Companion.isWindowsFileSystem
+import app.termora.transfer.TransportPanel.Companion.isWslPath
 import com.formdev.flatlaf.FlatClientProperties
 import com.formdev.flatlaf.extras.FlatSVGIcon
 import com.formdev.flatlaf.extras.components.FlatPopupMenu
@@ -217,7 +218,7 @@ internal class TransportNavigationPanel(private val navigator: TransportNavigato
             parents.addFirst(parent)
             parent = parent.parent
             // Windows 比较特殊，因为它有盘符
-            if (parent == null && fileSystem.isWindowsFileSystem()) {
+            if (parent == null && fileSystem.isWindowsFileSystem() && !workdir.isWslPath()) {
                 parents.addFirst(fileSystem.getPath(fileSystem.separator))
             }
         }
@@ -228,10 +229,13 @@ internal class TransportNavigationPanel(private val navigator: TransportNavigato
 
         for (i in 0 until parents.size) {
             val path = parents[i]
-            val button = if (i == 0) JLabel(computerIcon)
-            else if (fileSystem.isWindowsFileSystem() && path.root == path)
-                JButton(path.toString().replace(fileSystem.separator, StringUtils.EMPTY))
-            else JButton(path.name)
+            val button = if (i == 0) {
+                JLabel(computerIcon)
+            } else if (fileSystem.isWindowsFileSystem() && path.root == path && !path.isWslPath()) {
+                JButton(path.pathString.replace(fileSystem.separator, StringUtils.EMPTY))
+            } else {
+                JButton(path.name)
+            }
             // JLabel 与 JButton 对齐
             if (SystemUtils.IS_OS_MAC_OSX) {
                 if (button is JLabel)
