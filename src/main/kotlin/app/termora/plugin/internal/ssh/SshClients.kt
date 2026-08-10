@@ -48,6 +48,7 @@ import org.apache.sshd.common.io.IoSession
 import org.apache.sshd.common.kex.BuiltinDHFactories
 import org.apache.sshd.common.keyprovider.KeyIdentityProvider
 import org.apache.sshd.common.session.Session
+import org.apache.sshd.common.session.SessionHeartbeatController
 import org.apache.sshd.common.session.SessionListener
 import org.apache.sshd.common.signature.BuiltinSignatures
 import org.apache.sshd.common.util.net.SshdSocketAddress
@@ -392,6 +393,7 @@ object SshClients {
 
         val sshClient = builder.build() as JGitSshClient
 
+
         // https://github.com/TermoraDev/termora/issues/180
         // JGit 会尝试读取本地的私钥或缓存的私钥
         sshClient.keyIdentityProvider = KeyIdentityProvider { mutableListOf() }
@@ -430,6 +432,13 @@ object SshClients {
         CoreModuleProperties.HEARTBEAT_INTERVAL.set(sshClient, Duration.ofSeconds(heartbeatInterval.toLong()))
         CoreModuleProperties.ALLOW_DHG1_KEX_FALLBACK.set(sshClient, true)
         CoreModuleProperties.IO_CONNECT_TIMEOUT.set(sshClient, timeout)
+        CoreModuleProperties.FORWARD_REQUEST_TIMEOUT.set(sshClient, timeout)
+        CoreModuleProperties.SOCKET_KEEPALIVE.set(sshClient, true)
+
+        sshClient.setSessionHeartbeat(
+            SessionHeartbeatController.HeartbeatType.IGNORE,
+            Duration.ofSeconds(heartbeatInterval.toLong())
+        )
 
         sshClient.setKeyPasswordProviderFactory { IdentityPasswordProvider(CredentialsProvider.getDefault()) }
 
