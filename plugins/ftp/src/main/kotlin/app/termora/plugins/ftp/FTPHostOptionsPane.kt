@@ -209,20 +209,7 @@ class FTPHostOptionsPane : OptionsPane() {
                     isSelected: Boolean,
                     cellHasFocus: Boolean
                 ): Component {
-                    var text = value?.toString() ?: ""
-                    when (value) {
-                        AuthenticationType.Password -> {
-                            text = "Password"
-                        }
-
-                        AuthenticationType.PublicKey -> {
-                            text = "Public Key"
-                        }
-
-                        AuthenticationType.KeyboardInteractive -> {
-                            text = "Keyboard Interactive"
-                        }
-                    }
+                    val text = (value as? AuthenticationType)?.getDisplayName() ?: value?.toString().orEmpty()
                     return super.getListCellRendererComponent(
                         list,
                         text,
@@ -342,6 +329,23 @@ class FTPHostOptionsPane : OptionsPane() {
 
             passiveComboBox.addItem(PassiveMode.Local)
             passiveComboBox.addItem(PassiveMode.Remote)
+            passiveComboBox.renderer = object : DefaultListCellRenderer() {
+                override fun getListCellRendererComponent(
+                    list: JList<*>?,
+                    value: Any?,
+                    index: Int,
+                    isSelected: Boolean,
+                    cellHasFocus: Boolean
+                ): Component {
+                    val key = when (value as? PassiveMode) {
+                        PassiveMode.Local -> "termora.plugins.ftp.passive.local"
+                        PassiveMode.Remote -> "termora.plugins.ftp.passive.remote"
+                        null -> null
+                    }
+                    val text = key?.let { FTPI18n.getString(it) } ?: value?.toString().orEmpty()
+                    return super.getListCellRendererComponent(list, text, index, isSelected, cellHasFocus)
+                }
+            }
 
             add(getCenterComponent(), BorderLayout.CENTER)
         }

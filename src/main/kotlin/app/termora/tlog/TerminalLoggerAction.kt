@@ -113,7 +113,7 @@ class TerminalLoggerAction private constructor() :
         if (SystemInfo.isMacOS) {
             fc.osxAllowedFileTypes = listOf("log")
         } else if (SystemInfo.isWindows) {
-            fc.win32Filters.add(Pair("Log files", listOf("log")))
+            fc.win32Filters.add(Pair(I18n.getString("termora.file-chooser.log-files"), listOf("log")))
         }
 
         fc.defaultDirectory = getLogDir().absolutePath

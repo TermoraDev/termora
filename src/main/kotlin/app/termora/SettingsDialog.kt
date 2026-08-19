@@ -16,7 +16,7 @@ internal class SettingsDialog(owner: Window) : DialogWrapper(owner) {
 
     init {
         size = Dimension(
-            UIScale.scale(UIManager.getInt("Dialog.width")),
+            UIScale.scale(maxOf(UIManager.getInt("Dialog.width"), 800)),
             UIScale.scale(UIManager.getInt("Dialog.height"))
         )
         isModal = true

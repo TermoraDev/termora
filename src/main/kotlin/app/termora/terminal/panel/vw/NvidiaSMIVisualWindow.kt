@@ -39,7 +39,7 @@ internal class NvidiaSMIVisualWindow(tab: SSHTerminalTab, visualWindowManager: V
     private val busyLabel = JXBusyLabel()
     private val errorPanel = FormBuilder.create().layout(FormLayout("pref:grow", "20dlu, pref, 5dlu, pref"))
         .add(JLabel(FlatSVGIcon(Icons.warningDialog.name, 60, 60))).xy(1, 2, "center, fill")
-        .add(JLabel("Not supported")).xy(1, 4, "center, fill")
+        .add(JLabel(I18n.getString("termora.not-supported"))).xy(1, 4, "center, fill")
         .build()
     private val loadingPanel = FormBuilder.create().layout(FormLayout("pref:grow", "20dlu, pref"))
         .add(busyLabel).xy(1, 2, "center, fill")
@@ -177,13 +177,13 @@ internal class NvidiaSMIVisualWindow(tab: SSHTerminalTab, visualWindowManager: V
                         BorderFactory.createEmptyBorder(4, 4, 4, 4),
                     )
                 )
-                .add("GPU: ").xy(1, rows)
+                .add("${I18n.getString("termora.visual-window.nvidia-smi.gpu")}: ").xy(1, rows)
                 .add(gpuProgressBar).xy(3, rows).apply { rows += step }
-                .add("Temp: ").xy(1, rows)
+                .add("${I18n.getString("termora.visual-window.nvidia-smi.temperature")}: ").xy(1, rows)
                 .add(tempProgressBar).xy(3, rows).apply { rows += step }
-                .add("Mem: ").xy(1, rows)
+                .add("${I18n.getString("termora.visual-window.nvidia-smi.memory")}: ").xy(1, rows)
                 .add(memProgressBar).xy(3, rows).apply { rows += step }
-                .add("Power: ").xy(1, rows)
+                .add("${I18n.getString("termora.visual-window.nvidia-smi.power")}: ").xy(1, rows)
                 .add(powerProgressBar).xy(3, rows).apply { rows += step }
                 .build()
             add(p, BorderLayout.CENTER)
@@ -241,11 +241,11 @@ internal class NvidiaSMIVisualWindow(tab: SSHTerminalTab, visualWindowManager: V
                         )
                     )
                     .add(Box.createHorizontalGlue()).xy(1, 1)
-                    .add("Driver: ").xy(2, 1)
+                    .add("${I18n.getString("termora.visual-window.nvidia-smi.driver")}: ").xy(2, 1)
                     .add(driverVersionLabel).xy(3, 1)
                     .add("CUDA: ").xy(5, 1)
                     .add(cudaVersionLabel).xy(6, 1)
-                    .add("GPUS: ").xy(8, 1)
+                    .add("${I18n.getString("termora.visual-window.nvidia-smi.gpus")}: ").xy(8, 1)
                     .add(gpusLabel).xy(9, 1)
                     .add(Box.createHorizontalGlue()).xy(10, 1)
                     .build(), BorderLayout.NORTH

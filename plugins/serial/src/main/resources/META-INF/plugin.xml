@@ -12,6 +12,7 @@
 
     <descriptions>
         <description>Supports access to serial ports</description>
+        <description language="ru_RU">Подключение к последовательным портам</description>
         <description language="zh_CN">支持访问串口</description>
         <description language="zh_TW">支援訪問串口</description>
     </descriptions>

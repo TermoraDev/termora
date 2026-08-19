@@ -137,7 +137,7 @@ open class VisualWindowPanel(protected val id: String, protected val visualWindo
         addMouseListener(object : MouseAdapter() {})
 
         toggleWindowBtn.addActionListener { toggleWindow() }
-        toggleWindowBtn.toolTipText = I18n.getString("termora.visual-window.toggle-window")
+        updateToggleWindowTooltip()
 
         addPropertyChangeListener("isWindow") {
             if (isWindow) {
@@ -147,6 +147,7 @@ open class VisualWindowPanel(protected val id: String, protected val visualWindo
                 border = BorderFactory.createMatteBorder(1, 1, 1, 1, DynamicColor.BorderColor)
                 toggleWindowBtn.icon = Icons.openInNewWindow
             }
+            updateToggleWindowTooltip()
         }
 
         // 被添加到组件后
@@ -171,6 +172,13 @@ open class VisualWindowPanel(protected val id: String, protected val visualWindo
         }
 
         closeBtn.addActionListener { if (beforeClose()) Disposer.dispose(visualWindow) }
+    }
+
+    private fun updateToggleWindowTooltip() {
+        toggleWindowBtn.toolTipText = I18n.getString(
+            if (isWindow) "termora.visual-window.return-to-panel"
+            else "termora.visual-window.open-in-new-window"
+        )
     }
 
     private fun initToolBar() {

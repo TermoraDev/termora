@@ -21,7 +21,20 @@ open class PluginDescriptor(
         val defaultIcon: Icon = ScaleIcon(Icons.plugin, 32)
     }
 
+    val name: String get() = getBestName()
     val description: String get() = getBestDescription()
+
+    private fun getBestName(): String {
+        val language = I18n.containsLanguage(Locale.getDefault()) ?: "en_US"
+        if (language == "ru_RU") {
+            val key = "termora.settings.plugin.name.$id"
+            val localizedName = I18n.getString(key)
+            if (localizedName != key) {
+                return localizedName
+            }
+        }
+        return plugin.getName()
+    }
 
     private fun getBestDescription(): String {
         if (descriptions.isEmpty()) return plugin.getName()

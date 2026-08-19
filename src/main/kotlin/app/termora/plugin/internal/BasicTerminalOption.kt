@@ -96,7 +96,7 @@ open class BasicTerminalOption() : JPanel(BorderLayout()), Option {
             val highlights = KeywordHighlightManager.getInstance()
                 .getKeywordHighlights(accountOwner.id)
                 .filter { it.type == KeywordHighlightType.Set }
-            highlightSetComboBox.addItem(KeywordHighlight(id = "-1", keyword = "None"))
+            highlightSetComboBox.addItem(KeywordHighlight(id = "-1", keyword = I18n.getString("termora.no")))
             val defaultHighlight = KeywordHighlight(id = "0", keyword = I18n.getString("termora.highlight.default-set"))
             highlightSetComboBox.addItem(defaultHighlight)
             for (highlight in highlights) {

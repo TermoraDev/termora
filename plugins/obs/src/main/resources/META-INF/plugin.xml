@@ -14,6 +14,7 @@
 
     <descriptions>
         <description>Connecting to Huawei OBS</description>
+        <description language="ru_RU">Подключение к Huawei OBS</description>
         <description language="zh_CN">支持连接到华为云对象存储</description>
         <description language="zh_TW">支援連接到華為雲端物件存儲</description>
     </descriptions>

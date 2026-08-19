@@ -170,7 +170,7 @@ internal class TransportTabbed(
         val popupMenu = FlatPopupMenu()
 
         // 克隆
-        val clone = popupMenu.add(I18n.getString("termora.copy"))
+        val clone = popupMenu.add(I18n.getString("termora.tabbed.contextmenu.clone"))
         clone.addActionListener(object : AnAction() {
             override fun actionPerformed(evt: AnActionEvent) {
                 val c = addSelectionTab()

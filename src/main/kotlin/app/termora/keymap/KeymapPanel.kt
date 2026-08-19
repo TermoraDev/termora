@@ -171,12 +171,12 @@ class KeymapPanel : JPanel(BorderLayout()) {
 
 
     private fun copyKeymap(keymap: Keymap) {
-        var name = keymap.name + " Copy"
+        var name = I18n.getString("termora.settings.keymap.copy-name", keymap.name)
         for (i in 0 until Int.MAX_VALUE) {
             if (keymapManager.getKeymap(name) == null) {
                 break
             }
-            name = keymap.name + " Copy(${i + 1})"
+            name = I18n.getString("termora.settings.keymap.copy-name-indexed", keymap.name, i + 1)
         }
 
         keymapManager.addKeymap(cloneKeymap(name, keymap))

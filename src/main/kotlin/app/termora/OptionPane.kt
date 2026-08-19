@@ -25,7 +25,7 @@ object OptionPane {
     fun showConfirmDialog(
         parentComponent: Component?,
         message: Any,
-        title: String = UIManager.getString("OptionPane.messageDialogTitle"),
+        title: String = I18n.getString("termora.message"),
         optionType: Int = JOptionPane.YES_NO_OPTION,
         messageType: Int = JOptionPane.QUESTION_MESSAGE,
         icon: Icon? = null,
@@ -92,7 +92,7 @@ object OptionPane {
     fun showMessageDialog(
         parentComponent: Component?,
         message: String,
-        title: String = UIManager.getString("OptionPane.messageDialogTitle"),
+        title: String = I18n.getString("termora.message"),
         messageType: Int = JOptionPane.INFORMATION_MESSAGE,
         duration: Duration = Duration.ZERO,
     ) {
@@ -124,7 +124,7 @@ object OptionPane {
 
     fun showInputDialog(
         parentComponent: Component?,
-        title: String = UIManager.getString("OptionPane.messageDialogTitle"),
+        title: String = I18n.getString("termora.message"),
         value: String = StringUtils.EMPTY,
         placeholder: String = StringUtils.EMPTY,
     ): String? {

@@ -24,6 +24,17 @@ enum class AuthenticationType {
     KeyboardInteractive,
 }
 
+fun AuthenticationType.getDisplayName(): String {
+    val key = when (this) {
+        AuthenticationType.No -> "termora.new-host.general.authentication.none"
+        AuthenticationType.Password -> "termora.new-host.general.authentication.password"
+        AuthenticationType.PublicKey -> "termora.new-host.general.authentication.public-key"
+        AuthenticationType.SSHAgent -> "termora.new-host.general.authentication.ssh-agent"
+        AuthenticationType.KeyboardInteractive -> "termora.new-host.general.authentication.keyboard-interactive"
+    }
+    return I18n.getString(key)
+}
+
 enum class ProxyType {
     No,
     HTTP,
@@ -209,6 +220,15 @@ enum class TunnelingType {
     Local,
     Remote,
     Dynamic
+}
+
+fun TunnelingType.getDisplayName(): String {
+    val key = when (this) {
+        TunnelingType.Local -> "termora.new-host.tunneling.type.local"
+        TunnelingType.Remote -> "termora.new-host.tunneling.type.remote"
+        TunnelingType.Dynamic -> "termora.new-host.tunneling.type.dynamic"
+    }
+    return I18n.getString(key)
 }
 
 @Serializable

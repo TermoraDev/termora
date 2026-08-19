@@ -149,7 +149,7 @@ internal class TransportPopupMenu(
         copyMenu.isEnabled = hasParent.not() && files.isNotEmpty()
 
         for ((item, mnemonic) in mnemonics) {
-            item.text = "${item.text}(${KeyEvent.getKeyText(mnemonic)})"
+            item.text = "${item.text} (${KeyEvent.getKeyText(mnemonic)})"
             item.setMnemonic(mnemonic)
         }
     }

@@ -1,5 +1,6 @@
 package app.termora.transfer.s3
 
+import app.termora.I18n
 import app.termora.transfer.WithPathAttributes
 import org.apache.sshd.common.file.util.BasePath
 import java.nio.file.LinkOption
@@ -43,7 +44,7 @@ open class S3Path(
     open val objectName: String get() = names.subList(1, names.size).joinToString(separator)
 
     override fun getCustomType(): String? {
-        if (isBucket) return "Bucket"
+        if (isBucket) return I18n.getString("termora.transport.type.bucket")
         return null
     }
 

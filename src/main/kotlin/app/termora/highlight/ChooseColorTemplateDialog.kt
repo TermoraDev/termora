@@ -3,6 +3,7 @@ package app.termora.highlight
 import app.termora.DialogWrapper
 import app.termora.Disposable
 import app.termora.Disposer
+import app.termora.I18n
 import app.termora.TerminalFactory
 import com.formdev.flatlaf.util.SystemInfo
 import java.awt.*
@@ -52,7 +53,7 @@ class ChooseColorTemplateDialog(owner: Window, title: String) : DialogWrapper(ow
             panel.add(c)
         }
         panel.border = BorderFactory.createEmptyBorder(0, 0, 12, 0)
-        val customBtn = JButton("Custom")
+        val customBtn = JButton(I18n.getString("termora.custom"))
         customBtn.addActionListener {
             val dialog = MyColorPickerDialog(this)
             dialog.setLocationRelativeTo(this)

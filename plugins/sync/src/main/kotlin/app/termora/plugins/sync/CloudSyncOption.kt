@@ -349,9 +349,9 @@ class CloudSyncOption : JPanel(BorderLayout()), OptionsPane.PluginOption {
         // 如果失败，提示错误
         if (syncResult.isFailure) {
             val exception = syncResult.exceptionOrNull()
-            var message = exception?.message ?: "Failed to sync data"
+            var message = exception?.message ?: SyncI18n.getString("termora.settings.sync.failed")
             if (exception is ResponseException) {
-                message = "Server response: ${exception.code}"
+                message = SyncI18n.getString("termora.settings.sync.server-response", exception.code)
             }
 
             if (exception != null) {

@@ -83,7 +83,7 @@ internal class SystemInformationVisualWindow(tab: SSHTerminalTab, visualWindowMa
                     "pref, $formMargin, pref, $formMargin, pref, $formMargin"
                 )
             )
-                .add("CPU: ").xy(1, rows)
+                .add("${I18n.getString("termora.visual-window.system-information.cpu")}: ").xy(1, rows)
                 .add(cpuProgressBar).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.visual-window.system-information.mem")}: ").xy(1, rows)
                 .add(memoryProgressBar).xy(3, rows).apply { rows += step }

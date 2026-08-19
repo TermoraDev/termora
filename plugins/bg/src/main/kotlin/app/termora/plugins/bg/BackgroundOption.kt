@@ -95,7 +95,7 @@ class BackgroundOption : JPanel(BorderLayout()), OptionsPane.PluginOption {
             val chooser = FileChooser()
             chooser.osxAllowedFileTypes = listOf("png", "jpg", "jpeg")
             chooser.allowsMultiSelection = false
-            chooser.win32Filters.add(Pair("Image files", listOf("png", "jpg", "jpeg")))
+            chooser.win32Filters.add(Pair(I18n.getString("termora.file-chooser.image-files"), listOf("png", "jpg", "jpeg")))
             chooser.fileSelectionMode = JFileChooser.FILES_AND_DIRECTORIES
             chooser.showOpenDialog(owner).thenAccept {
                 if (it.isNotEmpty()) {

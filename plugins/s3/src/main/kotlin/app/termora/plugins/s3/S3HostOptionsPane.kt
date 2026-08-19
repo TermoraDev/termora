@@ -222,19 +222,19 @@ class S3HostOptionsPane : OptionsPane() {
                 .add("${I18n.getString("termora.new-host.general.name")}:").xy(1, rows)
                 .add(nameTextField).xyw(3, rows, 5).apply { rows += step }
 
-                .add("Endpoint:").xy(1, rows)
+                .add("${I18n.getString("termora.object-storage.endpoint")}:").xy(1, rows)
                 .add(hostTextField).xyw(3, rows, 5).apply { rows += step }
 
-                .add("AccessKey:").xy(1, rows)
+                .add("${I18n.getString("termora.object-storage.access-key")}:").xy(1, rows)
                 .add(usernameTextField).xyw(3, rows, 5).apply { rows += step }
 
-                .add("SecureKey:").xy(1, rows)
+                .add("${I18n.getString("termora.object-storage.secret-key")}:").xy(1, rows)
                 .add(passwordTextField).xyw(3, rows, 5).apply { rows += step }
 
-                .add("Region:").xy(1, rows)
+                .add("${I18n.getString("termora.object-storage.region")}:").xy(1, rows)
                 .add(regionTextField).xyw(3, rows, 5).apply { rows += step }
 
-                .add("Delimiter:").xy(1, rows)
+                .add("${I18n.getString("termora.object-storage.delimiter")}:").xy(1, rows)
                 .add(delimiterTextField).xyw(3, rows, 5).apply { rows += step }
 
                 .add("${I18n.getString("termora.new-host.general.remark")}:").xy(1, rows)

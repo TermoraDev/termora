@@ -44,7 +44,7 @@ class TerminalDisplay(
     private val toaster = Toaster()
 
     private var font = getTerminalFont()
-    private var monospacedFont = Font(Font.MONOSPACED, font.style, font.size)
+    private var monospacedFont = TerminalFontResolver.fallback(font.style, font.size)
     private var boldFont = font.deriveFont(Font.BOLD)
     private var italicFont = font.deriveFont(Font.ITALIC)
     private var boldItalicFont = font.deriveFont(Font.ITALIC or Font.BOLD)
@@ -190,22 +190,28 @@ class TerminalDisplay(
     }
 
     private fun checkFont() {
-        val terminal = DatabaseManager.getInstance().terminal
+        val expectedFont = getTerminalFont()
+        val expectedFallbackFont = getFallbackTerminalFont()
+        var changed = false
 
-        if ((terminal.fallbackFont.isNotBlank() && fallbackFont == null) ||
-            (terminal.fallbackFont.isBlank() && fallbackFont != null) ||
-            (terminal.fallbackFont != fallbackFont?.family) ||
-            (font.size != terminal.fontSize)
+        if (fallbackFont?.fontName != expectedFallbackFont?.fontName ||
+            fallbackFont?.size != expectedFallbackFont?.size
         ) {
-            fallbackFont = getFallbackTerminalFont()
+            fallbackFont = expectedFallbackFont
+            changed = true
         }
 
-        if (font.family != terminal.font || font.size != terminal.fontSize) {
-            font = getTerminalFont()
+        if (font.fontName != expectedFont.fontName || font.size != expectedFont.size) {
+            font = expectedFont
             boldFont = font.deriveFont(Font.BOLD)
             italicFont = font.deriveFont(Font.ITALIC)
             boldItalicFont = font.deriveFont(Font.ITALIC or Font.BOLD)
-            monospacedFont = Font(Font.MONOSPACED, font.style, font.size)
+            monospacedFont = TerminalFontResolver.fallback(font.style, font.size)
+            changed = true
+        }
+
+        if (changed) {
+            lru.clear()
         }
     }
 
@@ -502,7 +508,7 @@ class TerminalDisplay(
 
     private fun getTerminalFont(): Font {
         val terminal = DatabaseManager.getInstance().terminal
-        return Font(terminal.font, Font.PLAIN, terminal.fontSize)
+        return resolveFont(terminal.font, terminal.fontSize)
     }
 
     private fun getFallbackTerminalFont(): Font? {
@@ -510,8 +516,12 @@ class TerminalDisplay(
         return if (terminal.fallbackFont.isBlank()) {
             null
         } else {
-            Font(terminal.fallbackFont, Font.PLAIN, terminal.fontSize)
+            resolveFont(terminal.fallbackFont, terminal.fontSize)
         }
+    }
+
+    private fun resolveFont(fontName: String, fontSize: Int): Font {
+        return TerminalFontResolver.resolve(fontName, Font.PLAIN, fontSize)
     }
 
     fun toast(text: String, duration: Duration) {

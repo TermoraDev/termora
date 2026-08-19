@@ -351,7 +351,7 @@ class ApplicationRunner {
                 log.error(e.message, e)
             }
             JOptionPane.showMessageDialog(
-                null, "Unable to open database",
+                null, I18n.getString("termora.database.open-failed"),
                 I18n.getString("termora.title"), JOptionPane.ERROR_MESSAGE
             )
             exitProcess(1)

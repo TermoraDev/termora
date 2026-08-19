@@ -35,6 +35,10 @@ class BookmarkButton : JButton(Icons.bookmarks) {
             } else {
                 Icons.bookmarks
             }
+            toolTipText = I18n.getString(
+                if (value) "termora.transport.bookmarks.remove-current"
+                else "termora.transport.bookmarks.add-current"
+            )
         }
 
 
@@ -67,7 +71,6 @@ class BookmarkButton : JButton(Icons.bookmarks) {
 
         isBookmark = false
 
-        toolTipText = I18n.getString("termora.transport.bookmarks")
     }
 
     private fun showBookmarks(e: MouseEvent) {

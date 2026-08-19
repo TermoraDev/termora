@@ -49,7 +49,7 @@ class SSHCopyIdDialog(
     init {
         size = Dimension(UIManager.getInt("Dialog.width") - 100, UIManager.getInt("Dialog.height") - 100)
         isModal = true
-        title = "SSH Copy ID"
+        title = I18n.getString("termora.keymgr.ssh-copy-id.title")
         setLocationRelativeTo(null)
 
         Disposer.register(disposable, object : Disposable {
