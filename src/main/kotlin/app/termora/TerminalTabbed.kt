@@ -231,7 +231,7 @@ class TerminalTabbed(
         }
 
         // 克隆
-        val clone = popupMenu.add(I18n.getString("termora.copy"))
+        val clone = popupMenu.add(I18n.getString("termora.tabbed.contextmenu.clone"))
         clone.addActionListener { evt ->
             if (tab is HostTerminalTab) {
                 actionManager

@@ -15,6 +15,7 @@
 
     <descriptions>
         <description>Connecting to Tencent COS</description>
+        <description language="ru_RU">Подключение к Tencent COS</description>
         <description language="zh_CN">支持连接到腾讯云对象存储</description>
         <description language="zh_TW">支援連接到騰訊雲物件存儲</description>
     </descriptions>

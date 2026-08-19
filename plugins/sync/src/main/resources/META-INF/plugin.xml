@@ -12,6 +12,7 @@
 
     <descriptions>
         <description>Data sync to Gist or WebDAV</description>
+        <description language="ru_RU">Синхронизация данных через Gist или WebDAV</description>
         <description language="zh_CN">支持将配置同步到 Gist 或 WebDAV</description>
         <description language="zh_TW">支援將設定同步到 Gist 或 WebDAV</description>
     </descriptions>

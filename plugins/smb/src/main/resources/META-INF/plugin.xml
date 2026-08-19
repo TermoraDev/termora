@@ -14,6 +14,7 @@
 
     <descriptions>
         <description>Connecting to SMB</description>
+        <description language="ru_RU">Подключение к SMB</description>
         <description language="zh_CN">支持连接到 SMB</description>
         <description language="zh_TW">支援連接到 SMB</description>
     </descriptions>

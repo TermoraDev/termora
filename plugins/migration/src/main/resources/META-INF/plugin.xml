@@ -14,6 +14,7 @@
 
     <descriptions>
         <description>Migrate version 1.x configuration files to 2.x</description>
+        <description language="ru_RU">Перенос файлов конфигурации версии 1.x в 2.x</description>
         <description language="zh_CN">将 1.x 版本的配置文件迁移到 2.x</description>
         <description language="zh_TW">將 1.x 版本的設定檔移轉到 2.x</description>
     </descriptions>

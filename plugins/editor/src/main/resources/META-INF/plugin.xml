@@ -12,6 +12,7 @@
 
     <descriptions>
         <description>Edit SFTP files using the built-in editor</description>
+        <description language="ru_RU">Редактирование файлов по SFTP во встроенном редакторе</description>
         <description language="zh_CN">使用内置编辑器编辑 SFTP 文件</description>
         <description language="zh_TW">使用內建編輯器編輯 SFTP 文件</description>
     </descriptions>

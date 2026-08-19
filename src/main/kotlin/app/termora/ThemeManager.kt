@@ -98,6 +98,7 @@ internal class ThemeManager private constructor() {
         val themeClassname = themes.getOrDefault(classname, classname)
 
         if (UIManager.getLookAndFeel().javaClass.name == themeClassname) {
+            applyLocalizedDefaults()
             return
         }
 
@@ -111,8 +112,18 @@ internal class ThemeManager private constructor() {
             FlatAnimatedLafChange.hideSnapshotWithAnimation()
         }
 
+        applyLocalizedDefaults()
+
         ExtensionManager.getInstance().getExtensions(ThemeChangeExtension::class.java)
             .forEach { it.onChanged() }
+    }
+
+    private fun applyLocalizedDefaults() {
+        UIManager.put("OptionPane.okButtonText", I18n.getString("termora.confirm"))
+        UIManager.put("OptionPane.cancelButtonText", I18n.getString("termora.cancel"))
+        UIManager.put("OptionPane.yesButtonText", I18n.getString("termora.yes"))
+        UIManager.put("OptionPane.noButtonText", I18n.getString("termora.no"))
+        UIManager.put("OptionPane.messageDialogTitle", I18n.getString("termora.message"))
     }
 
     private fun immediateChange(classname: String) {

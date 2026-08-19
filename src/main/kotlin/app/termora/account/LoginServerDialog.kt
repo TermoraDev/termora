@@ -110,7 +110,7 @@ class LoginServerDialog(owner: Window) : DialogWrapper(owner) {
 
 
         val dialog = this
-        val newAction = object : AnAction(I18n.getString("termora.welcome.contextmenu.new")) {
+        val newAction = object : AnAction(I18n.getString("termora.settings.account.add-server")) {
             override fun actionPerformed(evt: AnActionEvent) {
                 if (serverComboBox.itemCount < 1 || serverComboBox.selectedItem == singaporeServer || serverComboBox.selectedItem == chinaServer) {
                     val c = NewServerDialog(dialog)
@@ -140,7 +140,7 @@ class LoginServerDialog(owner: Window) : DialogWrapper(owner) {
 
         fun refreshButton() {
             if (serverComboBox.selectedItem == singaporeServer || serverComboBox.selectedItem == chinaServer || serverComboBox.itemCount < 1) {
-                newAction.name = I18n.getString("termora.welcome.contextmenu.new")
+                newAction.name = I18n.getString("termora.settings.account.add-server")
             } else {
                 newAction.name = I18n.getString("termora.remove")
             }

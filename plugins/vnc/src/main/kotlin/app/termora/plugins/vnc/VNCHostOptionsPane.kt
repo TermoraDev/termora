@@ -188,20 +188,7 @@ internal open class VNCHostOptionsPane : OptionsPane() {
                     isSelected: Boolean,
                     cellHasFocus: Boolean
                 ): Component {
-                    var text = value?.toString() ?: ""
-                    when (value) {
-                        AuthenticationType.Password -> {
-                            text = "Password"
-                        }
-
-                        AuthenticationType.PublicKey -> {
-                            text = "Public Key"
-                        }
-
-                        AuthenticationType.KeyboardInteractive -> {
-                            text = "Keyboard Interactive"
-                        }
-                    }
+                    val text = (value as? AuthenticationType)?.getDisplayName() ?: value?.toString().orEmpty()
                     return super.getListCellRendererComponent(
                         list,
                         text,

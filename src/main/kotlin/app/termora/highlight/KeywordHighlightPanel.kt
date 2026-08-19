@@ -360,7 +360,7 @@ class KeywordHighlightPanel(private val accountOwner: AccountOwner) : JPanel(Bor
             exportBtn.addActionListener {
                 val fileChooser = FileChooser()
                 fileChooser.fileSelectionMode = JFileChooser.FILES_ONLY
-                fileChooser.win32Filters.add(Pair("All files", listOf("*")))
+                fileChooser.win32Filters.add(Pair(I18n.getString("termora.file-chooser.all-files"), listOf("*")))
                 fileChooser.showSaveDialog(owner, "highlights.json").thenAccept { file ->
                     file?.outputStream()?.use {
                         val highlights = keywordHighlightManager.getKeywordHighlights(accountOwner.id)
@@ -375,7 +375,7 @@ class KeywordHighlightPanel(private val accountOwner: AccountOwner) : JPanel(Bor
                 val chooser = FileChooser()
                 chooser.osxAllowedFileTypes = listOf("json")
                 chooser.allowsMultiSelection = false
-                chooser.win32Filters.add(Pair("JSON files", listOf("json")))
+                chooser.win32Filters.add(Pair(I18n.getString("termora.file-chooser.json-files"), listOf("json")))
                 chooser.fileSelectionMode = JFileChooser.FILES_ONLY
                 chooser.showOpenDialog(owner)
                     .thenAccept { if (it.isNotEmpty()) SwingUtilities.invokeLater { importKeywordHighlights(it.first()) } }

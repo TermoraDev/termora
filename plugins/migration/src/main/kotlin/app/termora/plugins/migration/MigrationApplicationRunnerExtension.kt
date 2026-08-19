@@ -84,7 +84,7 @@ class MigrationApplicationRunnerExtension private constructor() : ApplicationRun
                 log.error(e.message, e)
             }
             JOptionPane.showMessageDialog(
-                null, "Unable to open database",
+                null, MigrationI18n.getString("termora.plugins.migration.open-database-failed"),
                 I18n.getString("termora.title"), JOptionPane.ERROR_MESSAGE
             )
             exitProcess(1)

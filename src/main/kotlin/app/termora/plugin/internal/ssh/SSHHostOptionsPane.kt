@@ -355,20 +355,7 @@ internal class SSHHostOptionsPane(private val accountOwner: AccountOwner) : Opti
                     isSelected: Boolean,
                     cellHasFocus: Boolean
                 ): Component {
-                    var text = value?.toString() ?: ""
-                    when (value) {
-                        AuthenticationType.Password -> {
-                            text = "Password"
-                        }
-
-                        AuthenticationType.PublicKey -> {
-                            text = "Public Key"
-                        }
-
-                        AuthenticationType.KeyboardInteractive -> {
-                            text = "Keyboard Interactive"
-                        }
-                    }
+                    val text = (value as? AuthenticationType)?.getDisplayName() ?: value?.toString().orEmpty()
                     return super.getListCellRendererComponent(
                         list,
                         text,
@@ -605,8 +592,8 @@ internal class SSHHostOptionsPane(private val accountOwner: AccountOwner) : Opti
 
     private inner class TunnelingOption : JPanel(BorderLayout()), Option {
         val tunnelings = mutableListOf<Tunneling>()
-        val x11ForwardingCheckBox = JCheckBox("X DISPLAY:")
-        val forwardAgentCheckBox = JCheckBox("Enable ForwardAgent")
+        val x11ForwardingCheckBox = JCheckBox("${I18n.getString("termora.new-host.tunneling.x-display")}:")
+        val forwardAgentCheckBox = JCheckBox(I18n.getString("termora.new-host.tunneling.agent.enable"))
         val x11ServerTextField = OutlineTextField(255)
 
         private val model = object : DefaultTableModel() {
@@ -628,7 +615,7 @@ internal class SSHHostOptionsPane(private val accountOwner: AccountOwner) : Opti
                 val tunneling = tunnelings[row]
                 return when (column) {
                     0 -> tunneling.name
-                    1 -> tunneling.type
+                    1 -> tunneling.type.getDisplayName()
                     2 -> "${tunneling.sourceHost}:${tunneling.sourcePort}"
                     3 -> "${tunneling.destinationHost}:${tunneling.destinationPort}"
                     else -> super.getValueAt(row, column)
@@ -691,7 +678,7 @@ internal class SSHHostOptionsPane(private val accountOwner: AccountOwner) : Opti
 
             val x11Forwarding = Box.createHorizontalBox()
             x11Forwarding.border = BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder("X11 Forwarding"),
+                BorderFactory.createTitledBorder(I18n.getString("termora.new-host.tunneling.x11")),
                 BorderFactory.createEmptyBorder(4, 4, 4, 4)
             )
             x11Forwarding.add(x11ForwardingCheckBox)
@@ -699,7 +686,7 @@ internal class SSHHostOptionsPane(private val accountOwner: AccountOwner) : Opti
 
             val forwardAgent = Box.createHorizontalBox()
             forwardAgent.border = BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder("Agent Forwarding"),
+                BorderFactory.createTitledBorder(I18n.getString("termora.new-host.tunneling.agent")),
                 BorderFactory.createEmptyBorder(4, 4, 4, 4)
             )
             forwardAgent.add(forwardAgentCheckBox)
@@ -707,7 +694,7 @@ internal class SSHHostOptionsPane(private val accountOwner: AccountOwner) : Opti
             x11ServerTextField.isEnabled = x11ForwardingCheckBox.isSelected
 
             val panel = JPanel(BorderLayout())
-            panel.add(JLabel("TCP/IP Forwarding:"), BorderLayout.NORTH)
+            panel.add(JLabel("${I18n.getString("termora.new-host.tunneling.tcp")}:"), BorderLayout.NORTH)
             panel.add(scrollPane, BorderLayout.CENTER)
             panel.add(box, BorderLayout.SOUTH)
             panel.border = BorderFactory.createEmptyBorder(0, 0, 8, 0)
@@ -817,6 +804,24 @@ internal class SSHHostOptionsPane(private val accountOwner: AccountOwner) : Opti
                 typeComboBox.addItem(TunnelingType.Local)
                 typeComboBox.addItem(TunnelingType.Remote)
                 typeComboBox.addItem(TunnelingType.Dynamic)
+                typeComboBox.renderer = object : DefaultListCellRenderer() {
+                    override fun getListCellRendererComponent(
+                        list: JList<*>?,
+                        value: Any?,
+                        index: Int,
+                        isSelected: Boolean,
+                        cellHasFocus: Boolean
+                    ): Component {
+                        val text = (value as? TunnelingType)?.getDisplayName() ?: value?.toString().orEmpty()
+                        return super.getListCellRendererComponent(
+                            list,
+                            text,
+                            index,
+                            isSelected,
+                            cellHasFocus
+                        )
+                    }
+                }
 
                 localHostTextField.text = "127.0.0.1"
                 localPortSpinner.value = 1080

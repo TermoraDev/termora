@@ -57,7 +57,7 @@ class PluginPanel(val descriptor: PluginPluginDescriptor) : JPanel(), Disposable
         this.add(Box.createHorizontalStrut(8))
 
         val infoBox = Box.createVerticalBox()
-        infoBox.add(JLabel("<html><b>${descriptor.plugin.getName()}</b>&nbsp;&nbsp;${descriptor.version}</html>"))
+        infoBox.add(JLabel("<html><b>${descriptor.name}</b>&nbsp;&nbsp;${descriptor.version}</html>"))
         infoBox.add(Box.createVerticalStrut(4))
         val descriptionLabel = JXLabel(descriptor.description)
             .apply { foreground = DynamicColor("textInactiveText") }
@@ -160,7 +160,7 @@ class PluginPanel(val descriptor: PluginPluginDescriptor) : JPanel(), Disposable
         if (path.exists().not() || path.isDirectory.not()) return
 
         if (OptionPane.showConfirmDialog(
-                owner, I18n.getString("termora.settings.plugin.uninstall-confirm", descriptor.plugin.getName()),
+                owner, I18n.getString("termora.settings.plugin.uninstall-confirm", descriptor.name),
                 optionType = JOptionPane.OK_CANCEL_OPTION,
                 options = arrayOf(
                     I18n.getString("termora.settings.plugin.uninstall"),
@@ -344,7 +344,7 @@ class PluginPanel(val descriptor: PluginPluginDescriptor) : JPanel(), Disposable
                     owner,
                     I18n.getString(
                         "termora.settings.plugin.install-from-disk-warning",
-                        descriptor.plugin.getName()
+                        descriptor.name
                     ),
                     optionType = JOptionPane.OK_CANCEL_OPTION,
                     messageType = JOptionPane.WARNING_MESSAGE,

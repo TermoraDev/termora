@@ -272,8 +272,8 @@ class TelnetHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
 
         override fun toString(): String {
             return when (this) {
-                Backspace -> "ASCII Backspace (0x08)"
-                Delete -> "ASCII Delete (0x7F)"
+                Backspace -> "ASCII BS (0x08)"
+                Delete -> "ASCII DEL (0x7F)"
                 VT220 -> "VT220 Delete (ESC[3~)"
             }
         }

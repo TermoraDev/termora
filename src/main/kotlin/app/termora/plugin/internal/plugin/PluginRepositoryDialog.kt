@@ -23,7 +23,7 @@ internal class PluginRepositoryDialog(owner: Window) : DialogWrapper(owner) {
         size = Dimension(UIManager.getInt("Dialog.width") - 200, UIManager.getInt("Dialog.height") - 150)
         isModal = true
         isResizable = false
-        title = "Custom Plugin Repository"
+        title = I18n.getString("termora.settings.plugin.repository.title")
         list.fixedCellHeight = UIManager.getInt("Tree.rowHeight")
         for (url in PluginRepositoryManager.getInstance().getRepositories()) {
             model.addElement(url)
@@ -53,7 +53,10 @@ internal class PluginRepositoryDialog(owner: Window) : DialogWrapper(owner) {
 
         addBtn.addActionListener(object : AbstractAction() {
             override fun actionPerformed(e: ActionEvent) {
-                val text = OptionPane.showInputDialog(dialog)
+                val text = OptionPane.showInputDialog(
+                    dialog,
+                    title = I18n.getString("termora.settings.plugin.repository.add")
+                )
                 if (text.isNullOrBlank()) return
                 if ((text.startsWith("http://") || text.startsWith("https://")).not()) {
                     return

@@ -192,6 +192,26 @@ class SerialHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
             parityComboBox.addItem(SerialCommParity.Odd)
             parityComboBox.addItem(SerialCommParity.Mark)
             parityComboBox.addItem(SerialCommParity.Space)
+            parityComboBox.renderer = object : DefaultListCellRenderer() {
+                override fun getListCellRendererComponent(
+                    list: JList<*>?,
+                    value: Any?,
+                    index: Int,
+                    isSelected: Boolean,
+                    cellHasFocus: Boolean
+                ): Component {
+                    val key = when (value) {
+                        SerialCommParity.None -> "termora.new-host.serial.parity.none"
+                        SerialCommParity.Even -> "termora.new-host.serial.parity.even"
+                        SerialCommParity.Odd -> "termora.new-host.serial.parity.odd"
+                        SerialCommParity.Mark -> "termora.new-host.serial.parity.mark"
+                        SerialCommParity.Space -> "termora.new-host.serial.parity.space"
+                        else -> null
+                    }
+                    val text = key?.let { I18n.getString(it) } ?: value?.toString().orEmpty()
+                    return super.getListCellRendererComponent(list, text, index, isSelected, cellHasFocus)
+                }
+            }
 
             stopBitsComboBox.addItem("1")
             stopBitsComboBox.addItem("1.5")
@@ -210,10 +230,14 @@ class SerialHostOptionsPane(private val accountOwner: AccountOwner) : OptionsPan
                     isSelected: Boolean,
                     cellHasFocus: Boolean
                 ): Component {
-                    val text = value?.toString() ?: StringUtils.EMPTY
+                    val text = if (value == SerialCommFlowControl.None) {
+                        I18n.getString("termora.new-host.serial.flow-control.none")
+                    } else {
+                        value?.toString()?.replace('_', '/') ?: StringUtils.EMPTY
+                    }
                     return super.getListCellRendererComponent(
                         list,
-                        text.replace('_', '/'),
+                        text,
                         index,
                         isSelected,
                         cellHasFocus

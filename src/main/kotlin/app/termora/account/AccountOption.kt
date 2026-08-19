@@ -118,8 +118,8 @@ class AccountOption : JPanel(BorderLayout()), OptionsPane.Option, Disposable {
         var server = accountManager.getServer()
         var email = accountManager.getEmail()
         if (isLocally) {
-            server = I18n.getString("termora.settings.account.locally")
-            email = I18n.getString("termora.settings.account.locally")
+            server = I18n.getString("termora.settings.account.local-server")
+            email = I18n.getString("termora.settings.account.local-account")
         }
 
         val planBox = Box.createHorizontalBox()

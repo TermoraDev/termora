@@ -13,6 +13,7 @@
 
     <descriptions>
         <description>Display the geographical location of the host</description>
+        <description language="ru_RU">Отображение географического местоположения хоста</description>
         <description language="zh_CN">显示主机的地理位置</description>
         <description language="zh_TW">顯示主機的地理位置</description>
     </descriptions>

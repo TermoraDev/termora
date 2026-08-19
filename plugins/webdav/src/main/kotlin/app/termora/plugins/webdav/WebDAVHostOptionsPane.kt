@@ -211,7 +211,7 @@ class WebDAVHostOptionsPane : OptionsPane() {
                 .add("${I18n.getString("termora.new-host.general.name")}:").xy(1, rows)
                 .add(nameTextField).xyw(3, rows, 5).apply { rows += step }
 
-                .add("Endpoint:").xy(1, rows)
+                .add("${I18n.getString("termora.object-storage.endpoint")}:").xy(1, rows)
                 .add(endpointTextField).xyw(3, rows, 5).apply { rows += step }
 
                 .add("${I18n.getString("termora.new-host.general.username")}:").xy(1, rows)

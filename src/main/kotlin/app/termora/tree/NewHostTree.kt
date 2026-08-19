@@ -335,7 +335,7 @@ class NewHostTree : SimpleTree(), Disposable {
         val openWithSFTPCommand = openWith.add(I18n.getString("termora.tabbed.contextmenu.sftp-command"))
         val openInNewWindow = popupMenu.add(I18n.getString("termora.welcome.contextmenu.open-in-new-window"))
         popupMenu.addSeparator()
-        val copy = popupMenu.add(I18n.getString("termora.welcome.contextmenu.copy"))
+        val copy = popupMenu.add(I18n.getString("termora.welcome.contextmenu.duplicate"))
         val remove = popupMenu.add(I18n.getString("termora.welcome.contextmenu.remove"))
         val rename = popupMenu.add(I18n.getString("termora.welcome.contextmenu.rename"))
         popupMenu.addSeparator()
@@ -556,7 +556,7 @@ class NewHostTree : SimpleTree(), Disposable {
         )
 
         for ((item, mnemonic) in mnemonics) {
-            item.text = "${item.text}(${KeyEvent.getKeyText(mnemonic)})"
+            item.text = "${item.text} (${KeyEvent.getKeyText(mnemonic)})"
             item.setMnemonic(mnemonic)
         }
 
@@ -610,7 +610,7 @@ class NewHostTree : SimpleTree(), Disposable {
 
         val host = node.host
         val now = host.sort + 1
-        val name = if (level == 0) "${host.name} ${I18n.getString("termora.welcome.contextmenu.copy")}"
+        val name = if (level == 0) I18n.getString("termora.welcome.contextmenu.duplicate-name", host.name)
         else host.name
 
         val newHost = host.copy(
@@ -705,7 +705,7 @@ class NewHostTree : SimpleTree(), Disposable {
 
             ImportType.Xshell -> {
                 chooser.fileSelectionMode = JFileChooser.DIRECTORIES_ONLY
-                chooser.dialogTitle = "Xshell Sessions"
+                chooser.dialogTitle = I18n.getString("termora.welcome.import.xshell-sessions")
                 chooser.isAcceptAllFileFilterUsed = true
             }
 
@@ -975,7 +975,7 @@ class NewHostTree : SimpleTree(), Disposable {
             if (!SystemInfo.isWindows) {
                 OptionPane.showMessageDialog(
                     owner,
-                    "Non-UTF-8 encoded MobaXterm config files are only supported on Windows. Please convert the file to UTF-8 encoding first."
+                    I18n.getString("termora.welcome.contextmenu.import.moba-xterm-non-utf8")
                 )
                 return emptyList()
             }

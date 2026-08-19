@@ -29,12 +29,13 @@ class FontComboBox : FlatComboBox<String>() {
             ): Component {
                 var text = value
                 if (text is String) {
+                    val fontFamily = text
                     if (text.isBlank()) {
-                        text = "&lt;None&gt;"
+                        text = "&lt;${I18n.getString("termora.settings.terminal.fallback-font.none")}&gt;"
                     }
                     return super.getListCellRendererComponent(
                         list,
-                        "<html><font face='$text'>$text</font></html>",
+                        "<html><font face='$fontFamily'>$text</font></html>",
                         index,
                         isSelected,
                         cellHasFocus

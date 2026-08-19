@@ -181,7 +181,7 @@ class KeyManagerPanel(private val accountOwner: AccountOwner) : JPanel(BorderLay
 
                 val fileChooser = FileChooser()
                 fileChooser.fileSelectionMode = JFileChooser.FILES_ONLY
-                fileChooser.win32Filters.add(Pair("Zip files", listOf("zip")))
+                fileChooser.win32Filters.add(Pair(I18n.getString("termora.file-chooser.zip-files"), listOf("zip")))
                 fileChooser.showSaveDialog(SwingUtilities.getWindowAncestor(this@KeyManagerPanel), "key-export.zip")
                     .thenAccept { file ->
                         if (file != null) {
@@ -385,7 +385,7 @@ class KeyManagerPanel(private val accountOwner: AccountOwner) : JPanel(BorderLay
                 .add(nameTextField).xy(3, rows).apply { rows += step }
                 .add("${I18n.getString("termora.keymgr.table.remark")}:").xy(1, rows)
                 .add(remarkTextField).xy(3, rows).apply { rows += step }
-                .add("PublicKey:").xy(1, rows)
+                .add("${I18n.getString("termora.new-host.general.authentication.public-key")}:").xy(1, rows)
                 .add(JScrollPane(publicKeyTextArea).apply { border = FlatTextBorder() }).xy(3, rows)
                 .apply { rows += step }
                 .add(savePublicKeyBtn).xyw(1, rows, 3, "right, fill").apply { rows += step }
@@ -397,7 +397,7 @@ class KeyManagerPanel(private val accountOwner: AccountOwner) : JPanel(BorderLay
             savePublicKeyBtn.addActionListener {
                 val fileChooser = FileChooser()
                 fileChooser.fileSelectionMode = JFileChooser.FILES_ONLY
-                fileChooser.win32Filters.add(Pair("All Files", listOf("*")))
+                fileChooser.win32Filters.add(Pair(I18n.getString("termora.file-chooser.all-files"), listOf("*")))
                 fileChooser.showSaveDialog(this, "${nameTextField.text}.pub").thenAccept { file ->
                     file?.outputStream()?.use {
                         IOUtils.write(publicKeyTextArea.text, it, StandardCharsets.UTF_8)
@@ -630,7 +630,14 @@ class KeyManagerPanel(private val accountOwner: AccountOwner) : JPanel(BorderLay
                     ) ?: String()
                 }
                 val keyPair = provider.loadKeys(null).firstOrNull()
-                    ?: throw IllegalStateException("Failed to load the key file")
+                    ?: run {
+                        OptionPane.showMessageDialog(
+                            this,
+                            I18n.getString("termora.keymgr.import.load-failed"),
+                            messageType = JOptionPane.ERROR_MESSAGE
+                        )
+                        return
+                    }
                 val keyType = KeyUtils.getKeyType(keyPair)
                 if (keyType != KeyPairProvider.SSH_RSA
                     && keyType != KeyPairProvider.SSH_ED25519
@@ -638,7 +645,12 @@ class KeyManagerPanel(private val accountOwner: AccountOwner) : JPanel(BorderLay
                     && keyType != KeyPairProvider.ECDSA_SHA2_NISTP384
                     && keyType != KeyPairProvider.ECDSA_SHA2_NISTP521
                 ) {
-                    throw UnsupportedOperationException("Key type:${keyType}. Only RSA/ED25519/ECDSA keys are supported.")
+                    OptionPane.showMessageDialog(
+                        this,
+                        I18n.getString("termora.keymgr.import.unsupported-key-type", keyType),
+                        messageType = JOptionPane.ERROR_MESSAGE
+                    )
+                    return
                 }
 
                 nameTextField.text = StringUtils.defaultIfBlank(nameTextField.text, file.name)
@@ -668,10 +680,10 @@ class KeyManagerPanel(private val accountOwner: AccountOwner) : JPanel(BorderLay
                     id = randomUUID(),
                     length = lengthComboBox.selectedItem as Int,
                 )
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 OptionPane.showMessageDialog(
                     this,
-                    e.message ?: e.toString(),
+                    I18n.getString("termora.keymgr.import.error"),
                     messageType = JOptionPane.ERROR_MESSAGE
                 )
             }

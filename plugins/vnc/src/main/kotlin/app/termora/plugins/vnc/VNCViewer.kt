@@ -1,6 +1,9 @@
 package app.termora.plugins.vnc
 
 import app.termora.*
+import com.glavsoft.exceptions.AuthenticationFailedException
+import com.glavsoft.exceptions.UnsupportedProtocolVersionException
+import com.glavsoft.exceptions.UnsupportedSecurityTypeException
 import com.glavsoft.rfb.ClipboardController
 import com.glavsoft.rfb.client.KeyEventMessage
 import com.glavsoft.rfb.encoding.EncodingType
@@ -16,16 +19,18 @@ import com.glavsoft.viewer.swing.Surface
 import kotlinx.coroutines.*
 import kotlinx.coroutines.swing.Swing
 import org.apache.commons.lang3.StringUtils
-import org.apache.commons.lang3.exception.ExceptionUtils
 import java.awt.AWTEvent
 import java.awt.BorderLayout
 import java.awt.Graphics
 import java.awt.event.AWTEventListener
 import java.awt.event.ActionEvent
 import java.awt.event.MouseEvent
+import java.net.ConnectException
 import java.net.InetSocketAddress
 import java.net.Proxy
 import java.net.Socket
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 import java.util.concurrent.Executors
 import javax.swing.*
 import kotlin.math.max
@@ -69,7 +74,7 @@ class VNCViewer(private val host: Host) : JPanel(BorderLayout()), Disposable {
                 withContext(Dispatchers.Swing) {
                     OptionPane.showMessageDialog(
                         owner,
-                        e.message ?: ExceptionUtils.getMessage(e),
+                        getErrorMessage(e),
                         messageType = JOptionPane.ERROR_MESSAGE
                     )
                 }
@@ -77,6 +82,31 @@ class VNCViewer(private val host: Host) : JPanel(BorderLayout()), Disposable {
         }
 
         toolkit.addAWTEventListener(toolbar, AWTEvent.MOUSE_MOTION_EVENT_MASK)
+    }
+
+    private fun getErrorMessage(exception: Exception): String {
+        val causes = generateSequence<Throwable>(exception) { it.cause }.toList()
+        return when {
+            causes.any { it is AuthenticationFailedException } ->
+                I18n.getString("termora.vnc.error.authentication-failed")
+
+            causes.any { it is UnsupportedProtocolVersionException } ->
+                I18n.getString("termora.vnc.error.unsupported-protocol")
+
+            causes.any { it is UnsupportedSecurityTypeException } ->
+                I18n.getString("termora.vnc.error.unsupported-security")
+
+            causes.any { it is SocketTimeoutException } ->
+                I18n.getString("termora.vnc.error.timeout")
+
+            causes.any { it is UnknownHostException } ->
+                I18n.getString("termora.vnc.error.unknown-host")
+
+            causes.any { it is ConnectException } ->
+                I18n.getString("termora.vnc.error.connection-failed")
+
+            else -> I18n.getString("termora.vnc.error.generic")
+        }
     }
 
     private suspend fun connect() {

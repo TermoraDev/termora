@@ -411,7 +411,7 @@ internal open class TransportPanel(
                         }
 
                         override fun getPresentationName(): String {
-                            return "Path"
+                            return I18n.getString("termora.transport.path")
                         }
                     })
 

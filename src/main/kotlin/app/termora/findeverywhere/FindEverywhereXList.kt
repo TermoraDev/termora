@@ -1,5 +1,6 @@
 package app.termora.findeverywhere
 
+import app.termora.I18n
 import com.formdev.flatlaf.ui.FlatListUI
 import org.jdesktop.swingx.JXList
 import java.awt.*
@@ -42,7 +43,7 @@ class FindEverywhereXList(private val model: DefaultListModel<FindEverywhereResu
             )
         }
         g.color = UIManager.getColor("textInactiveText")
-        val text = "Nothing found."
+        val text = I18n.getString("termora.find-everywhere.nothing-found")
         val w = g.fontMetrics.stringWidth(text)
         g.drawString(text, width / 2 - w / 2, (height * 0.25).toInt())
     }

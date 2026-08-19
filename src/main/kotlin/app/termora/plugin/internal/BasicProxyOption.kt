@@ -36,6 +36,24 @@ class BasicProxyOption(
 
     private fun initView() {
         add(getCenterComponent(), BorderLayout.CENTER)
+        proxyTypeComboBox.renderer = object : DefaultListCellRenderer() {
+            override fun getListCellRendererComponent(
+                list: JList<*>?,
+                value: Any?,
+                index: Int,
+                isSelected: Boolean,
+                cellHasFocus: Boolean
+            ): Component {
+                val text = if (value == ProxyType.No) I18n.getString("termora.no") else value?.toString().orEmpty()
+                return super.getListCellRendererComponent(
+                    list,
+                    text,
+                    index,
+                    isSelected,
+                    cellHasFocus
+                )
+            }
+        }
         proxyAuthenticationTypeComboBox.renderer = object : DefaultListCellRenderer() {
             override fun getListCellRendererComponent(
                 list: JList<*>?,
@@ -44,20 +62,7 @@ class BasicProxyOption(
                 isSelected: Boolean,
                 cellHasFocus: Boolean
             ): Component {
-                var text = value?.toString() ?: ""
-                when (value) {
-                    AuthenticationType.Password -> {
-                        text = "Password"
-                    }
-
-                    AuthenticationType.PublicKey -> {
-                        text = "Public Key"
-                    }
-
-                    AuthenticationType.KeyboardInteractive -> {
-                        text = "Keyboard Interactive"
-                    }
-                }
+                val text = (value as? AuthenticationType)?.getDisplayName() ?: value?.toString().orEmpty()
                 return super.getListCellRendererComponent(
                     list,
                     text,

@@ -1,6 +1,7 @@
 package app.termora.highlight
 
 import app.termora.DynamicColor
+import app.termora.I18n
 import app.termora.terminal.ColorPalette
 import app.termora.terminal.TerminalColor
 import com.formdev.flatlaf.ui.FlatLineBorder
@@ -16,7 +17,7 @@ class KeywordHighlightView(
     var arc: Int = UIManager.getInt("Component.arc"),
     var fontSize: Int = 0,
 ) : JPanel() {
-    private val text = "Highlight"
+    private val text = I18n.getString("termora.highlight.preview-text")
 
     var textColor: Color? = null
     var backgroundColor: Color? = null

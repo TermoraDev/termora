@@ -124,7 +124,7 @@ class PluginOption : JPanel(BorderLayout()), OptionsPane.Option, Disposable, Acc
             val chooser = FileChooser()
             chooser.osxAllowedFileTypes = listOf("zip")
             chooser.allowsMultiSelection = false
-            chooser.win32Filters.add(Pair("Zip files", listOf("zip")))
+            chooser.win32Filters.add(Pair(I18n.getString("termora.file-chooser.zip-files"), listOf("zip")))
             chooser.fileSelectionMode = JFileChooser.FILES_ONLY
             chooser.showOpenDialog(owner).thenAccept { if (it.isNotEmpty()) installPluginFromDisk(it.first()) }
         }
@@ -171,7 +171,7 @@ class PluginOption : JPanel(BorderLayout()), OptionsPane.Option, Disposable, Acc
     private fun installPlugin(folder: File, pluginDescriptor: PluginDescriptor) {
         if (OptionPane.showConfirmDialog(
                 owner,
-                I18n.getString("termora.settings.plugin.install-from-disk-warning", pluginDescriptor.plugin.getName()),
+                I18n.getString("termora.settings.plugin.install-from-disk-warning", pluginDescriptor.name),
                 optionType = JOptionPane.OK_CANCEL_OPTION,
                 messageType = JOptionPane.WARNING_MESSAGE,
                 options = arrayOf(I18n.getString("termora.settings.plugin.install"), I18n.getString("termora.cancel")),

@@ -69,14 +69,14 @@ class NewKeywordHighlightDialog(
 
         textColorRevert.isFocusable = false
         textColorRevert.isEnabled = false
-        textColorRevert.toolTipText = "Use terminal foreground"
+        textColorRevert.toolTipText = I18n.getString("termora.highlight.use-terminal-foreground")
         textColorRevert.putClientProperty(
             FlatClientProperties.BUTTON_TYPE,
             FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON
         )
         backgroundColorRevert.isFocusable = false
         backgroundColorRevert.isEnabled = false
-        backgroundColorRevert.toolTipText = "Use terminal background"
+        backgroundColorRevert.toolTipText = I18n.getString("termora.highlight.use-terminal-background")
         backgroundColorRevert.putClientProperty(
             FlatClientProperties.BUTTON_TYPE,
             FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON

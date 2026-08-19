@@ -122,13 +122,13 @@ class MarketplacePanel : JPanel(BorderLayout()), Disposable {
                             }
                             cardLayout.show(cardPanel, PanelState.Plugins.name)
                         } else {
-                            failedLabel.text = "No plugins found"
+                            failedLabel.text = I18n.getString("termora.settings.plugin.marketplace.empty")
                             cardLayout.show(cardPanel, PanelState.FetchFailed.name)
                         }
                     }
                 } catch (_: Exception) {
                     withContext(Dispatchers.Swing) {
-                        failedLabel.text = "Failed to fetch the plugins"
+                        failedLabel.text = I18n.getString("termora.settings.plugin.marketplace.fetch-failed")
                         cardLayout.show(cardPanel, PanelState.FetchFailed.name)
                     }
                 } finally {

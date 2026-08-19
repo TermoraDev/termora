@@ -26,7 +26,7 @@ class RequestAuthenticationDialog(owner: Window, host: Host) : DialogWrapper(own
 
     init {
         isModal = true
-        title = "SSH User Authentication"
+        title = I18n.getString("termora.ssh.user-authentication")
         controlsVisible = false
 
         init()
@@ -54,6 +54,19 @@ class RequestAuthenticationDialog(owner: Window, host: Host) : DialogWrapper(own
                     isSelected,
                     cellHasFocus
                 )
+            }
+        }
+
+        authenticationTypeComboBox.renderer = object : DefaultListCellRenderer() {
+            override fun getListCellRendererComponent(
+                list: JList<*>?,
+                value: Any?,
+                index: Int,
+                isSelected: Boolean,
+                cellHasFocus: Boolean
+            ): Component {
+                val text = (value as? AuthenticationType)?.getDisplayName() ?: value?.toString().orEmpty()
+                return super.getListCellRendererComponent(list, text, index, isSelected, cellHasFocus)
             }
         }
 

@@ -1,6 +1,7 @@
 package app.termora.highlight
 
 import app.termora.DialogWrapper
+import app.termora.I18n
 import com.bric.colorpicker.ColorPicker
 import java.awt.Color
 import java.awt.Window
@@ -12,7 +13,7 @@ class MyColorPickerDialog(owner: Window) : DialogWrapper(owner) {
 
     init {
         isModal = true
-        title = "Color Picker"
+        title = I18n.getString("termora.highlight.color-picker")
         init()
         pack()
         setLocationRelativeTo(null)

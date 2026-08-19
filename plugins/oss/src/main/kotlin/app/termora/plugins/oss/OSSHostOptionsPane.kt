@@ -270,13 +270,13 @@ class OSSHostOptionsPane : OptionsPane() {
 //                .add("Endpoint:").xy(1, rows)
 //                .add(endpointTextField).xyw(3, rows, 5).apply { rows += step }
 
-                .add("SecretId:").xy(1, rows)
+                .add("${I18n.getString("termora.object-storage.secret-id")}:").xy(1, rows)
                 .add(usernameTextField).xyw(3, rows, 5).apply { rows += step }
 
-                .add("SecretKey:").xy(1, rows)
+                .add("${I18n.getString("termora.object-storage.secret-key")}:").xy(1, rows)
                 .add(passwordTextField).xyw(3, rows, 5).apply { rows += step }
 
-                .add("Delimiter:").xy(1, rows)
+                .add("${I18n.getString("termora.object-storage.delimiter")}:").xy(1, rows)
                 .add(delimiterTextField).xyw(3, rows, 5).apply { rows += step }
 
                 .add("${I18n.getString("termora.new-host.general.remark")}:").xy(1, rows)

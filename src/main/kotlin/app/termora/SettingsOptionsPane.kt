@@ -133,6 +133,23 @@ class SettingsOptionsPane : OptionsPane() {
             tabOrderComboBox.addItem(TabOrder.Hide)
             tabOrderComboBox.addItem(TabOrder.AsNeed)
             tabOrderComboBox.addItem(TabOrder.Always)
+            tabOrderComboBox.renderer = object : DefaultListCellRenderer() {
+                override fun getListCellRendererComponent(
+                    list: JList<*>?,
+                    value: Any?,
+                    index: Int,
+                    isSelected: Boolean,
+                    cellHasFocus: Boolean
+                ): Component {
+                    val text = when (value) {
+                        TabOrder.Hide -> I18n.getString("termora.settings.appearance.tab-order.hide")
+                        TabOrder.AsNeed -> I18n.getString("termora.settings.appearance.tab-order.as-needed")
+                        TabOrder.Always -> I18n.getString("termora.settings.appearance.tab-order.always")
+                        else -> value
+                    }
+                    return super.getListCellRendererComponent(list, text, index, isSelected, cellHasFocus)
+                }
+            }
             tabOrderComboBox.selectedItem = runCatching { TabOrder.valueOf(appearance.tabOrder) }
                 .getOrNull() ?: TabOrder.Hide
 
@@ -314,8 +331,8 @@ class SettingsOptionsPane : OptionsPane() {
 
         private fun showPreferredThemeContextmenu() {
             val popupMenu = FlatPopupMenu()
-            val dark = JMenu("For Dark OS")
-            val light = JMenu("For Light OS")
+            val dark = JMenu(I18n.getString("termora.settings.appearance.theme.dark-os"))
+            val light = JMenu(I18n.getString("termora.settings.appearance.theme.light-os"))
             val darkTheme = appearance.darkTheme
             val lightTheme = appearance.lightTheme
 
@@ -951,7 +968,7 @@ class SettingsOptionsPane : OptionsPane() {
                 .add(
                     createHyperlink(
                         "https://github.com/TermoraDev/termora/blob/${branch}/THIRDPARTY",
-                        "Open-source software"
+                        I18n.getString("termora.settings.about.open-source-software")
                     )
                 ).xy(3, rows).apply { rows += step }
 

@@ -542,7 +542,7 @@ object SshClients {
             return OptionPane.showConfirmDialog(
                 owner,
                 panel,
-                "SSH Security Warning",
+                I18n.getString("termora.host.modified-server-key.warning"),
                 messageType = JOptionPane.WARNING_MESSAGE,
                 optionType = JOptionPane.OK_CANCEL_OPTION
             )

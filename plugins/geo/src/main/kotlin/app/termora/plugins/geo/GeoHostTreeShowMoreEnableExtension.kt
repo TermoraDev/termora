@@ -19,7 +19,7 @@ internal class GeoHostTreeShowMoreEnableExtension private constructor() : HostTr
     private val enableManager get() = EnableManager.getInstance()
 
     override fun createJCheckBoxMenuItem(tree: JTree): JCheckBoxMenuItem {
-        val item = JCheckBoxMenuItem("Geo")
+        val item = JCheckBoxMenuItem(GeoI18n.getString("termora.plugins.geo.name"))
         item.isSelected = item.isEnabled && enableManager.getFlag(KEY, true)
         item.addActionListener {
             enableManager.setFlag(KEY, item.isSelected)
