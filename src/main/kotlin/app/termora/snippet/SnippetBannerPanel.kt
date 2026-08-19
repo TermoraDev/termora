@@ -15,8 +15,9 @@ class SnippetBannerPanel(fontSize: Int = 12) : JComponent() {
 """.trimIndent().lines()
 
     init {
-        font = Font("JetBrains Mono", Font.PLAIN, fontSize)
-        preferredSize = Dimension(width, getFontMetrics(font).height * banner.size)
+        font = Font(Font.MONOSPACED, Font.PLAIN, fontSize)
+        val fontMetrics = getFontMetrics(font)
+        preferredSize = Dimension(banner.maxOf(fontMetrics::stringWidth), fontMetrics.height * banner.size)
         size = preferredSize
     }
 
