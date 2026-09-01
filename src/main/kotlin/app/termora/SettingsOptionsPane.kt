@@ -239,7 +239,9 @@ class SettingsOptionsPane : OptionsPane() {
                 }
             }
 
-            if (System.getProperty(FlatSystemProperties.UI_SCALE).isNullOrBlank().not()) {
+            if (System.getProperty(FlatSystemProperties.UI_SCALE).isNullOrBlank().not()
+                && System.getProperty(Application.UI_SCALE_FROM_SETTINGS) == null
+            ) {
                 uiScaleComboBox.isEnabled = false
                 uiScaleComboBox.toolTipText = I18n.getString("termora.settings.appearance.ui-scale.overridden")
             }

@@ -209,6 +209,7 @@ class ApplicationRunner {
         ) {
             System.setProperty(FlatSystemProperties.UI_SCALE_ENABLED, "true")
             System.setProperty(FlatSystemProperties.UI_SCALE, uiScale)
+            System.setProperty(Application.UI_SCALE_FROM_SETTINGS, "true")
         }
     }
 

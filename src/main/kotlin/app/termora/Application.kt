@@ -27,6 +27,11 @@ import kotlin.math.pow
 object Application {
     private lateinit var baseDataDir: File
 
+    /**
+     * 标记 flatlaf.uiScale 是由设置界面写入的，而非 JVM 参数或环境变量
+     */
+    const val UI_SCALE_FROM_SETTINGS = "termora.uiScale.fromSettings"
+
 
     val ohMyJson = Json {
         ignoreUnknownKeys = true
