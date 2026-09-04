@@ -12,6 +12,7 @@ import app.termora.terminal.panel.FloatingToolbarPanel
 import app.termora.terminal.panel.TerminalPanel
 import app.termora.transfer.TransportTerminalTab
 import com.formdev.flatlaf.FlatClientProperties
+import com.formdev.flatlaf.FlatSystemProperties
 import com.formdev.flatlaf.extras.components.FlatComboBox
 import com.formdev.flatlaf.extras.components.FlatPopupMenu
 import com.formdev.flatlaf.extras.components.FlatToolBar
@@ -116,6 +117,7 @@ class SettingsOptionsPane : OptionsPane() {
         val backgroundComBoBox = YesOrNoComboBox()
         val confirmTabCloseComBoBox = YesOrNoComboBox()
         val tabOrderComboBox = FlatComboBox<TabOrder>()
+        val uiScaleComboBox = FlatComboBox<String>()
         val followSystemCheckBox = JCheckBox(I18n.getString("termora.settings.appearance.follow-system"))
         val preferredThemeBtn = JButton(Icons.settings)
         val opacitySpinner = NumberSpinner(100, 0, 100)
@@ -213,6 +215,37 @@ class SettingsOptionsPane : OptionsPane() {
                 }
             }
 
+            val scales = listOf("1.0", "1.25", "1.5", "1.75", "2.0", "2.5", "3.0")
+            scales.forEach { uiScaleComboBox.addItem(it) }
+            val uiScale = appearance.uiScale
+            if (uiScale.isNotBlank() && uiScale !in scales) {
+                uiScaleComboBox.addItem(uiScale)
+            }
+            uiScaleComboBox.selectedItem = uiScale
+            uiScaleComboBox.renderer = object : DefaultListCellRenderer() {
+                override fun getListCellRendererComponent(
+                    list: JList<*>?,
+                    value: Any?,
+                    index: Int,
+                    isSelected: Boolean,
+                    cellHasFocus: Boolean
+                ): Component {
+                    val text = if (value == null || value == StringUtils.EMPTY) {
+                        I18n.getString("termora.settings.appearance.ui-scale.system")
+                    } else {
+                        "${((value.toString().toDoubleOrNull() ?: 1.0) * 100).toInt()}%"
+                    }
+                    return super.getListCellRendererComponent(list, text, index, isSelected, cellHasFocus)
+                }
+            }
+
+            if (System.getProperty(FlatSystemProperties.UI_SCALE).isNullOrBlank().not()
+                && System.getProperty(Application.UI_SCALE_FROM_SETTINGS) == null
+            ) {
+                uiScaleComboBox.isEnabled = false
+                uiScaleComboBox.toolTipText = I18n.getString("termora.settings.appearance.ui-scale.overridden")
+            }
+
             add(getFormPanel(), BorderLayout.CENTER)
         }
 
@@ -292,6 +325,14 @@ class SettingsOptionsPane : OptionsPane() {
                 }
             }
 
+            uiScaleComboBox.addItemListener(object : ItemListener {
+                override fun itemStateChanged(e: ItemEvent) {
+                    if (e.stateChange != ItemEvent.SELECTED) return
+                    appearance.uiScale = uiScaleComboBox.selectedItem?.toString() ?: return
+                    SwingUtilities.invokeLater { TermoraRestarter.getInstance().scheduleRestart(owner) }
+                }
+            })
+
             preferredThemeBtn.addActionListener { showPreferredThemeContextmenu() }
 
         }
@@ -366,8 +407,9 @@ class SettingsOptionsPane : OptionsPane() {
         private fun getFormPanel(): JPanel {
             val layout = FormLayout(
                 "left:pref, $FORM_MARGIN, default:grow, $FORM_MARGIN, default, default:grow",
-                "pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref"
+                "pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref, $FORM_MARGIN, pref"
             )
+
             val box = FlatToolBar()
             box.add(followSystemCheckBox)
             box.add(Box.createHorizontalStrut(2))
@@ -390,6 +432,9 @@ class SettingsOptionsPane : OptionsPane() {
 
             builder.add("${I18n.getString("termora.settings.appearance.layout")}:").xy(1, rows)
                 .add(layoutComboBox).xy(3, rows).apply { rows += step }
+
+            builder.add("${I18n.getString("termora.settings.appearance.ui-scale")}:").xy(1, rows)
+                .add(uiScaleComboBox).xy(3, rows).apply { rows += step }
 
             builder.add("${I18n.getString("termora.settings.appearance.opacity")}:").xy(1, rows)
                 .add(opacitySpinner).xy(3, rows).apply { rows += step }

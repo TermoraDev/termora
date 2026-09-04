@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.LocaleUtils
 import org.apache.commons.lang3.SystemUtils
+import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import java.awt.*
 import java.awt.desktop.AppReopenedEvent
@@ -200,6 +201,16 @@ class ApplicationRunner {
             log.info("Language: {} , Locale: {}", language, locale)
         }
         Locale.setDefault(locale)
+
+        // UI 缩放，仅在未被 JVM 参数或 TERMORA_SCALE 环境变量覆盖时生效
+        val uiScale = DatabaseManager.getInstance().appearance.uiScale
+        if (System.getProperty(FlatSystemProperties.UI_SCALE).isNullOrBlank()
+            && NumberUtils.toDouble(uiScale, -1.0) > 0
+        ) {
+            System.setProperty(FlatSystemProperties.UI_SCALE_ENABLED, "true")
+            System.setProperty(FlatSystemProperties.UI_SCALE, uiScale)
+            System.setProperty(Application.UI_SCALE_FROM_SETTINGS, "true")
+        }
     }
 
 
