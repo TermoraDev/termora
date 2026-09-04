@@ -211,9 +211,16 @@ class TerminalPanel(val tab: TerminalTab?, val terminal: Terminal, private val w
                 }
 
                 val unitsToScroll = e.unitsToScroll
-                if (e.isShiftDown || unitsToScroll == 0 || abs(e.preciseWheelRotation) < 0.01) {
+                if (unitsToScroll == 0 || abs(e.preciseWheelRotation) < 0.01) {
                     return
                 }
+
+                val terminalModel = terminal.getTerminalModel()
+                val mouseMode = terminalModel.getData(DataKey.MouseMode, MouseMode.MOUSE_REPORTING_NONE)
+                if (e.isShiftDown.not() && (mouseMode != MouseMode.MOUSE_REPORTING_NONE || terminalModel.isAlternateScreenBuffer())) {
+                    return
+                }
+
                 val value = scrollBar.value + unitsToScroll
                 scrollBar.value = value
                 terminal.getScrollingModel().scrollTo(value)
