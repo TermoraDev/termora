@@ -1,6 +1,8 @@
 package app.termora
 
 import app.termora.database.DatabaseManager
+import app.termora.database.DatabaseSecret
+import app.termora.database.UnlockResult
 import app.termora.plugin.ExtensionManager
 import app.termora.plugin.PluginManager
 import com.formdev.flatlaf.FlatClientProperties
@@ -35,14 +37,14 @@ class ApplicationRunner {
 
     fun run() {
 
-        // 异步初始化
-        val loadPluginThread = Thread.ofVirtual().start { PluginManager.getInstance() }
-
         // 打印系统信息
         printSystemInfo()
 
-        // 打开数据库
+        // Open and unlock the database before plugins can initialize encrypted tables.
         openDatabase()
+
+        // 异步初始化
+        val loadPluginThread = Thread.ofVirtual().start { PluginManager.getInstance() }
 
         // 加载设置
         loadSettings()
@@ -355,14 +357,49 @@ class ApplicationRunner {
 
     private fun openDatabase() {
         try {
-            // 初始化数据库
-            DatabaseManager.getInstance()
+            val database = DatabaseManager.getInstance()
+            val secret = DatabaseSecret.getInstance()
+            while (secret.requiresUnlock()) {
+                val password = JPasswordField()
+                val result = JOptionPane.showConfirmDialog(
+                    null,
+                    password,
+                    I18n.getString("termora.settings.security.enter-password"),
+                    JOptionPane.OK_CANCEL_OPTION,
+                    JOptionPane.PLAIN_MESSAGE,
+                )
+                if (result != JOptionPane.OK_OPTION) {
+                    exitProcess(0)
+                }
+                when (secret.unlock(password.password)) {
+                    UnlockResult.SUCCESS -> Unit
+                    UnlockResult.UNSUPPORTED_FORMAT -> {
+                        JOptionPane.showMessageDialog(
+                            null,
+                            I18n.getString("termora.settings.security.unsupported-format"),
+                            I18n.getString("termora.title"),
+                            JOptionPane.ERROR_MESSAGE,
+                        )
+                        exitProcess(1)
+                    }
+                    UnlockResult.WRONG_PASSWORD_OR_CORRUPT -> {
+                    JOptionPane.showMessageDialog(
+                        null,
+                        I18n.getString("termora.settings.security.incorrect-password"),
+                        I18n.getString("termora.title"),
+                        JOptionPane.ERROR_MESSAGE,
+                    )
+                    }
+                }
+            }
+            check(secret.state().name == "UNLOCKED") { "Database protection metadata is invalid" }
+            database.initialize()
         } catch (e: Exception) {
             if (log.isErrorEnabled) {
                 log.error(e.message, e)
             }
             JOptionPane.showMessageDialog(
-                null, "Unable to open database",
+                null, I18n.getString("termora.settings.security.open-database-failed"),
                 I18n.getString("termora.title"), JOptionPane.ERROR_MESSAGE
             )
             exitProcess(1)

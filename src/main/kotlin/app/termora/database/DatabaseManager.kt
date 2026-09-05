@@ -42,6 +42,9 @@ class DatabaseManager private constructor() : Disposable {
 
     val database: Database
     val lock = ReentrantLock()
+    private val isNewDatabase: Boolean
+    @Volatile
+    private var initialized = false
 
     val properties by lazy { Properties(this) }
     val terminal by lazy { Terminal(this) }
@@ -60,6 +63,7 @@ class DatabaseManager private constructor() : Disposable {
         )
         FileUtils.forceMkdirParent(databaseFile)
         val isExists = databaseFile.exists()
+        isNewDatabase = !isExists
 
         database = Database.connect(
             "jdbc:sqlite:${databaseFile.absolutePath}",
@@ -71,25 +75,28 @@ class DatabaseManager private constructor() : Disposable {
             transaction(database) { SchemaUtils.create(UnsafeSettingEntity) }
         }
 
-        // 获取密钥信息
+        // Bootstrap only reads the unencrypted metadata. Encrypted tables must not
+        // be initialized until a protected database has been unlocked.
         transaction(database) { DatabaseSecret.getInstance(database) }
+    }
 
-        // 设置数据库版本号，便于后续升级
-        if (isExists.not()) {
-            transaction(database) {
-                // 创建数据库
-                SchemaUtils.create(DataEntity, SettingEntity)
-                @Suppress("SqlNoDataSourceInspection")
-                exec("PRAGMA db_version = 1", explicitStatementType = StatementType.UPDATE)
+    /** Completes initialization after [DatabaseSecret] is unlocked. */
+    fun initialize() {
+        if (initialized) return
+        lock.withLock {
+            if (initialized) return
+            DatabaseSecret.getInstance().requireUnlocked()
+            if (isNewDatabase) {
+                transaction(database) {
+                    SchemaUtils.create(DataEntity, SettingEntity)
+                    @Suppress("SqlNoDataSourceInspection")
+                    exec("PRAGMA db_version = 1", explicitStatementType = StatementType.UPDATE)
+                }
             }
+            map.putAll(getSettings())
+            registerDynamicExtensions()
+            initialized = true
         }
-
-        // 异步初始化
-        Thread.ofVirtual().start { map.putAll(getSettings()); }
-
-        // 注册动态扩展
-        registerDynamicExtensions()
-
     }
 
     private fun registerDynamicExtensions() {
