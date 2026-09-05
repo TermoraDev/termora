@@ -142,8 +142,8 @@ internal class SystemInformationVisualWindow(tab: SSHTerminalTab, visualWindowMa
 
         private suspend fun refreshCPUAndMem(session: ClientSession) {
 
-            // top
-            val pair = SshClients.execChannel(session, "top -bn1")
+            // Keep labels and decimal separators stable for the parser regardless of the server locale.
+            val pair = SshClients.execChannel(session, "LC_ALL=C top -bn1")
             if (pair.first != 0) {
                 return
             }
