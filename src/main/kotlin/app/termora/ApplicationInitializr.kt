@@ -71,61 +71,63 @@ class ApplicationInitializr {
     }
 
 
-    private fun setupNativeLibraries() {
-        val appPath = Application.getAppPath()
-        if (StringUtils.isBlank(appPath)) {
-            return
-        }
-
-        var contents = File(appPath)
-        if (SystemUtils.IS_OS_MAC_OSX || SystemUtils.IS_OS_LINUX) {
-            contents = contents.parentFile?.parentFile ?: return
-            if (SystemUtils.IS_OS_LINUX) {
-                contents = File(contents, "lib")
+    companion object {
+        internal fun setupNativeLibraries() {
+            val appPath = Application.getAppPath()
+            if (StringUtils.isBlank(appPath)) {
+                return
             }
-        } else if (SystemUtils.IS_OS_WINDOWS) {
-            contents = contents.parentFile ?: return
-        }
 
-        val dylib = FileUtils.getFile(contents, "app", "dylib")
-        if (dylib.exists().not()) {
-            return
-        }
+            var contents = File(appPath)
+            if (SystemUtils.IS_OS_MAC_OSX || SystemUtils.IS_OS_LINUX) {
+                contents = contents.parentFile?.parentFile ?: return
+                if (SystemUtils.IS_OS_LINUX) {
+                    contents = File(contents, "lib")
+                }
+            } else if (SystemUtils.IS_OS_WINDOWS) {
+                contents = contents.parentFile ?: return
+            }
 
-        val jna = FileUtils.getFile(dylib, "jna")
-        if (jna.exists()) {
-            System.setProperty("jna.nounpack", "true")
-            System.setProperty("jna.boot.library.path", jna.absolutePath)
-        }
+            val dylib = FileUtils.getFile(contents, "app", "dylib")
+            if (dylib.exists().not()) {
+                return
+            }
 
-        val pty4j = FileUtils.getFile(dylib, "pty4j")
-        if (pty4j.exists()) {
-            System.setProperty(PtyUtil.PREFERRED_NATIVE_FOLDER_KEY, pty4j.absolutePath)
-        }
+            val jna = FileUtils.getFile(dylib, "jna")
+            if (jna.exists()) {
+                System.setProperty("jna.nounpack", "true")
+                System.setProperty("jna.boot.library.path", jna.absolutePath)
+            }
 
-        val jSerialComm = FileUtils.getFile(dylib, "jSerialComm")
-        if (jSerialComm.exists()) {
-            System.setProperty("jSerialComm.library.path", jSerialComm.absolutePath)
-        }
+            val pty4j = FileUtils.getFile(dylib, "pty4j")
+            if (pty4j.exists()) {
+                System.setProperty(PtyUtil.PREFERRED_NATIVE_FOLDER_KEY, pty4j.absolutePath)
+            }
 
-        val restart4j = FileUtils.getFile(
-            dylib, "restart4j",
-            if (SystemUtils.IS_OS_WINDOWS) "restarter.exe" else "restarter"
-        )
-        if (restart4j.exists()) {
-            System.setProperty("restarter.path", restart4j.absolutePath)
-        }
+            val jSerialComm = FileUtils.getFile(dylib, "jSerialComm")
+            if (jSerialComm.exists()) {
+                System.setProperty("jSerialComm.library.path", jSerialComm.absolutePath)
+            }
 
-        val sqlite = FileUtils.getFile(dylib, "sqlite-jdbc")
-        if (sqlite.exists()) {
-            System.setProperty("org.sqlite.lib.path", sqlite.absolutePath)
-        }
+            val restart4j = FileUtils.getFile(
+                dylib, "restart4j",
+                if (SystemUtils.IS_OS_WINDOWS) "restarter.exe" else "restarter"
+            )
+            if (restart4j.exists()) {
+                System.setProperty("restarter.path", restart4j.absolutePath)
+            }
 
-        val flatlaf = FileUtils.getFile(dylib, "flatlaf")
-        if (flatlaf.exists()) {
-            System.setProperty(FlatSystemProperties.NATIVE_LIBRARY_PATH, flatlaf.absolutePath)
-        }
+            val sqlite = FileUtils.getFile(dylib, "sqlite-jdbc")
+            if (sqlite.exists()) {
+                System.setProperty("org.sqlite.lib.path", sqlite.absolutePath)
+            }
 
+            val flatlaf = FileUtils.getFile(dylib, "flatlaf")
+            if (flatlaf.exists()) {
+                System.setProperty(FlatSystemProperties.NATIVE_LIBRARY_PATH, flatlaf.absolutePath)
+            }
+
+        }
     }
 
     /**

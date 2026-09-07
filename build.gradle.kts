@@ -259,7 +259,7 @@ tasks.register<Copy>("copy-dependencies") {
                     // @formatter:on
                 } else if (os.isLinux) {
                     // @formatter:off
-                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "resources/*linux/${myArchName}/*", "-d", targetDir.absolutePath) }
+                    exec { commandLine("unzip", "-j" , "-o", file.absolutePath, "resources/com/pty4j/native/linux/${myArchName}/*", "-d", targetDir.absolutePath) }
                     // @formatter:on
                 } else if (os.isMacOsX) {
                     // @formatter:off
@@ -385,6 +385,8 @@ tasks.register<Exec>("jpackage") {
         "-Dapp-version=${project.version}",
         "-Drelease-date=${DateFormatUtils.format(Date(), "yyyy-MM-dd")}",
         "--add-exports java.base/sun.nio.ch=ALL-UNNAMED",
+        // 抑制 JDK 24+ 的 native-access 警告（sqlite/jna/pty4j 用 System.load），并为未来 JDK 的强制限制做准备
+        "--enable-native-access=ALL-UNNAMED",
     )
 
     options.add("-Dsun.java2d.metal=true")
@@ -457,6 +459,19 @@ tasks.register<Exec>("jpackage") {
         arguments.add("--mac-signing-key-user-name")
         arguments.add(macOSSignUsername)
     }
+
+    // ===== termora-cli 第二入口（CLI）=====
+    // 动态生成 launcher properties：Windows 加 win-console=true 让 CLI 有控制台/可见 stdout。
+    // 写到 build 目录，避免放进 src/main/resources 被打进 jar。
+    val cliLauncherProps = buildDir.file("jpackage-launchers/termora-cli.properties").asFile
+    cliLauncherProps.parentFile.mkdirs()
+    cliLauncherProps.writeText(
+        buildString {
+            append("main-class=app.termora.cli.CliMainKt\n")
+            if (os.isWindows) append("win-console=true\n")
+        }
+    )
+    arguments.addAll(listOf("--add-launcher", "termora-cli=${cliLauncherProps.absolutePath}"))
 
     commandLine(arguments)
 

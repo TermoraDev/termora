@@ -5,6 +5,7 @@ import app.termora.ApplicationScope
 import app.termora.FramePlugin
 import app.termora.account.AccountPlugin
 import app.termora.plugin.internal.badge.BadgePlugin
+import app.termora.plugin.internal.cli.CliInternalPlugin
 import app.termora.plugin.internal.extension.DynamicExtensionPlugin
 import app.termora.plugin.internal.local.LocalInternalPlugin
 import app.termora.plugin.internal.plugin.PluginInternalPlugin
@@ -137,6 +138,8 @@ internal class PluginManager private constructor() {
 
         // floating
         plugins.add(PluginDescriptor(FloatingToolbarPlugin(), origin = PluginOrigin.Internal, version = version))
+        // cli plugin
+        plugins.add(PluginDescriptor(CliInternalPlugin(), origin = PluginOrigin.Internal, version = version))
     }
 
     private fun loadSystemPlugins() {
