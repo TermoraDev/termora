@@ -55,7 +55,9 @@ class SSHTerminalTab(
     }
 
     override fun createReconnectTerminalTab(): TerminalTab {
-        return SSHTerminalTab(windowScope, host)
+        val currentHost = HostManager.getInstance().getHost(host.id)
+            ?.takeIf { it.protocol == host.protocol } ?: host
+        return SSHTerminalTab(windowScope, currentHost)
     }
 
     override suspend fun openPtyConnector(): PtyConnector {
