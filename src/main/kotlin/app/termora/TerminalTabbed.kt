@@ -88,17 +88,23 @@ class TerminalTabbed(
         }
 
 
-        // 右键菜单
+        // 标签页鼠标操作
         tabbedPane.addMouseListener(object : MouseAdapter() {
             override fun mouseClicked(e: MouseEvent) {
-                if (!SwingUtilities.isRightMouseButton(e)) {
-                    return
-                }
-
                 val index = tabbedPane.indexAtLocation(e.x, e.y)
                 if (index < 0) return
 
-                showContextMenu(index, e)
+                if (SwingUtilities.isMiddleMouseButton(e)) {
+                    if (tabbedPane.isTabClosable(index)) {
+                        tabbedPane.tabCloseCallback?.accept(tabbedPane, index)
+                        e.consume()
+                    }
+                    return
+                }
+
+                if (SwingUtilities.isRightMouseButton(e)) {
+                    showContextMenu(index, e)
+                }
             }
         })
 
