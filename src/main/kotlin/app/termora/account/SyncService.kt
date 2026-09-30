@@ -77,10 +77,11 @@ abstract class SyncService {
     }
 
     protected fun encryptData(id: String, data: String, ownerId: String): String {
-        val iv = DigestUtils.sha256(id).copyOf(12)
         val secretKey = getSecretKey(ownerId)
         if (secretKey.isEmpty()) return StringUtils.EMPTY
-        return Base64.encodeBase64String(AES.GCM.encrypt(secretKey, iv, data.toByteArray()))
+        val nonce = AES.randomBytes(12)
+        val ciphertext = AES.GCM.encrypt(secretKey, nonce, data.toByteArray())
+        return "v2:" + Base64.encodeBase64String(nonce + ciphertext)
     }
 
     protected fun getSecretKey(ownerId: String): ByteArray {
@@ -92,9 +93,14 @@ abstract class SyncService {
     }
 
     protected fun decryptData(id: String, data: String, ownerId: String): String {
-        val iv = DigestUtils.sha256(id).copyOf(12)
         val secretKey = getSecretKey(ownerId)
         if (secretKey.isEmpty()) throw IllegalStateException("根据 ownerId 无法获取对应密钥")
-        return String(AES.GCM.decrypt(secretKey, iv, Base64.decodeBase64(data)))
+        if (data.startsWith("v2:")) {
+            val encrypted = Base64.decodeBase64(data.removePrefix("v2:"))
+            require(encrypted.size > 12) { "Invalid sync ciphertext" }
+            return String(AES.GCM.decrypt(secretKey, encrypted.copyOf(12), encrypted.copyOfRange(12, encrypted.size)))
+        }
+        val legacyNonce = DigestUtils.sha256(id).copyOf(12)
+        return String(AES.GCM.decrypt(secretKey, legacyNonce, Base64.decodeBase64(data)))
     }
 }
