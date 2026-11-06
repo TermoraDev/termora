@@ -19,7 +19,7 @@ internal object TunnelManager {
         val hosts = HostManager.getInstance().hosts().associateBy { it.id }
         entries.keys.toList().forEach { (hostId, tunnel) ->
             val host = hosts[hostId]
-            if (host == null || tunnel !in host.tunnelings || !tunnel.enabled) {
+            if (host == null || tunnel !in host.tunnelings) {
                 stop(Host(id = hostId, name = "", protocol = "SSH"), tunnel)
             }
         }
@@ -56,18 +56,17 @@ internal object TunnelManager {
         started = true
         reconciliation.start()
         HostManager.getInstance().hosts().filter { it.protocol == "SSH" }.forEach { host ->
-            host.tunnelings.filter { it.enabled && it.autoStart }.forEach { start(host, it, owner) }
+            host.tunnelings.filter { it.autoStart }.forEach { start(host, it, owner) }
         }
     }
 
     fun startHost(host: Host, owner: Window) {
         if (ConnectionSettings.unifiedTunnelsOnly) return
         val latest = HostManager.getInstance().getHost(host.id) ?: host
-        latest.tunnelings.filter { it.enabled }.forEach { start(latest, it, owner) }
+        latest.tunnelings.forEach { start(latest, it, owner) }
     }
 
     fun start(host: Host, tunnel: Tunneling, owner: Window) {
-        if (!tunnel.enabled) return
         val key = host.id to tunnel
         val old = entries[key]
         if (old?.state == "connecting" || old?.session?.isOpen == true) return

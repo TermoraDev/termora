@@ -12,7 +12,7 @@ internal class TunnelManagerDialog(owner: Window) : JDialog(owner, I18n.getStrin
     private data class Row(val host: Host, val tunnel: Tunneling, val index: Int)
     private var rows = emptyList<Row>()
     private fun label(key: String) = I18n.getString("termora.tunnels.$key")
-    private val model = object : DefaultTableModel(arrayOf("Host", "Name", "Type", "Source", "Destination", "Enabled", "Auto start", "Status"), 0) {
+    private val model = object : DefaultTableModel(arrayOf("Host", "Name", "Type", "Source", "Destination", "Auto start", "Status"), 0) {
         override fun isCellEditable(row: Int, column: Int) = false
     }
     private val table = JTable(model)
@@ -21,7 +21,7 @@ internal class TunnelManagerDialog(owner: Window) : JDialog(owner, I18n.getStrin
     init {
         defaultCloseOperation = DISPOSE_ON_CLOSE
         layout = BorderLayout(8, 8)
-        val keys = listOf("host", "name", "type", "source", "destination", "enabled", "auto-start", "status")
+        val keys = listOf("host", "name", "type", "source", "destination", "auto-start", "status")
         keys.forEachIndexed { index, key -> table.columnModel.getColumn(index).headerValue = label(key) }
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION)
         table.autoCreateRowSorter = true
@@ -35,7 +35,6 @@ internal class TunnelManagerDialog(owner: Window) : JDialog(owner, I18n.getStrin
         button("delete") { selected()?.let { row ->
             if (JOptionPane.showConfirmDialog(this, label("confirm-delete"), title, JOptionPane.OK_CANCEL_OPTION) == JOptionPane.OK_OPTION) save(row, null)
         } }
-        button("enable") { selected()?.let { save(it, it.tunnel.copy(enabled = !it.tunnel.enabled)) } }
         button("auto-start") { selected()?.let { save(it, it.tunnel.copy(autoStart = !it.tunnel.autoStart)) } }
         button("start") { selected()?.let { TunnelManager.start(it.host, it.tunnel, this) }; refresh() }
         button("stop") { selected()?.let { TunnelManager.stop(it.host, it.tunnel) }; refresh() }
@@ -58,7 +57,7 @@ internal class TunnelManagerDialog(owner: Window) : JDialog(owner, I18n.getStrin
             host.tunnelings.mapIndexed { index, tunnel -> Row(host, tunnel, index) }
         }
         if (updated == rows && model.rowCount == updated.size) {
-            rows.forEachIndexed { index, row -> model.setValueAt(TunnelManager.status(row.host, row.tunnel), index, 7) }
+            rows.forEachIndexed { index, row -> model.setValueAt(TunnelManager.status(row.host, row.tunnel), index, 6) }
             return
         }
         rows = updated
@@ -67,7 +66,7 @@ internal class TunnelManagerDialog(owner: Window) : JDialog(owner, I18n.getStrin
             val t = row.tunnel
             model.addRow(arrayOf<Any>(row.host.name, t.name, t.type, "${t.sourceHost}:${t.sourcePort}",
                 if (t.type == TunnelingType.Dynamic) "SOCKS" else "${t.destinationHost}:${t.destinationPort}",
-                t.enabled, t.autoStart, TunnelManager.status(row.host, t)))
+                t.autoStart, TunnelManager.status(row.host, t)))
         }
         val index = rows.indexOfFirst { it.host.id == selection?.host?.id && it.index == selection.index }
         if (index >= 0) table.setRowSelectionInterval(table.convertRowIndexToView(index), table.convertRowIndexToView(index))
