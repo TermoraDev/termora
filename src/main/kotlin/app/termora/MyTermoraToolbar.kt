@@ -86,7 +86,9 @@ internal class MyTermoraToolbar(private val windowScope: WindowScope, private va
         }
 
         add(Box.createHorizontalGlue())
-        add(JButton(I18n.getString("termora.tunnels.title")).apply {
+        add(JButton(Icons.networkPolicy).apply {
+            toolTipText = I18n.getString("termora.tunnels.title")
+            accessibleContext.accessibleName = toolTipText
             addActionListener { app.termora.tunneling.TunnelManagerDialog(frame).isVisible = true }
         })
 
