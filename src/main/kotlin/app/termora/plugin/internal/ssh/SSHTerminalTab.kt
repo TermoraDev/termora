@@ -37,6 +37,16 @@ class SSHTerminalTab(
         private val log = LoggerFactory.getLogger(SSHTerminalTab::class.java)
     }
 
+    @Volatile private var disconnected = false
+
+    fun reconnectOnActivation() {
+        val currentHost = HostManager.getInstance().getHost(host.id) ?: host
+        if (disconnected && currentHost.options.extras["autoReconnect"].toBoolean() && canReconnect()) {
+            disconnected = false
+            reconnect()
+        }
+    }
+
     private val mutex = Mutex()
     private val owner get() = SwingUtilities.getWindowAncestor(terminalPanel)
     private val tab get() = this
@@ -228,6 +238,7 @@ class SSHTerminalTab(
     }
 
     override fun stop() {
+        disconnected = true
         if (mutex.tryLock()) {
             try {
                 super.stop()
