@@ -16,14 +16,16 @@ internal class ConnectionSettings : JPanel(BorderLayout()), OptionsPane.Option {
     }
 
     init {
-        add(JCheckBox(I18n.getString("termora.tunnels.unified-only")).apply {
-            isSelected = unifiedTunnelsOnly
-            addActionListener { unifiedTunnelsOnly = isSelected }
-        }, BorderLayout.CENTER)
-        add(JCheckBox(I18n.getString("termora.settings.allow-folder-connections")).apply {
+        val options = JPanel(java.awt.GridLayout(0, 1, 0, 8))
+        options.add(JCheckBox(I18n.getString("termora.settings.allow-folder-connections")).apply {
             isSelected = allowFolderConnections
             addActionListener { allowFolderConnections = isSelected }
-        }, BorderLayout.NORTH)
+        })
+        options.add(JCheckBox(I18n.getString("termora.tunnels.unified-only")).apply {
+            isSelected = unifiedTunnelsOnly
+            addActionListener { unifiedTunnelsOnly = isSelected }
+        })
+        add(options, BorderLayout.NORTH)
     }
 
     override fun getIcon(isSelected: Boolean) = Icons.server

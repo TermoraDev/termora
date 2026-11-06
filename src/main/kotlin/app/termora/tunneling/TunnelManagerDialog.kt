@@ -77,9 +77,7 @@ internal class TunnelManagerDialog(owner: Window) : JDialog(owner, I18n.getStrin
         val hosts = HostManager.getInstance().hosts().filter { it.protocol == "SSH" && !it.isFolder }
         val host = row?.host ?: run {
             if (hosts.isEmpty()) { JOptionPane.showMessageDialog(this, label("no-hosts")); return }
-            val choices = hosts.map { "${it.name} (${it.username}@${it.host}) [${it.id}]" }.toTypedArray()
-            val choice = JOptionPane.showInputDialog(this, label("host"), title, JOptionPane.QUESTION_MESSAGE, null, choices, choices.first()) ?: return
-            hosts[choices.indexOf(choice)]
+            SSHHostPicker(this, hosts).choose() ?: return
         }
         val dialog = SSHTunnelingOption.PortForwardingDialog(this, row?.tunnel)
         dialog.isVisible = true
