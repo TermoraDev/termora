@@ -37,6 +37,16 @@ class SSHTerminalTab(
         private val log = LoggerFactory.getLogger(SSHTerminalTab::class.java)
     }
 
+    @Volatile private var disconnected = false
+
+    fun reconnectOnActivation() {
+        val currentHost = HostManager.getInstance().getHost(host.id) ?: host
+        if (disconnected && currentHost.options.extras["autoReconnect"].toBoolean() && canReconnect()) {
+            disconnected = false
+            reconnect()
+        }
+    }
+
     private val mutex = Mutex()
     private val owner get() = SwingUtilities.getWindowAncestor(terminalPanel)
     private val tab get() = this
@@ -139,25 +149,8 @@ class SSHTerminalTab(
     }
 
     private suspend fun openTunnelings(session: ClientSession, host: Host) {
-        if (host.tunnelings.isEmpty()) {
-            return
-        }
-
-        for (tunneling in host.tunnelings) {
-            try {
-                SshClients.openTunneling(session, host, tunneling)
-                withContext(Dispatchers.Swing) {
-                    terminal.write("Start [${tunneling.name}] port forwarding successfully.\r\n")
-                }
-            } catch (e: Exception) {
-                if (log.isErrorEnabled) {
-                    log.error("Start [${tunneling.name}] port forwarding failed: {}", e.message, e)
-                }
-                withContext(Dispatchers.Swing) {
-                    terminal.write("Start [${tunneling.name}] port forwarding failed: ${e.message}\r\n")
-                }
-            }
-
+        withContext(Dispatchers.Swing) {
+            app.termora.tunneling.TunnelManager.startHost(host, owner)
         }
     }
 
@@ -228,6 +221,7 @@ class SSHTerminalTab(
     }
 
     override fun stop() {
+        disconnected = true
         if (mutex.tryLock()) {
             try {
                 super.stop()

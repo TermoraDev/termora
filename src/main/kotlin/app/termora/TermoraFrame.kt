@@ -58,6 +58,17 @@ class TermoraFrame : JFrame(), DataProvider {
     }
 
     private fun initEvents() {
+        addWindowListener(object : WindowAdapter() {
+            override fun windowOpened(e: WindowEvent) {
+                app.termora.tunneling.TunnelManager.startAutomatically(this@TermoraFrame)
+            }
+            override fun windowActivated(e: WindowEvent) {
+                if (e.oppositeWindow != null) return
+                terminalTabbed.getTerminalTabs().toList()
+                    .filterIsInstance<app.termora.plugin.internal.ssh.SSHTerminalTab>()
+                    .forEach { it.reconnectOnActivation() }
+            }
+        })
         if (SystemInfo.isLinux) {
             toolbar.addMouseListener(moveMouseAdapter)
             toolbar.addMouseMotionListener(moveMouseAdapter)

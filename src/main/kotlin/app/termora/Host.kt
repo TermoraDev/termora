@@ -219,6 +219,7 @@ data class Tunneling(
     val sourcePort: Int = 0,
     val destinationHost: String = StringUtils.EMPTY,
     val destinationPort: Int = 0,
+    val autoStart: Boolean = false,
 )
 
 
