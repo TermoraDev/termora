@@ -53,7 +53,7 @@ internal class SSHHostOptionsPane(private val accountOwner: AccountOwner) : Opti
     init {
         addOption(generalOption)
         addOption(proxyOption)
-        addOption(tunnelingOption)
+        if (!ConnectionSettings.unifiedTunnelsOnly) addOption(tunnelingOption)
         addOption(jumpHostsOption)
         addOption(terminalOption)
         addOption(sftpOption)

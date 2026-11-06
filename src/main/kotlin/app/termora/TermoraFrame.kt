@@ -59,6 +59,9 @@ class TermoraFrame : JFrame(), DataProvider {
 
     private fun initEvents() {
         addWindowListener(object : WindowAdapter() {
+            override fun windowOpened(e: WindowEvent) {
+                app.termora.tunneling.TunnelManager.startAutomatically(this@TermoraFrame)
+            }
             override fun windowActivated(e: WindowEvent) {
                 if (e.oppositeWindow != null) return
                 terminalTabbed.getTerminalTabs().toList()

@@ -225,7 +225,7 @@ internal class SSHTunnelingOption : JPanel(BorderLayout()), OptionsPane.Option {
         return this
     }
 
-    private inner class PortForwardingDialog(
+    class PortForwardingDialog(
         owner: Window,
         var tunneling: Tunneling? = null
     ) : DialogWrapper(owner) {
@@ -289,7 +289,7 @@ internal class SSHTunnelingOption : JPanel(BorderLayout()), OptionsPane.Option {
                 return
             }
 
-            tunneling = Tunneling(
+            tunneling = (tunneling ?: Tunneling()).copy(
                 name = nameTextField.text,
                 type = typeComboBox.selectedItem as TunnelingType,
                 sourceHost = localHostTextField.text,

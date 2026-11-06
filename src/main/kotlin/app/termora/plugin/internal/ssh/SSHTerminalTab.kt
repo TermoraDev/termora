@@ -149,25 +149,8 @@ class SSHTerminalTab(
     }
 
     private suspend fun openTunnelings(session: ClientSession, host: Host) {
-        if (host.tunnelings.isEmpty()) {
-            return
-        }
-
-        for (tunneling in host.tunnelings) {
-            try {
-                SshClients.openTunneling(session, host, tunneling)
-                withContext(Dispatchers.Swing) {
-                    terminal.write("Start [${tunneling.name}] port forwarding successfully.\r\n")
-                }
-            } catch (e: Exception) {
-                if (log.isErrorEnabled) {
-                    log.error("Start [${tunneling.name}] port forwarding failed: {}", e.message, e)
-                }
-                withContext(Dispatchers.Swing) {
-                    terminal.write("Start [${tunneling.name}] port forwarding failed: ${e.message}\r\n")
-                }
-            }
-
+        withContext(Dispatchers.Swing) {
+            app.termora.tunneling.TunnelManager.startHost(host, owner)
         }
     }
 
