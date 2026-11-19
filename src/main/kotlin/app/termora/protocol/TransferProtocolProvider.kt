@@ -23,6 +23,8 @@ interface TransferProtocolProvider : ProtocolProvider {
                 StringUtils.equalsIgnoreCase(protocol, LocalTransferProtocolProvider.PROTOCOL)
             ) {
                 p = "file"
+            } else if (StringUtils.equalsIgnoreCase(protocol, app.termora.plugin.internal.wsl.WSLProtocolProvider.PROTOCOL)) {
+                p = "wsl-file"
             }
 
             return providers.filterIsInstance<TransferProtocolProvider>()

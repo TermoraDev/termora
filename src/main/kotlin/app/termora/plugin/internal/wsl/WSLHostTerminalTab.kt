@@ -34,6 +34,15 @@ class WSLHostTerminalTab(windowScope: WindowScope, host: Host) : PtyHostTerminal
         commands.add("-d")
         commands.add(host.host)
 
+        if (StringUtils.isNotBlank(host.username)) {
+            commands.add("-u")
+            commands.add(host.username)
+        }
+
+        commands.add("--cd")
+        commands.add("~")
+
+
         if (StringUtils.isNoneBlank(host.options.startupCommand)) {
             commands.addAll(parseCommand(host.options.startupCommand))
         }

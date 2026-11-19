@@ -75,6 +75,15 @@ internal open class TransportPanel(
         private val folderIcon = FlatTreeClosedIcon()
         private val fileIcon = FlatTreeLeafIcon()
 
+        internal fun Path.isWslPath(): Boolean {
+            if (!SystemInfo.isWindows) {
+                return false
+            }
+            val pathStr = this.absolutePathString()
+            return pathStr.startsWith("\\\\wsl.localhost\\", ignoreCase = true) ||
+                    pathStr.startsWith("\\\\wsl$\\", ignoreCase = true)
+        }
+
         internal fun FileSystem.isWindowsFileSystem(): Boolean {
             return SystemInfo.isWindows && isLocallyFileSystem()
         }
