@@ -138,10 +138,10 @@ application {
 
     if (os.isMacOsX) {
         // macOS NSWindow
-        args.add("--add-opens java.desktop/java.awt=ALL-UNNAMED")
-        args.add("--add-opens java.desktop/sun.lwawt=ALL-UNNAMED")
-        args.add("--add-opens java.desktop/sun.lwawt.macosx=ALL-UNNAMED")
-        args.add("--add-exports java.desktop/com.apple.eawt=ALL-UNNAMED")
+        args.add("--add-opens=java.desktop/java.awt=ALL-UNNAMED")
+        args.add("--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED")
+        args.add("--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED")
+        args.add("--add-exports=java.desktop/com.apple.eawt=ALL-UNNAMED")
         args.add("-Dsun.java2d.metal=true")
         args.add("-Dapple.awt.application.appearance=system")
     }
