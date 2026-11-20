@@ -14,7 +14,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 class OBSClientHandler(
     private val cred: IObsCredentialsProvider,
     private val proxy: Proxy,
-    val buckets: List<ObsBucket>
+    val buckets: List<ObsBucket>,
+    private val customEndpoint: String = ""
 ) : Closeable {
 
     companion object {
@@ -49,7 +50,7 @@ class OBSClientHandler(
     }
 
     /**
-     * key: Region
+     * key: Endpoint
      * value: Client
      */
     private val clients = mutableMapOf<String, ObsClient>()
@@ -60,11 +61,12 @@ class OBSClientHandler(
 
         synchronized(this) {
             val bucket = buckets.first { it.bucketName == bucket }
-            if (clients.containsKey(bucket.location)) {
-                return clients.getValue(bucket.location)
+            val endpoint = customEndpoint.ifBlank { "https://obs.${bucket.location}.myhuaweicloud.com" }
+            if (clients.containsKey(endpoint)) {
+                return clients.getValue(endpoint)
             }
-            clients[bucket.location] = createOBSClient(cred, "https://obs.${bucket.location}.myhuaweicloud.com", proxy)
-            return clients.getValue(bucket.location)
+            clients[endpoint] = createOBSClient(cred, endpoint, proxy)
+            return clients.getValue(endpoint)
         }
     }
 
