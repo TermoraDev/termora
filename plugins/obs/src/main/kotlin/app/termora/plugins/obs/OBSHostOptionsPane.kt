@@ -62,6 +62,7 @@ class OBSHostOptionsPane : OptionsPane() {
         return Host(
             name = name,
             protocol = protocol,
+            host = generalOption.endpointTextField.text.trim(),
             port = port,
             username = generalOption.usernameTextField.text,
             authentication = authentication,
@@ -74,6 +75,7 @@ class OBSHostOptionsPane : OptionsPane() {
 
     fun setHost(host: Host) {
         generalOption.nameTextField.text = host.name
+        generalOption.endpointTextField.text = host.host
         generalOption.usernameTextField.text = host.username
         generalOption.remarkTextArea.text = host.remark
         generalOption.passwordTextField.text = host.authentication.password
@@ -148,6 +150,7 @@ class OBSHostOptionsPane : OptionsPane() {
 
     private inner class GeneralOption : JPanel(BorderLayout()), Option {
         val nameTextField = OutlineTextField(128)
+        val endpointTextField = OutlineTextField(255)
         val usernameTextField = OutlineTextField(128)
         val passwordTextField = OutlinePasswordField(255)
         val remarkTextArea = FixedLengthTextArea(512)
@@ -267,8 +270,8 @@ class OBSHostOptionsPane : OptionsPane() {
 //                .add("Region:").xy(1, rows)
 //                .add(regionComboBox).xyw(3, rows, 5).apply { rows += step }
 
-//                .add("Endpoint:").xy(1, rows)
-//                .add(endpointTextField).xyw(3, rows, 5).apply { rows += step }
+                .add("Endpoint:").xy(1, rows)
+                .add(endpointTextField).xyw(3, rows, 5).apply { rows += step }
 
                 .add("SecretId:").xy(1, rows)
                 .add(usernameTextField).xyw(3, rows, 5).apply { rows += step }
